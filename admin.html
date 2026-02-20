@@ -5,11 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestor de Programação Semanal</title>
     <style>
+        /* Bloqueia a rolagem global da janela para criar um layout de app moderno */
         body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 0; background-color: #f0f2f5; display: flex; height: 100vh; overflow: hidden; }
         
-        /* Layout Principal */
-        #sidebar { width: 250px; background-color: #fff; border-right: 1px solid #ddd; display: flex; flex-direction: column; height: 100%; box-shadow: 2px 0 5px rgba(0,0,0,0.05); z-index: 10;}
-        #main-content { flex: 1; overflow-y: auto; padding: 20px; position: relative; }
+        /* Sidebar: Fixa à esquerda, ocupando 100% da altura */
+        #painelSidebar { display: none; width: 250px; background-color: #fff; border-right: 1px solid #ddd; flex-direction: column; height: 100vh; box-shadow: 2px 0 5px rgba(0,0,0,0.05); z-index: 10;}
+        
+        /* Painel Principal: Ocupa o resto do espaço (flex: 1) e tem rolagem própria (overflow-y: auto) */
+        #painelSistema { display: none; flex: 1; overflow-y: auto; padding: 20px; box-sizing: border-box; height: 100vh; position: relative; }
         
         /* Sidebar Elements */
         .sidebar-header { padding: 20px; background-color: #1a73e8; color: white; text-align: center; }
@@ -22,7 +25,7 @@
         .history-item.active { background-color: #e8f0fe; color: #1a73e8; border-left: 4px solid #1a73e8; }
         
         /* Formulário & Seções */
-        .container { max-width: 850px; margin: 0 auto; }
+        .container { max-width: 850px; margin: 0 auto; padding-bottom: 40px;}
         .topo-acoes { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .btn-config { background-color: #fbbc05; color: #333; padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 14px;}
         .btn-config:hover { background-color: #f2a600; }
@@ -51,9 +54,8 @@
         .hidden { display: none !important; }
         .evento-destaque { background-color: #e8f0fe; border-color: #d2e3fc; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid;}
         
-        /* Telas de Controle */
-        #painelSistema, #painelSidebar { display: none; } 
-        #telaLogin { max-width: 400px; margin: 80px auto; text-align: center; background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); width: 100%;}
+        /* Tela de Login Centralizada */
+        #telaLogin { max-width: 400px; margin: auto; text-align: center; background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); width: 100%;}
         
         /* Modal Configurações */
         #modalConfig { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 100; justify-content: center; align-items: center;}
@@ -290,7 +292,6 @@
                 if (docSnap.exists()) {
                     configGlobal = docSnap.data();
                 } else {
-                    // Primeiro acesso: Salva as listas padrão
                     await setDoc(doc(db, "configuracoes", "geral"), configGlobal);
                 }
                 atualizarDOMComListas();
@@ -307,7 +308,6 @@
             document.querySelectorAll('.lista-leitores').forEach(s => s.innerHTML = gerarOpts(configGlobal.leitores_estudo, "Leitor do Estudo..."));
             document.querySelectorAll('.lista-irmaos').forEach(s => s.innerHTML = gerarOpts(configGlobal.irmaos, "Irmão Designado..."));
             
-            // Atualiza as dinâmicas já em tela
             document.querySelectorAll('.min-estudante').forEach(s => { const v = s.value; s.innerHTML = gerarOpts(todos, "Estudante"); s.value = v; });
             document.querySelectorAll('.min-ajudante').forEach(s => { const v = s.value; s.innerHTML = gerarOpts(todos, "Ajudante (se houver)"); s.value = v; });
             document.querySelectorAll('.vc-designado').forEach(s => { const v = s.value; s.innerHTML = gerarOpts(configGlobal.aprovados_ensino, "Designado"); s.value = v; });
@@ -321,7 +321,7 @@
                 const querySnapshot = await getDocs(collection(db, "programacoes_semanais"));
                 let datas = [];
                 querySnapshot.forEach(doc => datas.push(doc.id));
-                datas.sort((a,b) => b.localeCompare(a)); // Mais recentes primeiro
+                datas.sort((a,b) => b.localeCompare(a)); 
 
                 lista.innerHTML = '';
                 datas.forEach(d => {
@@ -347,7 +347,6 @@
             document.getElementById('blocoVisita').classList.add('hidden');
             document.getElementById('blocoEstudo').classList.remove('hidden');
             
-            // Reset partes dinâmicas
             document.getElementById('containerMinisterio').innerHTML = '';
             document.getElementById('containerVidaCrista').innerHTML = '';
             criarParteMinisterio(); criarParteMinisterio(); criarParteMinisterio();
@@ -360,7 +359,7 @@
             let hoje = new Date();
             let diaAlvo = parseInt(configGlobal.dia_reuniao);
             let offset = (diaAlvo - hoje.getDay() + 7) % 7;
-            if (offset === 0) offset = 7; // Próxima semana
+            if (offset === 0) offset = 7; 
             
             let prox = new Date(hoje);
             prox.setDate(hoje.getDate() + offset);
@@ -375,10 +374,9 @@
             const formSections = document.getElementById('formSections');
             const dataInput = document.getElementById('dataReuniao');
 
-            // Lógica da Terça-feira para Visita
             if (val === "Visita" && dataInput.value) {
                 let d = new Date(dataInput.value + "T12:00:00");
-                let diff = 2 - d.getDay(); // 2 é Terça
+                let diff = 2 - d.getDay(); 
                 d.setDate(d.getDate() + diff);
                 dataInput.value = d.toISOString().split('T')[0];
             }
@@ -402,24 +400,20 @@
             document.getElementById('comentariosFinais').value = e.target.value;
         });
 
-        // --- VALIDAÇÃO ANTI-DUPLICIDADE MESMA SEMANA (MINISTÉRIO) ---
+        // --- VALIDAÇÃO ANTI-DUPLICIDADE ---
         document.getElementById('containerMinisterio').addEventListener('change', (e) => {
             if (e.target.tagName !== 'SELECT') return;
             const selecionado = e.target.value;
             if (!selecionado) return;
 
-            // Busca todos os selects do ministério
             const selects = document.querySelectorAll('#containerMinisterio select');
             let contagem = 0;
-            selects.forEach(s => {
-                if(s.value === selecionado) contagem++;
-            });
+            selects.forEach(s => { if(s.value === selecionado) contagem++; });
 
             if(contagem > 1) {
                 alert(`⚠️ TRAVA DE SEGURANÇA:\n\nO(a) publicador(a) "${selecionado}" já foi selecionado(a) para outra parte do Ministério nesta MESMA reunião.\n\nPor favor, escolha outro nome.`);
-                e.target.value = ""; // Desfaz a seleção
+                e.target.value = ""; 
             } else if (dadosSemanaAnterior && dadosSemanaAnterior.ministerio) {
-                // Mantém a verificação da semana passada
                 const isEstudante = e.target.classList.contains('min-estudante');
                 const isAjudante = e.target.classList.contains('min-ajudante');
                 let func = null;
@@ -472,7 +466,7 @@
         document.getElementById('btnAddMinisterio').addEventListener('click', () => criarParteMinisterio());
         document.getElementById('btnAddVidaCrista').addEventListener('click', () => criarParteVidaCrista());
 
-        // --- EDIÇÃO (CARREGAR DO BANCO) ---
+        // --- EDIÇÃO ---
         async function carregarProgramacaoEdicao(dataId, liElement) {
             document.querySelectorAll('.history-item').forEach(i => i.classList.remove('active'));
             liElement.classList.add('active');
@@ -485,7 +479,7 @@
                     document.getElementById('tituloAcao').innerText = `Editando: ${dataId.split('-').reverse().join('/')}`;
                     document.getElementById('dataReuniao').value = d.data;
                     document.getElementById('tipoEvento').value = d.tipo_evento || "Normal";
-                    document.getElementById('tipoEvento').dispatchEvent(new Event('change')); // Força UI atualizar
+                    document.getElementById('tipoEvento').dispatchEvent(new Event('change')); 
                     
                     if (!["Assembleia", "Congresso", "Celebracao"].includes(d.tipo_evento)) {
                         document.getElementById('presidente').value = d.presidente || "";
@@ -516,7 +510,7 @@
             } catch(e) { document.getElementById('mensagem').innerText = "Erro ao carregar edição."; }
         }
 
-        // --- SALVAMENTO E LIMPEZA ---
+        // --- SALVAMENTO ---
         document.getElementById('btnSalvar').addEventListener('click', async () => {
             const dataReuniao = document.getElementById('dataReuniao').value;
             const tipoEvento = document.getElementById('tipoEvento').value;
@@ -550,14 +544,13 @@
                 await setDoc(doc(db, "programacoes_semanais", dataReuniao), programacaoData);
                 msgDiv.style.color = "green"; msgDiv.innerText = "Salvo com sucesso!";
                 
-                // Recarrega o sidebar e limpa o form
                 carregarHistoricoSidebar();
                 setTimeout(() => { prepararNovoFormulario(); }, 1500);
 
             } catch (error) { msgDiv.style.color = "red"; msgDiv.innerText = "Erro ao salvar."; }
         });
 
-        // --- MODAL DE CONFIGURAÇÕES (GERENCIADOR) ---
+        // --- MODAL CONFIGURAÇÕES ---
         const modalConfig = document.getElementById('modalConfig');
         const selectListaAtiva = document.getElementById('tipoListaEdicao');
         const boxItens = document.getElementById('listaItensAtuais');
@@ -569,7 +562,6 @@
         });
         
         document.getElementById('fecharConfig').addEventListener('click', () => modalConfig.style.display = 'none');
-
         selectListaAtiva.addEventListener('change', renderizarListaConfig);
 
         function renderizarListaConfig() {
@@ -589,12 +581,8 @@
             const nomeStr = input.value.trim();
             if(!nomeStr) return;
             
-            // Permite adicionar vários separados por vírgula
             const nomes = nomeStr.split(',').map(n => n.trim()).filter(n => n);
-            
-            nomes.forEach(n => {
-                if(!configGlobal[tipo].includes(n)) configGlobal[tipo].push(n);
-            });
+            nomes.forEach(n => { if(!configGlobal[tipo].includes(n)) configGlobal[tipo].push(n); });
             
             configGlobal[tipo].sort();
             input.value = '';
