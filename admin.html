@@ -515,34 +515,52 @@
             document.getElementById('comentariosFinais').value = e.target.value;
         });
 
-        // --- VALIDAÇÃO ANTI-DUPLICIDADE ---
-        document.getElementById('containerMinisterio').addEventListener('change', (e) => {
+       // --- VALIDAÇÃO ANTI-DUPLICIDADE E REGRA DA SEMANA ANTERIOR ---
+        // Aplicando para o Ministério e para a Leitura da Bíblia
+        document.getElementById('formSections').addEventListener('change', (e) => {
             if (e.target.tagName !== 'SELECT') return;
             const selecionado = e.target.value;
             if (!selecionado) return;
 
-            // 1. Verifica se está repetindo na MESMA semana
-            const selects = document.querySelectorAll('#containerMinisterio select');
-            let contagem = 0;
-            selects.forEach(s => { if(s.value === selecionado) contagem++; });
+            const isEstudante = e.target.classList.contains('min-estudante');
+            const isAjudante = e.target.classList.contains('min-ajudante');
+            const isLeitura = e.target.id === 'leituraBiblia';
 
-            if(contagem > 1) {
-                alert(`⚠️ TRAVA DE SEGURANÇA:\n\nO(a) publicador(a) "${selecionado}" já foi selecionado(a) para outra parte nesta MESMA reunião.`);
-                e.target.value = ""; 
-            } 
+            // Se a mudança não foi em nenhum desses 3 campos sensíveis, ignoramos
+            if (!isEstudante && !isAjudante && !isLeitura) return;
+
+            // 1. Verifica se está repetindo na MESMA semana (Trava para o Ministério)
+            if (isEstudante || isAjudante) {
+                const selects = document.querySelectorAll('#containerMinisterio select');
+                let contagem = 0;
+                selects.forEach(s => { if(s.value === selecionado) contagem++; });
+
+                if(contagem > 1) {
+                    alert(`⚠️ TRAVA DE SEGURANÇA:\n\nO(a) publicador(a) "${selecionado}" já foi selecionado(a) para outra parte nesta MESMA reunião.`);
+                    e.target.value = ""; 
+                    return; // Para aqui e não exibe o alerta de semana passada
+                }
+            }
+
             // 2. Verifica se está repetindo a MESMA FUNÇÃO da semana passada
-            else if (dadosSemanaAnterior && dadosSemanaAnterior.ministerio) {
-                const isEstudante = e.target.classList.contains('min-estudante');
-                const isAjudante = e.target.classList.contains('min-ajudante');
+            if (dadosSemanaAnterior) {
                 let func = null;
                 
-                dadosSemanaAnterior.ministerio.forEach(p => {
-                    if (isAjudante && p.ajudante === selecionado) func = "AJUDANTE";
-                    if (isEstudante && p.estudante === selecionado) func = "ESTUDANTE";
-                });
+                // Checa a Leitura da Bíblia
+                if (isLeitura && dadosSemanaAnterior.tesouros && dadosSemanaAnterior.tesouros.leitura === selecionado) {
+                    func = "LEITOR DA BÍBLIA";
+                } 
+                // Checa o Estudante e Ajudante do Ministério
+                else if ((isEstudante || isAjudante) && dadosSemanaAnterior.ministerio) {
+                    dadosSemanaAnterior.ministerio.forEach(p => {
+                        if (isAjudante && p.ajudante === selecionado) func = "AJUDANTE";
+                        if (isEstudante && p.estudante === selecionado) func = "ESTUDANTE";
+                    });
+                }
                 
+                // Dispara o alerta se a função for idêntica
                 if (func) {
-                    alert(`⚠️ AVISO INTELIGENTE:\n\nO(a) publicador(a) "${selecionado}" já atuou como ${func} na semana passada.\n\n.`);
+                    alert(`⚠️ AVISO INTELIGENTE:\n\nO(a) publicador(a) "${selecionado}" já participou como ${func} na semana passada.\n\n`);
                 }
             }
         });
