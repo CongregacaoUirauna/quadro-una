@@ -3,34 +3,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Administrativo Inteligente</title>
+    <title>Gestor de Programação Semanal</title>
     <style>
-        body { font-family: Arial, sans-serif; padding: 20px; max-width: 850px; margin: 0 auto; background-color: #f0f2f5;}
-        .section { background-color: white; border: 1px solid #ddd; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);}
-        h1 { color: #1a73e8; text-align: center; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 0; background-color: #f0f2f5; display: flex; height: 100vh; overflow: hidden; }
+        
+        /* Layout Principal */
+        #sidebar { width: 250px; background-color: #fff; border-right: 1px solid #ddd; display: flex; flex-direction: column; height: 100%; box-shadow: 2px 0 5px rgba(0,0,0,0.05); z-index: 10;}
+        #main-content { flex: 1; overflow-y: auto; padding: 20px; position: relative; }
+        
+        /* Sidebar Elements */
+        .sidebar-header { padding: 20px; background-color: #1a73e8; color: white; text-align: center; }
+        .sidebar-header h2 { margin: 0; font-size: 18px; }
+        #btnNovaProgramacao { background-color: #34a853; color: white; border: none; padding: 10px; margin: 15px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 14px; }
+        #btnNovaProgramacao:hover { background-color: #2b803e; }
+        .history-list { list-style: none; padding: 0; margin: 0; overflow-y: auto; flex: 1; }
+        .history-item { padding: 12px 20px; border-bottom: 1px solid #eee; cursor: pointer; color: #333; font-weight: bold; display: flex; justify-content: space-between; align-items: center;}
+        .history-item:hover { background-color: #f1f3f4; color: #1a73e8; }
+        .history-item.active { background-color: #e8f0fe; color: #1a73e8; border-left: 4px solid #1a73e8; }
+        
+        /* Formulário & Seções */
+        .container { max-width: 850px; margin: 0 auto; }
+        .topo-acoes { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .btn-config { background-color: #fbbc05; color: #333; padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 14px;}
+        .btn-config:hover { background-color: #f2a600; }
+        .btn-sair { background-color: #ea4335; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 14px;}
+        .btn-sair:hover { background-color: #c5221f; }
+        
+        .section { background-color: white; border: 1px solid #ddd; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);}
+        h1 { color: #1a73e8; text-align: center; margin-top: 0;}
         h3 { color: #333; border-bottom: 2px solid #eee; padding-bottom: 5px; margin-top: 0; display: flex; justify-content: space-between; align-items: center;}
         label { display: block; margin-top: 15px; font-weight: bold; font-size: 14px; color: #444;}
         input, select { width: 100%; padding: 10px; margin-top: 5px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; font-size: 14px;}
         .input-group { display: flex; gap: 10px; margin-top: 5px; align-items: center;}
         .input-group input, .input-group select { width: 50%; }
         
-        button { background-color: #1a73e8; color: white; padding: 12px 20px; border: none; cursor: pointer; font-size: 16px; margin-top: 15px; border-radius: 4px; width: 100%; font-weight: bold;}
-        button:hover { background-color: #1557b0; }
+        button.btn-salvar { background-color: #1a73e8; color: white; padding: 12px 20px; border: none; cursor: pointer; font-size: 16px; margin-top: 15px; border-radius: 4px; width: 100%; font-weight: bold;}
+        button.btn-salvar:hover { background-color: #1557b0; }
         
-        .btn-add { background-color: #34a853; width: auto; padding: 6px 12px; font-size: 12px; margin-top: 0; }
+        .btn-add { background-color: #34a853; color: white; width: auto; padding: 6px 12px; font-size: 12px; border: none; border-radius: 4px; cursor: pointer;}
         .btn-add:hover { background-color: #2b803e; }
-        .btn-remove { background-color: #ea4335; width: auto; padding: 10px; margin-top: 0; font-size: 14px;}
+        .btn-remove { background-color: #ea4335; color: white; width: auto; padding: 10px; margin-top: 0; font-size: 14px; border: none; border-radius: 4px; cursor: pointer;}
         .btn-remove:hover { background-color: #c5221f; }
-        .btn-sair { background-color: #ea4335; width: auto; float: right; margin-top: 0; padding: 8px 15px;}
-        .btn-sair:hover { background-color: #c5221f; }
         
         #mensagem, #loginMensagem { margin-top: 15px; font-weight: bold; text-align: center; }
         
-        #painelSistema { display: none; } 
-        #telaLogin { max-width: 400px; margin: 80px auto; text-align: center; background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);}
         .dinamico-item { background-color: #f8f9fa; padding: 10px; border-radius: 5px; margin-top: 10px; border: 1px dashed #ccc;}
         .hidden { display: none !important; }
-        .evento-destaque { background-color: #e8f0fe; border-color: #d2e3fc; padding: 15px; border-radius: 8px; margin-bottom: 20px;}
+        .evento-destaque { background-color: #e8f0fe; border-color: #d2e3fc; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid;}
+        
+        /* Telas de Controle */
+        #painelSistema, #painelSidebar { display: none; } 
+        #telaLogin { max-width: 400px; margin: 80px auto; text-align: center; background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); width: 100%;}
+        
+        /* Modal Configurações */
+        #modalConfig { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 100; justify-content: center; align-items: center;}
+        .modal-content { background-color: #fff; padding: 20px; border-radius: 8px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; position: relative;}
+        .modal-close { position: absolute; top: 15px; right: 15px; font-size: 20px; cursor: pointer; color: #666; font-weight: bold;}
+        .config-grid { display: grid; grid-template-columns: 1fr; gap: 15px; margin-top: 15px;}
+        .lista-manager { border: 1px solid #ddd; padding: 10px; border-radius: 5px; background: #fafafa;}
+        .lista-manager select { height: 100px; margin-bottom: 10px;}
     </style>
 </head>
 <body>
@@ -40,106 +71,166 @@
         <p style="color: #666; font-size: 14px;">Insira suas credenciais para gerenciar a escala.</p>
         <input type="email" id="emailLogin" placeholder="Seu E-mail" required>
         <input type="password" id="senhaLogin" placeholder="Sua Senha" required>
-        <button id="btnEntrar">Entrar no Sistema</button>
+        <button class="btn-salvar" id="btnEntrar">Entrar no Sistema</button>
         <div id="loginMensagem"></div>
     </div>
 
-    <div id="painelSistema">
-        <button id="btnSair" class="btn-sair">Sair do Sistema</button>
-        <h1>Gestor de Programação Semanal</h1>
-        
-        <div class="evento-destaque">
-            <label for="dataReuniao" style="margin-top: 0;">Data da Reunião:</label>
-            <input type="date" id="dataReuniao" required>
-            
-            <label for="tipoEvento">Tipo de Programação:</label>
-            <select id="tipoEvento">
-                <option value="Normal">Reunião Normal</option>
-                <option value="Visita">Visita do Superintendente de Circuito</option>
-                <option value="Assembleia">Assembleia</option>
-                <option value="Congresso">Congresso</option>
-                <option value="Celebracao">Celebração da Morte de Cristo</option>
-            </select>
+    <div id="painelSidebar">
+        <div class="sidebar-header">
+            <h2>Gestor Semanal</h2>
         </div>
+        <button id="btnNovaProgramacao">+ Nova Programação</button>
+        <ul class="history-list" id="listaHistorico">
+            </ul>
+    </div>
 
-        <div id="formSections">
-            <div class="section">
-                <label for="presidente" style="margin-top: 0;">Presidente da Reunião:</label>
-                <input type="text" id="presidente" placeholder="Digite o nome do Presidente">
-                <small style="color: #666;">Os Comentários Iniciais e Finais serão preenchidos automaticamente com este nome.</small>
+    <div id="painelSistema">
+        <div class="container">
+            <div class="topo-acoes">
+                <button id="btnConfig" class="btn-config">⚙️ Configurações & Listas</button>
+                <button id="btnSair" class="btn-sair">Sair do Sistema</button>
             </div>
-
-            <div class="section">
-                <h3>Abertura</h3>
-                <div class="input-group">
-                    <input type="number" id="canticoInicial" placeholder="Nº do Cântico" min="1">
-                    <input type="text" id="oracaoInicial" placeholder="Oração Inicial">
+            
+            <h1 id="tituloAcao">Nova Programação</h1>
+            
+            <form id="formReuniao">
+                <div class="evento-destaque">
+                    <label for="dataReuniao" style="margin-top: 0;">Data da Reunião:</label>
+                    <input type="date" id="dataReuniao" required>
+                    
+                    <label for="tipoEvento">Tipo de Programação:</label>
+                    <select id="tipoEvento">
+                        <option value="Normal">Reunião Normal</option>
+                        <option value="Visita">Visita do Superintendente de Circuito</option>
+                        <option value="Assembleia">Assembleia</option>
+                        <option value="Congresso">Congresso</option>
+                        <option value="Celebracao">Celebração da Morte de Cristo</option>
+                    </select>
                 </div>
-                <label for="comentariosIniciais">Comentários Iniciais (1 min):</label>
-                <input type="text" id="comentariosIniciais" readonly style="background-color: #e9ecef;">
+
+                <div id="formSections">
+                    <div class="section">
+                        <label for="presidente" style="margin-top: 0;">Presidente da Reunião:</label>
+                        <select id="presidente" class="lista-presidentes"></select>
+                        <small style="color: #666;">Os Comentários Iniciais e Finais acompanharão este nome.</small>
+                    </div>
+
+                    <div class="section">
+                        <h3>Abertura</h3>
+                        <div class="input-group">
+                            <input type="number" id="canticoInicial" placeholder="Nº do Cântico" min="1">
+                            <input type="text" id="oracaoInicial" placeholder="Oração Inicial">
+                        </div>
+                        <label for="comentariosIniciais">Comentários Iniciais (1 min):</label>
+                        <input type="text" id="comentariosIniciais" readonly style="background-color: #e9ecef;">
+                    </div>
+
+                    <div class="section">
+                        <h3>Tesouros da Palavra de Deus</h3>
+                        <label for="parte1">Parte 1 - Discurso Principal (10 min):</label>
+                        <select id="parte1" class="aprovados-ensino"></select>
+                        
+                        <label for="parte2">Parte 2 - Joias Espirituais (10 min):</label>
+                        <select id="parte2" class="aprovados-ensino"></select>
+                        
+                        <label for="leituraBiblia">Parte 3 - Leitura da Bíblia (4 min):</label>
+                        <select id="leituraBiblia" class="lista-irmaos"></select>
+                    </div>
+
+                    <div class="section">
+                        <h3>
+                            Faça seu Melhor no Ministério
+                            <button type="button" class="btn-add" id="btnAddMinisterio">+ Adicionar Parte</button>
+                        </h3>
+                        <div id="containerMinisterio"></div>
+                    </div>
+
+                    <div class="section">
+                        <h3>
+                            Nossa Vida Cristã
+                            <button type="button" class="btn-add" id="btnAddVidaCrista">+ Adicionar Parte</button>
+                        </h3>
+                        <label for="canticoIntermediario">Cântico Intermediário (Número):</label>
+                        <input type="number" id="canticoIntermediario" placeholder="Nº do Cântico" min="1">
+
+                        <div id="containerVidaCrista"></div>
+
+                        <div id="blocoEstudo">
+                            <label>Estudo Bíblico de Congregação (30 min):</label>
+                            <div class="input-group">
+                                <select id="estudoDirigente" class="aprovados-ensino"></select>
+                                <select id="estudoLeitor" class="lista-leitores"></select>
+                            </div>
+                        </div>
+
+                        <div id="blocoVisita" class="hidden">
+                            <label style="color: #1a73e8;">Discurso do Superintendente (30 min):</label>
+                            <input type="text" id="discursoViajante" placeholder="Nome do Superintendente">
+                        </div>
+
+                        <label for="comentariosFinais">Comentários Finais (3 min):</label>
+                        <input type="text" id="comentariosFinais" readonly style="background-color: #e9ecef;">
+
+                        <label>Conclusão:</label>
+                        <div class="input-group">
+                            <input type="number" id="canticoFinal" placeholder="Nº do Cântico" min="1">
+                            <input type="text" id="oracaoFinal" placeholder="Oração Final">
+                        </div>
+                    </div>
+                </div> <button type="button" class="btn-salvar" id="btnSalvar">Salvar Programação</button>
+                <div id="mensagem"></div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modalConfig">
+        <div class="modal-content">
+            <span class="modal-close" id="fecharConfig">&times;</span>
+            <h2 style="color: #1a73e8; margin-top: 0;">Configurações e Listas</h2>
+            
+            <div class="section" style="padding: 15px; margin-bottom: 10px;">
+                <label for="configDiaReuniao" style="margin-top:0;">Dia da Reunião na Semana:</label>
+                <select id="configDiaReuniao">
+                    <option value="1">Segunda-feira</option>
+                    <option value="2">Terça-feira</option>
+                    <option value="3">Quarta-feira</option>
+                    <option value="4" selected>Quinta-feira</option>
+                    <option value="5">Sexta-feira</option>
+                    <option value="6">Sábado</option>
+                    <option value="0">Domingo</option>
+                </select>
+                <small style="color:#666;">A data sugerida no painel usará este dia como padrão.</small>
             </div>
 
-            <div class="section">
-                <h3>Tesouros da Palavra de Deus</h3>
-                <label for="parte1">Parte 1 - Discurso Principal (10 min):</label>
-                <select id="parte1" class="aprovados-ensino"></select>
-                
-                <label for="parte2">Parte 2 - Joias Espirituais (10 min):</label>
-                <select id="parte2" class="aprovados-ensino"></select>
-                
-                <label for="leituraBiblia">Parte 3 - Leitura da Bíblia (4 min):</label>
-                <select id="leituraBiblia" class="lista-irmaos"></select>
-            </div>
-
-            <div class="section">
-                <h3>
-                    Faça seu Melhor no Ministério
-                    <button type="button" class="btn-add" id="btnAddMinisterio">+ Adicionar Parte</button>
-                </h3>
-                <div id="containerMinisterio"></div>
-            </div>
-
-            <div class="section">
-                <h3>
-                    Nossa Vida Cristã
-                    <button type="button" class="btn-add" id="btnAddVidaCrista">+ Adicionar Parte</button>
-                </h3>
-                <label for="canticoIntermediario">Cântico Intermediário (Número):</label>
-                <input type="number" id="canticoIntermediario" placeholder="Nº do Cântico" min="1">
-
-                <div id="containerVidaCrista"></div>
-
-                <div id="blocoEstudo">
-                    <label>Estudo Bíblico de Congregação (30 min):</label>
+            <div class="config-grid">
+                <div class="lista-manager">
+                    <label style="margin-top:0;">Selecione a Lista para Gerenciar:</label>
+                    <select id="tipoListaEdicao">
+                        <option value="irmaos">Irmãos (Leitura e Geral)</option>
+                        <option value="irmas">Irmãs (Geral)</option>
+                        <option value="presidentes">Aprovados para Presidente</option>
+                        <option value="aprovados_ensino">Aprovados para Discursos/Ensino</option>
+                        <option value="leitores_estudo">Aprovados para Leitor do Estudo</option>
+                    </select>
+                    
+                    <select id="listaItensAtuais" multiple></select>
+                    <button type="button" class="btn-remove" id="btnRemoverNome" style="width: 100%; margin-bottom: 10px;">Remover Selecionado</button>
+                    
                     <div class="input-group">
-                        <select id="estudoDirigente" class="aprovados-ensino"></select>
-                        <select id="estudoLeitor" class="lista-todos">
-                            <option value="">Leitor...</option>
-                        </select>
+                        <input type="text" id="novoNome" placeholder="Adicionar novo nome...">
+                        <button type="button" class="btn-add" id="btnAdicionarNome" style="padding: 10px;">Adicionar</button>
                     </div>
                 </div>
-
-                <div id="blocoVisita" class="hidden">
-                    <label style="color: #1a73e8;">Discurso do Superintendente (30 min):</label>
-                    <input type="text" id="discursoViajante" placeholder="Nome do Superintendente">
-                </div>
-
-                <label for="comentariosFinais">Comentários Finais (3 min):</label>
-                <input type="text" id="comentariosFinais" readonly style="background-color: #e9ecef;">
-
-                <label>Conclusão:</label>
-                <div class="input-group">
-                    <input type="number" id="canticoFinal" placeholder="Nº do Cântico" min="1">
-                    <input type="text" id="oracaoFinal" placeholder="Oração Final">
-                </div>
             </div>
-        </div> <button id="btnSalvar">Salvar Programação no Banco de Dados</button>
-        <div id="mensagem"></div>
+            
+            <button type="button" class="btn-salvar" id="btnSalvarConfig">Salvar Configurações</button>
+            <div id="msgConfig" style="text-align: center; margin-top: 10px; font-weight: bold;"></div>
+        </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, getDocs, collection } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
         const firebaseConfig = {
@@ -155,33 +246,29 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
 
-        // --- DADOS INTELIGENTES ---
-        const irmaos = ["Antônio Duarte", "Celso Dornellys", "David Gabriel", "Edglê", "Edinho Freitas", "Elton Freitas", "Francisco Nunes", "Genival", "Glebston", "Leonel", "Nicácio", "Robert Cesar", "Rony Henrique", "Sávio Samuel"].sort();
-        const irmas = ["Ana Paula", "Anna Clara", "Bruna", "Cleonice", "Conceição", "Dona Lia", "Francinete", "Geralda", "Gerlândia", "Giudeth", "Helena", "Jaiara", "Joelma Sobreira", "Kleitiane", "Leticia Lima", "Letícia Angélica", "Libetânia", "Luci", "Maria Helena", "Mayane", "Remédios", "Sabrina", "Silmara", "Silvia", "Sonilde", "Suelene", "Terezinha", "Vitoria", "Vânia", "Zildilene", "Zuilha"].sort();
-        const todosOsPublicadores = [...irmaos, ...irmas].sort();
-        const aprovadosEnsino = ["Francisco Nunes", "Robert Cesar", "Glebston"].sort();
-        
+        // --- ESTADO GLOBAL (Carregado do BD) ---
+        let configGlobal = {
+            dia_reuniao: 4, // Quinta
+            presidentes: ["Francisco Nunes", "Glebston", "Robert César"].sort(),
+            aprovados_ensino: ["Francisco Nunes", "Glebston", "Robert César"].sort(),
+            leitores_estudo: ["Edinho Freitas", "Elton Freitas", "Glebston", "Nicácio", "Robert César", "Rony Henrique"].sort(),
+            irmaos: ["Antônio Duarte", "Celso Dornellys", "David Gabriel", "Edglê", "Edinho Freitas", "Elton Freitas", "Francisco Nunes", "Genival", "Glebston", "Leonel", "Nicácio", "Robert César", "Rony Henrique", "Sávio Samuel"].sort(),
+            irmas: ["Ana Paula", "Anna Clara", "Bruna", "Cleonice", "Conceição", "Dona Lia", "Francinete", "Geralda", "Gerlândia", "Giudeth", "Helena", "Jaiara", "Joelma Sobreira", "Kleitiane", "Leticia Lima", "Letícia Angélica", "Libetânia", "Luci", "Maria Helena", "Mayane", "Remédios", "Sabrina", "Silmara", "Silvia", "Sonilde", "Suelene", "Terezinha", "Vitoria", "Vânia", "Zildilene", "Zuilha"].sort()
+        };
         let dadosSemanaAnterior = null;
 
-        // --- FUNÇÕES DE INTERFACE ---
-        function gerarOptions(arrayDados, placeholder) {
-            return `<option value="">${placeholder}</option>` + arrayDados.map(n => `<option value="${n}">${n}</option>`).join('');
-        }
-
-        function popularSelectsFixos() {
-            document.querySelectorAll('.aprovados-ensino').forEach(sel => sel.innerHTML = gerarOptions(aprovadosEnsino, "Selecione o Orador..."));
-            document.querySelectorAll('.lista-irmaos').forEach(sel => sel.innerHTML = gerarOptions(irmaos, "Irmão Designado..."));
-            document.querySelectorAll('.lista-todos').forEach(sel => sel.innerHTML = gerarOptions(todosOsPublicadores, "Selecione..."));
-        }
-
         // --- LÓGICA DE AUTENTICAÇÃO ---
-        onAuthStateChanged(auth, (user) => {
+        onAuthStateChanged(auth, async (user) => {
             if (user) {
                 document.getElementById('telaLogin').style.display = 'none';
+                document.getElementById('painelSidebar').style.display = 'flex';
                 document.getElementById('painelSistema').style.display = 'block';
-                popularSelectsFixos();
+                await carregarConfiguracoes();
+                carregarHistoricoSidebar();
+                prepararNovoFormulario();
             } else {
                 document.getElementById('telaLogin').style.display = 'block';
+                document.getElementById('painelSidebar').style.display = 'none';
                 document.getElementById('painelSistema').style.display = 'none';
             }
         });
@@ -190,189 +277,349 @@
             const email = document.getElementById('emailLogin').value;
             const senha = document.getElementById('senhaLogin').value;
             document.getElementById('loginMensagem').innerText = "Acessando...";
-            try {
-                await signInWithEmailAndPassword(auth, email, senha);
-            } catch (error) {
-                document.getElementById('loginMensagem').innerText = "Erro: Verifique e-mail e senha.";
-                document.getElementById('loginMensagem').style.color = "red";
-            }
+            try { await signInWithEmailAndPassword(auth, email, senha); } 
+            catch (error) { document.getElementById('loginMensagem').innerText = "Erro: Verifique e-mail e senha."; document.getElementById('loginMensagem').style.color = "red"; }
         });
 
         document.getElementById('btnSair').addEventListener('click', () => signOut(auth));
 
-        // --- INTELIGÊNCIA DE EVENTOS E PRESIDENTE ---
-        document.getElementById('presidente').addEventListener('input', (e) => {
-            document.getElementById('comentariosIniciais').value = e.target.value;
-            document.getElementById('comentariosFinais').value = e.target.value;
+        // --- BANCO DE DADOS: CONFIGURAÇÕES GLOBAIS ---
+        async function carregarConfiguracoes() {
+            try {
+                const docSnap = await getDoc(doc(db, "configuracoes", "geral"));
+                if (docSnap.exists()) {
+                    configGlobal = docSnap.data();
+                } else {
+                    // Primeiro acesso: Salva as listas padrão
+                    await setDoc(doc(db, "configuracoes", "geral"), configGlobal);
+                }
+                atualizarDOMComListas();
+            } catch (err) { console.error("Erro ao carregar configurações", err); }
+        }
+
+        function atualizarDOMComListas() {
+            const todos = [...configGlobal.irmaos, ...configGlobal.irmas].sort();
+            
+            const gerarOpts = (arr, ph) => `<option value="">${ph}</option>` + arr.map(n => `<option value="${n}">${n}</option>`).join('');
+            
+            document.querySelectorAll('.lista-presidentes').forEach(s => s.innerHTML = gerarOpts(configGlobal.presidentes, "Selecione o Presidente..."));
+            document.querySelectorAll('.aprovados-ensino').forEach(s => s.innerHTML = gerarOpts(configGlobal.aprovados_ensino, "Selecione..."));
+            document.querySelectorAll('.lista-leitores').forEach(s => s.innerHTML = gerarOpts(configGlobal.leitores_estudo, "Leitor do Estudo..."));
+            document.querySelectorAll('.lista-irmaos').forEach(s => s.innerHTML = gerarOpts(configGlobal.irmaos, "Irmão Designado..."));
+            
+            // Atualiza as dinâmicas já em tela
+            document.querySelectorAll('.min-estudante').forEach(s => { const v = s.value; s.innerHTML = gerarOpts(todos, "Estudante"); s.value = v; });
+            document.querySelectorAll('.min-ajudante').forEach(s => { const v = s.value; s.innerHTML = gerarOpts(todos, "Ajudante (se houver)"); s.value = v; });
+            document.querySelectorAll('.vc-designado').forEach(s => { const v = s.value; s.innerHTML = gerarOpts(configGlobal.aprovados_ensino, "Designado"); s.value = v; });
+        }
+
+        // --- SIDEBAR E FLUXO DE LIMPEZA ---
+        async function carregarHistoricoSidebar() {
+            const lista = document.getElementById('listaHistorico');
+            lista.innerHTML = '<li class="history-item">Carregando...</li>';
+            try {
+                const querySnapshot = await getDocs(collection(db, "programacoes_semanais"));
+                let datas = [];
+                querySnapshot.forEach(doc => datas.push(doc.id));
+                datas.sort((a,b) => b.localeCompare(a)); // Mais recentes primeiro
+
+                lista.innerHTML = '';
+                datas.forEach(d => {
+                    const li = document.createElement('li');
+                    li.className = 'history-item';
+                    li.innerHTML = `${d.split('-').reverse().join('/')} <span>✏️</span>`;
+                    li.onclick = () => carregarProgramacaoEdicao(d, li);
+                    lista.appendChild(li);
+                });
+            } catch(e) { lista.innerHTML = '<li class="history-item">Erro ao carregar</li>'; }
+        }
+
+        document.getElementById('btnNovaProgramacao').addEventListener('click', () => {
+            document.querySelectorAll('.history-item').forEach(i => i.classList.remove('active'));
+            prepararNovoFormulario();
         });
 
+        function prepararNovoFormulario() {
+            document.getElementById('formReuniao').reset();
+            document.getElementById('tituloAcao').innerText = "Nova Programação";
+            document.getElementById('mensagem').innerText = "";
+            document.getElementById('formSections').classList.remove('hidden');
+            document.getElementById('blocoVisita').classList.add('hidden');
+            document.getElementById('blocoEstudo').classList.remove('hidden');
+            
+            // Reset partes dinâmicas
+            document.getElementById('containerMinisterio').innerHTML = '';
+            document.getElementById('containerVidaCrista').innerHTML = '';
+            criarParteMinisterio(); criarParteMinisterio(); criarParteMinisterio();
+            criarParteVidaCrista();
+            
+            sugerirProximaData();
+        }
+
+        function sugerirProximaData() {
+            let hoje = new Date();
+            let diaAlvo = parseInt(configGlobal.dia_reuniao);
+            let offset = (diaAlvo - hoje.getDay() + 7) % 7;
+            if (offset === 0) offset = 7; // Próxima semana
+            
+            let prox = new Date(hoje);
+            prox.setDate(hoje.getDate() + offset);
+            
+            document.getElementById('dataReuniao').value = prox.toISOString().split('T')[0];
+            buscarDadosSemanaAnterior(document.getElementById('dataReuniao').value);
+        }
+
+        // --- INTELIGÊNCIA DE EVENTOS E DATAS ---
         document.getElementById('tipoEvento').addEventListener('change', (e) => {
             const val = e.target.value;
             const formSections = document.getElementById('formSections');
-            const blocoVisita = document.getElementById('blocoVisita');
-            const blocoEstudo = document.getElementById('blocoEstudo');
+            const dataInput = document.getElementById('dataReuniao');
+
+            // Lógica da Terça-feira para Visita
+            if (val === "Visita" && dataInput.value) {
+                let d = new Date(dataInput.value + "T12:00:00");
+                let diff = 2 - d.getDay(); // 2 é Terça
+                d.setDate(d.getDate() + diff);
+                dataInput.value = d.toISOString().split('T')[0];
+            }
 
             if (["Assembleia", "Congresso", "Celebracao"].includes(val)) {
                 formSections.classList.add('hidden');
             } else {
                 formSections.classList.remove('hidden');
                 if (val === "Visita") {
-                    blocoEstudo.classList.add('hidden');
-                    blocoVisita.classList.remove('hidden');
+                    document.getElementById('blocoEstudo').classList.add('hidden');
+                    document.getElementById('blocoVisita').classList.remove('hidden');
                 } else {
-                    blocoEstudo.classList.remove('hidden');
-                    blocoVisita.classList.add('hidden');
+                    document.getElementById('blocoEstudo').classList.remove('hidden');
+                    document.getElementById('blocoVisita').classList.add('hidden');
                 }
             }
         });
 
-        // --- INTELIGÊNCIA: BUSCAR SEMANA ANTERIOR ---
-        document.getElementById('dataReuniao').addEventListener('change', async (e) => {
-            if(!e.target.value) return;
-            // Calcula 7 dias antes considerando o fuso horário local de forma simples
-            const d = new Date(e.target.value + "T12:00:00"); 
-            d.setDate(d.getDate() - 7);
-            const dataAnterior = d.toISOString().split('T')[0];
-
-            try {
-                const docRef = doc(db, "programacoes_semanais", dataAnterior);
-                const docSnap = await getDoc(docRef);
-                if (docSnap.exists()) {
-                    dadosSemanaAnterior = docSnap.data();
-                    console.log("Dados da semana anterior carregados para verificação de duplicidade.");
-                } else {
-                    dadosSemanaAnterior = null;
-                }
-            } catch(err) { console.error("Erro ao buscar semana anterior", err); }
+        document.getElementById('presidente').addEventListener('change', (e) => {
+            document.getElementById('comentariosIniciais').value = e.target.value;
+            document.getElementById('comentariosFinais').value = e.target.value;
         });
 
-        // --- LÓGICA DE PARTES DINÂMICAS E ALERTA DE REPETIÇÃO ---
-        function criarParteMinisterio() {
-            const container = document.getElementById('containerMinisterio');
-            const div = document.createElement('div');
-            div.className = 'dinamico-item input-group';
-            div.innerHTML = `
-                <select class="min-estudante">${gerarOptions(todosOsPublicadores, "Estudante")}</select>
-                <select class="min-ajudante">${gerarOptions(todosOsPublicadores, "Ajudante (se houver)")}</select>
-                <button type="button" class="btn-remove" onclick="this.parentElement.remove()">X</button>
-            `;
-            container.appendChild(div);
-        }
-
-        function criarParteVidaCrista() {
-            const container = document.getElementById('containerVidaCrista');
-            const div = document.createElement('div');
-            div.className = 'dinamico-item input-group';
-            div.innerHTML = `
-                <input type="text" class="vc-tempo" placeholder="Tempo (ex: 15 min)" style="width: 30%;">
-                <select class="vc-designado aprovados-ensino" style="width: 70%;">${gerarOptions(aprovadosEnsino, "Designado")}</select>
-                <button type="button" class="btn-remove" onclick="this.parentElement.remove()">X</button>
-            `;
-            container.appendChild(div);
-        }
-
-        document.getElementById('btnAddMinisterio').addEventListener('click', criarParteMinisterio);
-        document.getElementById('btnAddVidaCrista').addEventListener('click', criarParteVidaCrista);
-
-        // Verificação inteligente ao alterar nome no Ministério
+        // --- VALIDAÇÃO ANTI-DUPLICIDADE MESMA SEMANA (MINISTÉRIO) ---
         document.getElementById('containerMinisterio').addEventListener('change', (e) => {
-            if (!dadosSemanaAnterior || !dadosSemanaAnterior.ministerio || e.target.tagName !== 'SELECT') return;
-            const nome = e.target.value;
-            if(!nome) return;
+            if (e.target.tagName !== 'SELECT') return;
+            const selecionado = e.target.value;
+            if (!selecionado) return;
 
-            const isEstudante = e.target.classList.contains('min-estudante');
-            const isAjudante = e.target.classList.contains('min-ajudante');
-            
-            let funcaoRepetida = null;
-            dadosSemanaAnterior.ministerio.forEach(parte => {
-                if (isAjudante && parte.ajudante === nome) funcaoRepetida = "AJUDANTE";
-                if (isEstudante && parte.estudante === nome) funcaoRepetida = "ESTUDANTE";
+            // Busca todos os selects do ministério
+            const selects = document.querySelectorAll('#containerMinisterio select');
+            let contagem = 0;
+            selects.forEach(s => {
+                if(s.value === selecionado) contagem++;
             });
 
-            if (funcaoRepetida) {
-                alert(`⚠️ ATENÇÃO INTELIGENTE: \n\nO(a) publicador(a) ${nome} já foi designado(a) como ${funcaoRepetida} na semana passada.\n\nVocê tem certeza que deseja repetir a mesma função nesta semana?`);
+            if(contagem > 1) {
+                alert(`⚠️ TRAVA DE SEGURANÇA:\n\nO(a) publicador(a) "${selecionado}" já foi selecionado(a) para outra parte do Ministério nesta MESMA reunião.\n\nPor favor, escolha outro nome.`);
+                e.target.value = ""; // Desfaz a seleção
+            } else if (dadosSemanaAnterior && dadosSemanaAnterior.ministerio) {
+                // Mantém a verificação da semana passada
+                const isEstudante = e.target.classList.contains('min-estudante');
+                const isAjudante = e.target.classList.contains('min-ajudante');
+                let func = null;
+                dadosSemanaAnterior.ministerio.forEach(p => {
+                    if (isAjudante && p.ajudante === selecionado) func = "AJUDANTE";
+                    if (isEstudante && p.estudante === selecionado) func = "ESTUDANTE";
+                });
+                if (func) alert(`⚠️ AVISO: ${selecionado} já foi ${func} na semana passada.`);
             }
         });
 
-        window.onload = () => {
-            criarParteMinisterio(); criarParteMinisterio(); criarParteMinisterio();
-            criarParteVidaCrista();
-        };
+        async function buscarDadosSemanaAnterior(dataAtualStr) {
+            if(!dataAtualStr) return;
+            const d = new Date(dataAtualStr + "T12:00:00"); 
+            d.setDate(d.getDate() - 7);
+            try {
+                const docSnap = await getDoc(doc(db, "programacoes_semanais", d.toISOString().split('T')[0]));
+                dadosSemanaAnterior = docSnap.exists() ? docSnap.data() : null;
+            } catch(err) { dadosSemanaAnterior = null; }
+        }
+        document.getElementById('dataReuniao').addEventListener('change', (e) => buscarDadosSemanaAnterior(e.target.value));
 
-        // --- SALVAMENTO FINAL NO FIREBASE ---
+        // --- PARTES DINÂMICAS ---
+        function criarParteMinisterio(est = "", aju = "") {
+            const todos = [...configGlobal.irmaos, ...configGlobal.irmas].sort();
+            const gerarOpts = (arr, ph, sel) => `<option value="">${ph}</option>` + arr.map(n => `<option value="${n}" ${n===sel?'selected':''}>${n}</option>`).join('');
+            
+            const div = document.createElement('div');
+            div.className = 'dinamico-item input-group';
+            div.innerHTML = `
+                <select class="min-estudante">${gerarOpts(todos, "Estudante", est)}</select>
+                <select class="min-ajudante">${gerarOpts(todos, "Ajudante", aju)}</select>
+                <button type="button" class="btn-remove" onclick="this.parentElement.remove()">X</button>
+            `;
+            document.getElementById('containerMinisterio').appendChild(div);
+        }
+
+        function criarParteVidaCrista(tmp = "", des = "") {
+            const gerarOpts = (arr, ph, sel) => `<option value="">${ph}</option>` + arr.map(n => `<option value="${n}" ${n===sel?'selected':''}>${n}</option>`).join('');
+            
+            const div = document.createElement('div');
+            div.className = 'dinamico-item input-group';
+            div.innerHTML = `
+                <input type="text" class="vc-tempo" placeholder="Tempo (ex: 15 min)" style="width: 30%;" value="${tmp}">
+                <select class="vc-designado aprovados-ensino" style="width: 70%;">${gerarOpts(configGlobal.aprovados_ensino, "Designado", des)}</select>
+                <button type="button" class="btn-remove" onclick="this.parentElement.remove()">X</button>
+            `;
+            document.getElementById('containerVidaCrista').appendChild(div);
+        }
+        document.getElementById('btnAddMinisterio').addEventListener('click', () => criarParteMinisterio());
+        document.getElementById('btnAddVidaCrista').addEventListener('click', () => criarParteVidaCrista());
+
+        // --- EDIÇÃO (CARREGAR DO BANCO) ---
+        async function carregarProgramacaoEdicao(dataId, liElement) {
+            document.querySelectorAll('.history-item').forEach(i => i.classList.remove('active'));
+            liElement.classList.add('active');
+            document.getElementById('mensagem').innerText = "Carregando dados...";
+            
+            try {
+                const docSnap = await getDoc(doc(db, "programacoes_semanais", dataId));
+                if(docSnap.exists()) {
+                    const d = docSnap.data();
+                    document.getElementById('tituloAcao').innerText = `Editando: ${dataId.split('-').reverse().join('/')}`;
+                    document.getElementById('dataReuniao').value = d.data;
+                    document.getElementById('tipoEvento').value = d.tipo_evento || "Normal";
+                    document.getElementById('tipoEvento').dispatchEvent(new Event('change')); // Força UI atualizar
+                    
+                    if (!["Assembleia", "Congresso", "Celebracao"].includes(d.tipo_evento)) {
+                        document.getElementById('presidente').value = d.presidente || "";
+                        document.getElementById('presidente').dispatchEvent(new Event('change'));
+                        
+                        document.getElementById('canticoInicial').value = d.abertura?.cantico || "";
+                        document.getElementById('oracaoInicial').value = d.abertura?.oracao || "";
+                        document.getElementById('parte1').value = d.tesouros?.parte_1 || "";
+                        document.getElementById('parte2').value = d.tesouros?.parte_2 || "";
+                        document.getElementById('leituraBiblia').value = d.tesouros?.leitura || "";
+                        
+                        document.getElementById('containerMinisterio').innerHTML = '';
+                        if(d.ministerio) d.ministerio.forEach(p => criarParteMinisterio(p.estudante, p.ajudante));
+                        
+                        document.getElementById('canticoIntermediario').value = d.vida_crista?.cantico_intermediario || "";
+                        document.getElementById('containerVidaCrista').innerHTML = '';
+                        if(d.vida_crista?.partes) d.vida_crista.partes.forEach(p => criarParteVidaCrista(p.tempo, p.designado));
+                        
+                        document.getElementById('estudoDirigente').value = d.vida_crista?.estudo_dirigente || "";
+                        document.getElementById('estudoLeitor').value = d.vida_crista?.estudo_leitor || "";
+                        document.getElementById('discursoViajante').value = d.vida_crista?.discurso_viajante || "";
+                        
+                        document.getElementById('canticoFinal').value = d.vida_crista?.cantico_final || "";
+                        document.getElementById('oracaoFinal').value = d.vida_crista?.oracao_final || "";
+                    }
+                    document.getElementById('mensagem').innerText = "";
+                }
+            } catch(e) { document.getElementById('mensagem').innerText = "Erro ao carregar edição."; }
+        }
+
+        // --- SALVAMENTO E LIMPEZA ---
         document.getElementById('btnSalvar').addEventListener('click', async () => {
             const dataReuniao = document.getElementById('dataReuniao').value;
             const tipoEvento = document.getElementById('tipoEvento').value;
             const msgDiv = document.getElementById('mensagem');
 
-            if (!dataReuniao) {
-                msgDiv.style.color = "red"; msgDiv.innerText = "ATENÇÃO: Selecione a data da reunião.";
-                window.scrollTo({ top: 0, behavior: 'smooth' }); return;
+            if (!dataReuniao) { msgDiv.style.color = "red"; msgDiv.innerText = "ATENÇÃO: Selecione a data."; return; }
+            msgDiv.style.color = "blue"; msgDiv.innerText = "Salvando no banco de dados...";
+
+            let programacaoData = { data: dataReuniao, tipo_evento: tipoEvento };
+
+            if (!["Assembleia", "Congresso", "Celebracao"].includes(tipoEvento)) {
+                const min = [], vc = [];
+                document.querySelectorAll('#containerMinisterio .dinamico-item').forEach(i => min.push({estudante: i.querySelector('.min-estudante').value, ajudante: i.querySelector('.min-ajudante').value}));
+                document.querySelectorAll('#containerVidaCrista .dinamico-item').forEach(i => vc.push({tempo: i.querySelector('.vc-tempo').value, designado: i.querySelector('.vc-designado').value}));
+                
+                programacaoData = { ...programacaoData,
+                    presidente: document.getElementById('presidente').value,
+                    abertura: { cantico: document.getElementById('canticoInicial').value, oracao: document.getElementById('oracaoInicial').value, comentarios: document.getElementById('comentariosIniciais').value },
+                    tesouros: { parte_1: document.getElementById('parte1').value, parte_2: document.getElementById('parte2').value, leitura: document.getElementById('leituraBiblia').value },
+                    ministerio: min,
+                    vida_crista: {
+                        cantico_intermediario: document.getElementById('canticoIntermediario').value, partes: vc,
+                        estudo_dirigente: document.getElementById('estudoDirigente').value, estudo_leitor: document.getElementById('estudoLeitor').value,
+                        discurso_viajante: document.getElementById('discursoViajante').value, comentarios_finais: document.getElementById('comentariosFinais').value,
+                        cantico_final: document.getElementById('canticoFinal').value, oracao_final: document.getElementById('oracaoFinal').value
+                    }
+                };
             }
-
-            msgDiv.style.color = "blue"; msgDiv.innerText = "Processando e enviando...";
-
-            // Se for evento especial, salva uma versão enxuta
-            if (["Assembleia", "Congresso", "Celebracao"].includes(tipoEvento)) {
-                try {
-                    await setDoc(doc(db, "programacoes_semanais", dataReuniao), { data: dataReuniao, tipo_evento: tipoEvento });
-                    msgDiv.style.color = "green"; msgDiv.innerText = `Evento (${tipoEvento}) registrado com sucesso!`;
-                } catch(e) { msgDiv.style.color = "red"; msgDiv.innerText = "Erro ao salvar."; }
-                return;
-            }
-
-            const partesMinisterio = [];
-            document.querySelectorAll('#containerMinisterio .dinamico-item').forEach(item => {
-                partesMinisterio.push({
-                    estudante: item.querySelector('.min-estudante').value,
-                    ajudante: item.querySelector('.min-ajudante').value
-                });
-            });
-
-            const partesVidaCrista = [];
-            document.querySelectorAll('#containerVidaCrista .dinamico-item').forEach(item => {
-                partesVidaCrista.push({
-                    tempo: item.querySelector('.vc-tempo').value,
-                    designado: item.querySelector('.vc-designado').value
-                });
-            });
-
-            const programacaoData = {
-                data: dataReuniao,
-                tipo_evento: tipoEvento,
-                presidente: document.getElementById('presidente').value,
-                abertura: {
-                    cantico: document.getElementById('canticoInicial').value,
-                    oracao: document.getElementById('oracaoInicial').value,
-                    comentarios: document.getElementById('comentariosIniciais').value
-                },
-                tesouros: {
-                    parte_1: document.getElementById('parte1').value,
-                    parte_2: document.getElementById('parte2').value,
-                    leitura: document.getElementById('leituraBiblia').value
-                },
-                ministerio: partesMinisterio,
-                vida_crista: {
-                    cantico_intermediario: document.getElementById('canticoIntermediario').value,
-                    partes: partesVidaCrista,
-                    estudo_dirigente: document.getElementById('estudoDirigente').value,
-                    estudo_leitor: document.getElementById('estudoLeitor').value,
-                    discurso_viajante: document.getElementById('discursoViajante').value,
-                    comentarios_finais: document.getElementById('comentariosFinais').value,
-                    cantico_final: document.getElementById('canticoFinal').value,
-                    oracao_final: document.getElementById('oracaoFinal').value
-                }
-            };
 
             try {
                 await setDoc(doc(db, "programacoes_semanais", dataReuniao), programacaoData);
-                msgDiv.style.color = "green";
-                msgDiv.innerText = "Programação salva com sucesso e regras validadas!";
-            } catch (error) {
-                console.error(error);
-                msgDiv.style.color = "red";
-                msgDiv.innerText = "Erro ao salvar. Verifique sua conexão.";
-            }
+                msgDiv.style.color = "green"; msgDiv.innerText = "Salvo com sucesso!";
+                
+                // Recarrega o sidebar e limpa o form
+                carregarHistoricoSidebar();
+                setTimeout(() => { prepararNovoFormulario(); }, 1500);
+
+            } catch (error) { msgDiv.style.color = "red"; msgDiv.innerText = "Erro ao salvar."; }
+        });
+
+        // --- MODAL DE CONFIGURAÇÕES (GERENCIADOR) ---
+        const modalConfig = document.getElementById('modalConfig');
+        const selectListaAtiva = document.getElementById('tipoListaEdicao');
+        const boxItens = document.getElementById('listaItensAtuais');
+
+        document.getElementById('btnConfig').addEventListener('click', () => {
+            document.getElementById('configDiaReuniao').value = configGlobal.dia_reuniao;
+            renderizarListaConfig();
+            modalConfig.style.display = 'flex';
+        });
+        
+        document.getElementById('fecharConfig').addEventListener('click', () => modalConfig.style.display = 'none');
+
+        selectListaAtiva.addEventListener('change', renderizarListaConfig);
+
+        function renderizarListaConfig() {
+            const tipo = selectListaAtiva.value;
+            boxItens.innerHTML = '';
+            const arrayAtual = configGlobal[tipo] || [];
+            arrayAtual.forEach(nome => {
+                const opt = document.createElement('option');
+                opt.value = nome; opt.innerText = nome;
+                boxItens.appendChild(opt);
+            });
+        }
+
+        document.getElementById('btnAdicionarNome').addEventListener('click', () => {
+            const input = document.getElementById('novoNome');
+            const tipo = selectListaAtiva.value;
+            const nomeStr = input.value.trim();
+            if(!nomeStr) return;
+            
+            // Permite adicionar vários separados por vírgula
+            const nomes = nomeStr.split(',').map(n => n.trim()).filter(n => n);
+            
+            nomes.forEach(n => {
+                if(!configGlobal[tipo].includes(n)) configGlobal[tipo].push(n);
+            });
+            
+            configGlobal[tipo].sort();
+            input.value = '';
+            renderizarListaConfig();
+        });
+
+        document.getElementById('btnRemoverNome').addEventListener('click', () => {
+            const tipo = selectListaAtiva.value;
+            const selecionados = Array.from(boxItens.selectedOptions).map(o => o.value);
+            configGlobal[tipo] = configGlobal[tipo].filter(n => !selecionados.includes(n));
+            renderizarListaConfig();
+        });
+
+        document.getElementById('btnSalvarConfig').addEventListener('click', async () => {
+            const msg = document.getElementById('msgConfig');
+            msg.style.color = "blue"; msg.innerText = "Salvando configurações...";
+            
+            configGlobal.dia_reuniao = parseInt(document.getElementById('configDiaReuniao').value);
+            
+            try {
+                await setDoc(doc(db, "configuracoes", "geral"), configGlobal);
+                atualizarDOMComListas();
+                msg.style.color = "green"; msg.innerText = "Configurações salvas!";
+                setTimeout(() => { modalConfig.style.display = 'none'; msg.innerText=""; }, 1500);
+            } catch(e) { msg.style.color = "red"; msg.innerText = "Erro ao salvar."; }
         });
     </script>
 </body>
