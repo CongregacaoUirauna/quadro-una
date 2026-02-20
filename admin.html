@@ -64,6 +64,15 @@
         .config-grid { display: grid; grid-template-columns: 1fr; gap: 15px; margin-top: 15px;}
         .lista-manager { border: 1px solid #ddd; padding: 10px; border-radius: 5px; background: #fafafa;}
         .lista-manager select { height: 100px; margin-bottom: 10px;}
+        
+        /* Novos estilos para Exclusão e WhatsApp */
+        .btn-delete-history { background: none; border: none; cursor: pointer; color: #ea4335; font-size: 14px; padding: 0 5px;}
+        .btn-delete-history:hover { color: #c5221f; transform: scale(1.2);}
+        .history-item-actions { display: flex; align-items: center; gap: 5px; }
+        .btn-whatsapp { background-color: #25D366; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 5px;}
+        .btn-whatsapp:hover { background-color: #128C7E; }
+        .designacao-card { border: 1px solid #ddd; padding: 15px; margin-bottom: 10px; border-radius: 8px; background-color: #f9f9f9;}
+        
     </style>
 </head>
 <body>
@@ -89,8 +98,11 @@
     <div id="painelSistema">
         <div class="container">
             <div class="topo-acoes">
-                <button id="btnConfig" class="btn-config">⚙️ Configurações & Listas</button>
-                <button id="btnSair" class="btn-sair">Sair do Sistema</button>
+                <div style="display: flex; gap: 10px;">
+                    <button type="button" id="btnConfig" class="btn-config">⚙️ Configurações & Listas</button>
+                    <button type="button" id="btnGerarDesignacoes" class="btn-config" style="background-color: #25D366; color: white;">📱 Enviar Designações</button>
+                </div>
+                <button type="button" id="btnSair" class="btn-sair">Sair do Sistema</button>
             </div>
             
             <h1 id="tituloAcao">Nova Programação</h1>
@@ -232,7 +244,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, doc, setDoc, getDoc, getDocs, collection } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, getDocs, collection, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
         const firebaseConfig = {
@@ -314,7 +326,7 @@
         }
 
         // --- SIDEBAR E FLUXO DE LIMPEZA ---
-        async function carregarHistoricoSidebar() {
+       async function carregarHistoricoSidebar() {
             const lista = document.getElementById('listaHistorico');
             lista.innerHTML = '<li class="history-item">Carregando...</li>';
             try {
@@ -327,8 +339,40 @@
                 datas.forEach(d => {
                     const li = document.createElement('li');
                     li.className = 'history-item';
-                    li.innerHTML = `${d.split('-').reverse().join('/')} <span>✏️</span>`;
-                    li.onclick = () => carregarProgramacaoEdicao(d, li);
+                    
+                    const spanData = document.createElement('span');
+                    spanData.innerText = d.split('-').reverse().join('/');
+                    spanData.style.flex = "1";
+                    spanData.onclick = () => carregarProgramacaoEdicao(d, li);
+
+                    const divAcoes = document.createElement('div');
+                    divAcoes.className = 'history-item-actions';
+                    
+                    const btnEditar = document.createElement('span');
+                    btnEditar.innerText = '✏️';
+                    btnEditar.style.cursor = 'pointer';
+                    btnEditar.onclick = () => carregarProgramacaoEdicao(d, li);
+
+                    const btnExcluir = document.createElement('button');
+                    btnExcluir.innerHTML = '🗑️';
+                    btnExcluir.className = 'btn-delete-history';
+                    btnExcluir.title = "Excluir Reunião";
+                    btnExcluir.onclick = async (e) => {
+                        e.stopPropagation(); // Evita que clique na linha inteira
+                        if(confirm(`⚠️ ATENÇÃO: Tem certeza que deseja EXCLUIR permanentemente a reunião do dia ${spanData.innerText}? Essa ação apagará a programação do quadro.`)) {
+                            try {
+                                await deleteDoc(doc(db, "programacoes_semanais", d));
+                                carregarHistoricoSidebar(); // Recarrega a barra lateral
+                                if(document.getElementById('dataReuniao').value === d) prepararNovoFormulario(); // Limpa a tela se estiver editando a excluída
+                            } catch(err) { alert("Erro ao excluir do banco de dados."); }
+                        }
+                    };
+
+                    divAcoes.appendChild(btnEditar);
+                    divAcoes.appendChild(btnExcluir);
+                    
+                    li.appendChild(spanData);
+                    li.appendChild(divAcoes);
                     lista.appendChild(li);
                 });
             } catch(e) { lista.innerHTML = '<li class="history-item">Erro ao carregar</li>'; }
@@ -608,6 +652,66 @@
                 msg.style.color = "green"; msg.innerText = "Configurações salvas!";
                 setTimeout(() => { modalConfig.style.display = 'none'; msg.innerText=""; }, 1500);
             } catch(e) { msg.style.color = "red"; msg.innerText = "Erro ao salvar."; }
+        });
+
+        // --- LÓGICA DE DESIGNAÇÕES (WHATSAPP) ---
+        const modalDesignacoes = document.getElementById('modalDesignacoes');
+        
+        document.getElementById('btnGerarDesignacoes').addEventListener('click', () => {
+            const dataReuniao = document.getElementById('dataReuniao').value;
+            const container = document.getElementById('listaDesignacoesProntas');
+            container.innerHTML = '';
+
+            if (!dataReuniao) {
+                alert("Por favor, selecione uma data da reunião no formulário.");
+                return;
+            }
+
+            const dataFormatada = dataReuniao.split('-').reverse().join('/');
+            let designacoes = [];
+
+            // Puxa a Leitura da Bíblia (Parte 3)
+            const leitura = document.getElementById('leituraBiblia').value;
+            if (leitura) {
+                designacoes.push({ nome: leitura, ajudante: "", parte: "Parte 3 - Leitura da Bíblia" });
+            }
+
+            // Puxa o Ministério (Partes 4 em diante)
+            document.querySelectorAll('#containerMinisterio .dinamico-item').forEach((item, index) => {
+                const estudante = item.querySelector('.min-estudante').value;
+                const ajudante = item.querySelector('.min-ajudante').value;
+                if (estudante) {
+                    designacoes.push({ nome: estudante, ajudante: ajudante, parte: `Parte ${index + 4}` });
+                }
+            });
+
+            if (designacoes.length === 0) {
+                container.innerHTML = '<p style="text-align:center; color:#666;">Nenhuma designação de Leitura ou Ministério preenchida ainda.</p>';
+            } else {
+                designacoes.forEach(desig => {
+                    const card = document.createElement('div');
+                    card.className = 'designacao-card';
+                    
+                    const textoMsg = `*DESIGNAÇÃO PARA A REUNIÃO NOSSA VIDA E MINISTÉRIO CRISTÃO*\n\n👤 *Nome:* ${desig.nome}\n👥 *Ajudante:* ${desig.ajudante || '---'}\n📅 *Data:* ${dataFormatada}\n📝 *Número da parte:* ${desig.parte}\n🏢 *Local:* Salão principal\n\n_Observação para o estudante: A lição e a fonte de matéria para a sua designação estão na Apostila da Reunião Vida e Ministério. Veja as instruções para a parte que estão nas Instruções para a Reunião Nossa Vida e Ministério Cristão (S-89)._`;
+                    
+                    const urlWhatsApp = `https://api.whatsapp.com/send?text=${encodeURIComponent(textoMsg)}`;
+
+                    card.innerHTML = `
+                        <strong style="display:block; font-size: 16px; color: #333;">${desig.parte}</strong>
+                        <span style="display:block; font-size: 14px; margin-bottom: 10px;">Estudante: <b>${desig.nome}</b> ${desig.ajudante ? `| Aj: ${desig.ajudante}` : ''}</span>
+                        <a href="${urlWhatsApp}" target="_blank" style="text-decoration: none;">
+                            <button type="button" class="btn-whatsapp">Enviar Designação Oficial</button>
+                        </a>
+                    `;
+                    container.appendChild(card);
+                });
+            }
+
+            modalDesignacoes.style.display = 'flex';
+        });
+
+        document.getElementById('fecharDesignacoes').addEventListener('click', () => {
+            modalDesignacoes.style.display = 'none';
         });
     </script>
 </body>
