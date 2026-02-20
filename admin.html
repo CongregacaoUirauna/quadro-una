@@ -5,32 +5,39 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Painel Administrativo - Escala da Congregação</title>
     <style>
-        body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
-        .section { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 5px; }
-        label { display: block; margin-top: 10px; font-weight: bold; font-size: 14px;}
-        input { width: 100%; padding: 8px; margin-top: 5px; box-sizing: border-box; }
-        button { background-color: #4CAF50; color: white; padding: 10px 15px; border: none; cursor: pointer; font-size: 16px; margin-top: 15px; }
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; background-color: #f9f9f9;}
+        .section { background-color: white; border: 1px solid #ddd; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);}
+        h1 { color: #333; text-align: center; }
+        h3 { color: #555; border-bottom: 2px solid #eee; padding-bottom: 5px; margin-top: 0; }
+        label { display: block; margin-top: 15px; font-weight: bold; font-size: 14px; color: #444;}
+        input { width: 100%; padding: 10px; margin-top: 5px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+        .input-group { display: flex; gap: 10px; }
+        .input-group input { width: 50%; }
+        button { background-color: #4CAF50; color: white; padding: 12px 20px; border: none; cursor: pointer; font-size: 16px; margin-top: 15px; border-radius: 4px; width: 100%; font-weight: bold;}
         button:hover { background-color: #45a049; }
-        #mensagem, #loginMensagem { margin-top: 15px; font-weight: bold; }
+        .btn-sair { background-color: #f44336; width: auto; float: right; margin-top: 0; padding: 8px 15px;}
+        .btn-sair:hover { background-color: #d32f2f; }
+        #mensagem, #loginMensagem { margin-top: 15px; font-weight: bold; text-align: center; }
         
         /* Controle de visibilidade */
         #painelSistema { display: none; } 
-        #telaLogin { max-width: 400px; margin: 50px auto; text-align: center; }
+        #telaLogin { max-width: 400px; margin: 80px auto; text-align: center; background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);}
     </style>
 </head>
 <body>
 
-    <div id="telaLogin" class="section">
-        <h2>Acesso Restrito</h2>
+    <div id="telaLogin">
+        <h2 style="color: #333; margin-top: 0;">Acesso Restrito</h2>
+        <p style="color: #666; font-size: 14px;">Insira suas credenciais para gerenciar a escala.</p>
         <input type="email" id="emailLogin" placeholder="Seu E-mail" required>
         <input type="password" id="senhaLogin" placeholder="Sua Senha" required>
-        <button id="btnEntrar">Entrar</button>
+        <button id="btnEntrar">Entrar no Sistema</button>
         <div id="loginMensagem"></div>
     </div>
 
     <div id="painelSistema">
+        <button id="btnSair" class="btn-sair">Sair do Sistema</button>
         <h1>Painel de Designações Semanais</h1>
-        <button id="btnSair" style="background-color: #f44336; margin-bottom: 20px;">Sair do Sistema</button>
         
         <div class="section">
             <label for="dataReuniao">Data da Reunião (Identificador Único):</label>
@@ -42,25 +49,70 @@
 
         <div class="section">
             <h3>Abertura</h3>
-            <label for="canticoInicial">Cântico Inicial (Número):</label>
-            <input type="number" id="canticoInicial">
-            <label for="oracaoInicial">Oração Inicial:</label>
-            <input type="text" id="oracaoInicial">
+            <div class="input-group">
+                <input type="number" id="canticoInicial" placeholder="Nº do Cântico">
+                <input type="text" id="oracaoInicial" placeholder="Oração Inicial">
+            </div>
             <label for="comentariosIniciais">Comentários Iniciais (1 min):</label>
-            <input type="text" id="comentariosIniciais">
+            <input type="text" id="comentariosIniciais" placeholder="Ex: Francisco Nunes">
         </div>
 
         <div class="section">
             <h3>Tesouros da Palavra de Deus</h3>
             <label for="parte1">Parte 1 - Discurso Principal (10 min):</label>
-            <input type="text" id="parte1">
+            <input type="text" id="parte1" placeholder="Ex: Glebston Lima">
             <label for="parte2">Parte 2 - Joias Espirituais (10 min):</label>
-            <input type="text" id="parte2">
+            <input type="text" id="parte2" placeholder="Ex: Glebston Lima">
             <label for="leituraBiblia">Parte 3 - Leitura da Bíblia (4 min):</label>
-            <input type="text" id="leituraBiblia">
+            <input type="text" id="leituraBiblia" placeholder="Ex: Rony">
         </div>
 
-        <button id="btnSalvar">Salvar Programação</button>
+        <div class="section">
+            <h3>Faça seu Melhor no Ministério</h3>
+            <label>Parte 4:</label>
+            <div class="input-group">
+                <input type="text" id="parte4Estudante" placeholder="Estudante (Ex: A. Paula)">
+                <input type="text" id="parte4Ajudante" placeholder="Ajudante (Ex: A. Clara)">
+            </div>
+
+            <label>Parte 5:</label>
+            <div class="input-group">
+                <input type="text" id="parte5Estudante" placeholder="Estudante (Ex: Leticia L.)">
+                <input type="text" id="parte5Ajudante" placeholder="Ajudante (Ex: D. Lia)">
+            </div>
+
+            <label>Parte 6:</label>
+            <div class="input-group">
+                <input type="text" id="parte6Estudante" placeholder="Estudante (Ex: Sabrina)">
+                <input type="text" id="parte6Ajudante" placeholder="Ajudante (Ex: Geralda)">
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>Nossa Vida Cristã</h3>
+            <label for="canticoIntermediario">Cântico Intermediário (Número):</label>
+            <input type="number" id="canticoIntermediario" placeholder="Ex: 118">
+
+            <label for="parte7">Parte 7 (15 min):</label>
+            <input type="text" id="parte7" placeholder="Ex: Francisco Nunes">
+
+            <label>Estudo Bíblico de Congregação (30 min):</label>
+            <div class="input-group">
+                <input type="text" id="estudoDirigente" placeholder="Dirigente (Ex: Robert C.)">
+                <input type="text" id="estudoLeitor" placeholder="Leitor (Ex: Rony)">
+            </div>
+
+            <label for="comentariosFinais">Comentários Finais (3 min):</label>
+            <input type="text" id="comentariosFinais" placeholder="Ex: Francisco Nunes">
+
+            <label>Conclusão:</label>
+            <div class="input-group">
+                <input type="number" id="canticoFinal" placeholder="Nº do Cântico">
+                <input type="text" id="oracaoFinal" placeholder="Oração Final">
+            </div>
+        </div>
+
+        <button id="btnSalvar">Salvar Programação no Banco de Dados</button>
         <div id="mensagem"></div>
     </div>
 
@@ -69,7 +121,7 @@
         import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-        // Sua configuração do Firebase
+        // Configuração do Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyC3U8tyPk5IB_y51-3d7_6V-16qtoqzeI8",
             authDomain: "quadro-congregacao.firebaseapp.com",
@@ -83,19 +135,16 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
 
-        // Elementos da Interface
         const telaLogin = document.getElementById('telaLogin');
         const painelSistema = document.getElementById('painelSistema');
         const loginMensagem = document.getElementById('loginMensagem');
 
-        // LÓGICA DE AUTENTICAÇÃO
+        // Lógica de Autenticação
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                // Usuário está logado
                 telaLogin.style.display = 'none';
                 painelSistema.style.display = 'block';
             } else {
-                // Usuário não está logado
                 telaLogin.style.display = 'block';
                 painelSistema.style.display = 'none';
             }
@@ -105,13 +154,14 @@
             const email = document.getElementById('emailLogin').value;
             const senha = document.getElementById('senhaLogin').value;
             loginMensagem.innerText = "Verificando...";
+            loginMensagem.style.color = "#333";
             
             try {
                 await signInWithEmailAndPassword(auth, email, senha);
                 loginMensagem.innerText = ""; 
             } catch (error) {
                 loginMensagem.style.color = "red";
-                loginMensagem.innerText = "Erro ao fazer login. Verifique e-mail e senha.";
+                loginMensagem.innerText = "Erro: Verifique e-mail e senha.";
                 console.error(error);
             }
         });
@@ -120,19 +170,21 @@
             signOut(auth);
         });
 
-        // LÓGICA DE SALVAMENTO NO BANCO DE DADOS
+        // Lógica de Salvamento
         document.getElementById('btnSalvar').addEventListener('click', async () => {
             const dataReuniao = document.getElementById('dataReuniao').value;
             const msgDiv = document.getElementById('mensagem');
 
             if (!dataReuniao) {
                 msgDiv.style.color = "red";
-                msgDiv.innerText = "Por favor, selecione a data da reunião.";
+                msgDiv.innerText = "ATENÇÃO: Por favor, selecione a data da reunião.";
+                // Rolar para o topo para usuário ver o aviso
+                window.scrollTo({ top: 0, behavior: 'smooth' }); 
                 return;
             }
 
             msgDiv.style.color = "blue";
-            msgDiv.innerText = "Salvando...";
+            msgDiv.innerText = "Enviando para o banco de dados...";
 
             const programacaoData = {
                 data: dataReuniao,
@@ -146,17 +198,34 @@
                     parte_1: document.getElementById('parte1').value,
                     parte_2: document.getElementById('parte2').value,
                     leitura: document.getElementById('leituraBiblia').value
+                },
+                ministerio: {
+                    parte_4_estudante: document.getElementById('parte4Estudante').value,
+                    parte_4_ajudante: document.getElementById('parte4Ajudante').value,
+                    parte_5_estudante: document.getElementById('parte5Estudante').value,
+                    parte_5_ajudante: document.getElementById('parte5Ajudante').value,
+                    parte_6_estudante: document.getElementById('parte6Estudante').value,
+                    parte_6_ajudante: document.getElementById('parte6Ajudante').value
+                },
+                vida_crista: {
+                    cantico_intermediario: document.getElementById('canticoIntermediario').value,
+                    parte_7: document.getElementById('parte7').value,
+                    estudo_dirigente: document.getElementById('estudoDirigente').value,
+                    estudo_leitor: document.getElementById('estudoLeitor').value,
+                    comentarios_finais: document.getElementById('comentariosFinais').value,
+                    cantico_final: document.getElementById('canticoFinal').value,
+                    oracao_final: document.getElementById('oracaoFinal').value
                 }
             };
 
             try {
                 await setDoc(doc(db, "programacoes_semanais", dataReuniao), programacaoData);
                 msgDiv.style.color = "green";
-                msgDiv.innerText = "Programação salva com sucesso!";
+                msgDiv.innerText = "Programação salva com sucesso! O quadro de anúncios já está atualizado.";
             } catch (error) {
                 console.error("Erro ao salvar: ", error);
                 msgDiv.style.color = "red";
-                msgDiv.innerText = "Erro ao salvar. Verifique o console.";
+                msgDiv.innerText = "Erro ao salvar. Verifique sua conexão.";
             }
         });
     </script>
