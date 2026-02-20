@@ -365,8 +365,19 @@
         async function carregarConfiguracoes() {
             try {
                 const docSnap = await getDoc(doc(db, "configuracoes", "geral"));
-                if (docSnap.exists()) configGlobal = docSnap.data();
-                else await setDoc(doc(db, "configuracoes", "geral"), configGlobal);
+                if (docSnap.exists()) {
+                    // Mescla os dados do banco com as listas locais para não perder as novidades
+                    configGlobal = { ...configGlobal, ...docSnap.data() };
+                } else {
+                    await setDoc(doc(db, "configuracoes", "geral"), configGlobal);
+                }
+                
+                // Trava de segurança: Se a lista de oração ainda não existir no banco, ele injeta e salva
+                if (!configGlobal.aprovados_oracao) {
+                    configGlobal.aprovados_oracao = ["Edinho Freitas", "Elton Freitas", "Francisco Nunes", "Glebston", "Robert César", "Rony Henrique"].sort();
+                    await setDoc(doc(db, "configuracoes", "geral"), configGlobal);
+                }
+
                 atualizarDOMComListas();
             } catch (err) { console.error("Erro ao carregar configurações", err); }
         }
