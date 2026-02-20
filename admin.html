@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestor de Programação Semanal</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
     <style>
         /* Bloqueia a rolagem global da janela para criar um layout de app moderno */
         body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 0; background-color: #f0f2f5; display: flex; height: 100vh; overflow: hidden; }
@@ -23,6 +28,9 @@
         .history-item { padding: 12px 20px; border-bottom: 1px solid #eee; cursor: pointer; color: #333; font-weight: bold; display: flex; justify-content: space-between; align-items: center;}
         .history-item:hover { background-color: #f1f3f4; color: #1a73e8; }
         .history-item.active { background-color: #e8f0fe; color: #1a73e8; border-left: 4px solid #1a73e8; }
+        .btn-delete-history { background: none; border: none; cursor: pointer; color: #ea4335; font-size: 14px; padding: 0 5px;}
+        .btn-delete-history:hover { color: #c5221f; transform: scale(1.2);}
+        .history-item-actions { display: flex; align-items: center; gap: 5px; }
         
         /* Formulário & Seções */
         .container { max-width: 850px; margin: 0 auto; padding-bottom: 40px;}
@@ -57,25 +65,57 @@
         /* Tela de Login Centralizada */
         #telaLogin { max-width: 400px; margin: auto; text-align: center; background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); width: 100%;}
         
-        /* Modal Configurações */
-        #modalConfig { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 100; justify-content: center; align-items: center;}
+        /* Modais */
+        .modal-bg { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 100; justify-content: center; align-items: center;}
         .modal-content { background-color: #fff; padding: 20px; border-radius: 8px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; position: relative;}
         .modal-close { position: absolute; top: 15px; right: 15px; font-size: 20px; cursor: pointer; color: #666; font-weight: bold;}
         .config-grid { display: grid; grid-template-columns: 1fr; gap: 15px; margin-top: 15px;}
         .lista-manager { border: 1px solid #ddd; padding: 10px; border-radius: 5px; background: #fafafa;}
         .lista-manager select { height: 100px; margin-bottom: 10px;}
         
-        /* Novos estilos para Exclusão e WhatsApp */
-        .btn-delete-history { background: none; border: none; cursor: pointer; color: #ea4335; font-size: 14px; padding: 0 5px;}
-        .btn-delete-history:hover { color: #c5221f; transform: scale(1.2);}
-        .history-item-actions { display: flex; align-items: center; gap: 5px; }
-        .btn-whatsapp { background-color: #25D366; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 5px;}
+        /* Ações do Card de Designação */
+        .designacao-card { border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; border-radius: 8px; background-color: #f9f9f9;}
+        .btn-whatsapp { background-color: #25D366; color: white; border: none; padding: 8px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 8px;}
         .btn-whatsapp:hover { background-color: #128C7E; }
-        .designacao-card { border: 1px solid #ddd; padding: 15px; margin-bottom: 10px; border-radius: 8px; background-color: #f9f9f9;}
-        
+        .btn-download-img { background-color: #1a73e8; color: white; border: none; padding: 8px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 8px;}
+        .btn-download-img:hover { background-color: #1557b0; }
+
+        /* Molde Oculto S-89 para gerar a Imagem */
+        #molde-s89 {
+            position: absolute; left: -9999px; top: -9999px; /* Oculto fora da tela */
+            width: 480px; background-color: white; padding: 30px; 
+            font-family: Arial, sans-serif; color: black; z-index: -1;
+            border: 2px solid #fff; /* Evita bordas cortadas na geração */
+        }
+        .s89-titulo { text-align: center; font-weight: 900; font-size: 18px; text-transform: uppercase; margin-bottom: 30px; line-height: 1.3; }
+        .s89-linha { display: flex; align-items: flex-end; margin-bottom: 15px; font-size: 18px;}
+        .s89-label { font-weight: bold; margin-right: 8px; white-space: nowrap; }
+        .s89-campo { flex-grow: 1; border-bottom: 2px dotted #000; font-family: 'Courier New', Courier, monospace; font-weight: bold; padding-left: 10px;}
+        .s89-local-titulo { font-weight: bold; font-size: 18px; margin-top: 25px; margin-bottom: 10px;}
+        .s89-checkbox { font-size: 18px; margin-bottom: 5px; display: flex; align-items: center; gap: 10px;}
+        .s89-box { width: 16px; height: 16px; border: 2px solid #000; display: inline-block; }
+        .s89-box-checked { background-color: #000; }
+        .s89-obs { margin-top: 30px; font-size: 13px; text-align: justify; line-height: 1.4; }
     </style>
 </head>
 <body>
+
+    <div id="molde-s89">
+        <div class="s89-titulo">DESIGNAÇÃO PARA A REUNIÃO<br>NOSSA VIDA E MINISTÉRIO CRISTÃO</div>
+        <div class="s89-linha"><div class="s89-label">Nome:</div><div class="s89-campo" id="s89-nome"></div></div>
+        <div class="s89-linha"><div class="s89-label">Ajudante:</div><div class="s89-campo" id="s89-ajudante"></div></div>
+        <div class="s89-linha"><div class="s89-label">Data:</div><div class="s89-campo" id="s89-data"></div></div>
+        <div class="s89-linha"><div class="s89-label">Número da parte:</div><div class="s89-campo" id="s89-parte"></div></div>
+        
+        <div class="s89-local-titulo">Local:</div>
+        <div class="s89-checkbox"><div class="s89-box s89-box-checked"></div> Salão principal</div>
+        <div class="s89-checkbox"><div class="s89-box"></div> Sala B</div>
+        <div class="s89-checkbox"><div class="s89-box"></div> Sala C</div>
+        
+        <div class="s89-obs">
+            <strong>Observação para o estudante:</strong> A lição e a fonte de matéria para a sua designação estão na <i>Apostila da Reunião Vida e Ministério</i>. Veja as instruções para a parte que estão nas <i>Instruções para a Reunião Nossa Vida e Ministério Cristão</i> (S-89).
+        </div>
+    </div>
 
     <div id="telaLogin">
         <h2 style="color: #1a73e8; margin-top: 0;">Acesso Restrito</h2>
@@ -91,8 +131,7 @@
             <h2>Gestor Semanal</h2>
         </div>
         <button id="btnNovaProgramacao">+ Nova Programação</button>
-        <ul class="history-list" id="listaHistorico">
-            </ul>
+        <ul class="history-list" id="listaHistorico"></ul>
     </div>
 
     <div id="painelSistema">
@@ -191,13 +230,15 @@
                             <input type="text" id="oracaoFinal" placeholder="Oração Final">
                         </div>
                     </div>
-                </div> <button type="button" class="btn-salvar" id="btnSalvar">Salvar Programação</button>
+                </div> 
+
+                <button type="button" class="btn-salvar" id="btnSalvar">Salvar Programação</button>
                 <div id="mensagem"></div>
             </form>
         </div>
     </div>
 
-    <div id="modalConfig">
+    <div id="modalConfig" class="modal-bg">
         <div class="modal-content">
             <span class="modal-close" id="fecharConfig">&times;</span>
             <h2 style="color: #1a73e8; margin-top: 0;">Configurações e Listas</h2>
@@ -242,13 +283,23 @@
         </div>
     </div>
 
-    <div id="modalDesignacoes" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 100; justify-content: center; align-items: center;">
+    <div id="modalDesignacoes" class="modal-bg">
         <div class="modal-content">
             <span class="modal-close" id="fecharDesignacoes">&times;</span>
-            <h2 style="color: #25D366; margin-top: 0;">📱 Enviar Designações</h2>
-            <p style="color: #666; font-size: 14px; margin-bottom: 15px;">Envie a designação no formato oficial (S-38) direto para o WhatsApp do estudante.</p>
-            <div id="listaDesignacoesProntas" style="max-height: 60vh; overflow-y: auto;">
-                </div>
+            <h2 style="color: #25D366; margin-top: 0;">📱 Designações Geradas</h2>
+            
+            <div id="loadingImagens" style="text-align: center; padding: 20px; font-weight: bold; color: #1a73e8; display: none;">
+                ⏳ Processando imagens, por favor aguarde...
+            </div>
+
+            <div id="conteudoDesignacoes">
+                <button type="button" id="btnBaixarTodasImagens" class="btn-salvar" style="background-color: #fbbc05; color: #333; margin-top: 0; margin-bottom: 20px; display: none;">
+                    📦 Baixar TODAS as Imagens (Arquivo ZIP)
+                </button>
+                
+                <div id="listaDesignacoesProntas" style="max-height: 50vh; overflow-y: auto; padding-right: 10px;">
+                    </div>
+            </div>
         </div>
     </div>
 
@@ -270,9 +321,9 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
 
-        // --- ESTADO GLOBAL (Carregado do BD) ---
+        // --- ESTADO GLOBAL ---
         let configGlobal = {
-            dia_reuniao: 4, // Quinta
+            dia_reuniao: 4, 
             presidentes: ["Francisco Nunes", "Glebston", "Robert César"].sort(),
             aprovados_ensino: ["Francisco Nunes", "Glebston", "Robert César"].sort(),
             leitores_estudo: ["Edinho Freitas", "Elton Freitas", "Glebston", "Nicácio", "Robert César", "Rony Henrique"].sort(),
@@ -280,6 +331,7 @@
             irmas: ["Ana Paula", "Anna Clara", "Bruna", "Cleonice", "Conceição", "Dona Lia", "Francinete", "Geralda", "Gerlândia", "Giudeth", "Helena", "Jaiara", "Joelma Sobreira", "Kleitiane", "Leticia Lima", "Letícia Angélica", "Libetânia", "Luci", "Maria Helena", "Mayane", "Remédios", "Sabrina", "Silmara", "Silvia", "Sonilde", "Suelene", "Terezinha", "Vitoria", "Vânia", "Zildilene", "Zuilha"].sort()
         };
         let dadosSemanaAnterior = null;
+        let designacoesGeradasMemoria = []; // Guarda as imagens geradas
 
         // --- LÓGICA DE AUTENTICAÇÃO ---
         onAuthStateChanged(auth, async (user) => {
@@ -311,18 +363,14 @@
         async function carregarConfiguracoes() {
             try {
                 const docSnap = await getDoc(doc(db, "configuracoes", "geral"));
-                if (docSnap.exists()) {
-                    configGlobal = docSnap.data();
-                } else {
-                    await setDoc(doc(db, "configuracoes", "geral"), configGlobal);
-                }
+                if (docSnap.exists()) configGlobal = docSnap.data();
+                else await setDoc(doc(db, "configuracoes", "geral"), configGlobal);
                 atualizarDOMComListas();
             } catch (err) { console.error("Erro ao carregar configurações", err); }
         }
 
         function atualizarDOMComListas() {
             const todos = [...configGlobal.irmaos, ...configGlobal.irmas].sort();
-            
             const gerarOpts = (arr, ph) => `<option value="">${ph}</option>` + arr.map(n => `<option value="${n}">${n}</option>`).join('');
             
             document.querySelectorAll('.lista-presidentes').forEach(s => s.innerHTML = gerarOpts(configGlobal.presidentes, "Selecione o Presidente..."));
@@ -335,8 +383,8 @@
             document.querySelectorAll('.vc-designado').forEach(s => { const v = s.value; s.innerHTML = gerarOpts(configGlobal.aprovados_ensino, "Designado"); s.value = v; });
         }
 
-        // --- SIDEBAR E FLUXO DE LIMPEZA ---
-       async function carregarHistoricoSidebar() {
+        // --- SIDEBAR E FLUXO DE LIMPEZA COM BOTÃO DE EXCLUIR ---
+        async function carregarHistoricoSidebar() {
             const lista = document.getElementById('listaHistorico');
             lista.innerHTML = '<li class="history-item">Carregando...</li>';
             try {
@@ -368,12 +416,12 @@
                     btnExcluir.className = 'btn-delete-history';
                     btnExcluir.title = "Excluir Reunião";
                     btnExcluir.onclick = async (e) => {
-                        e.stopPropagation(); // Evita que clique na linha inteira
+                        e.stopPropagation(); 
                         if(confirm(`⚠️ ATENÇÃO: Tem certeza que deseja EXCLUIR permanentemente a reunião do dia ${spanData.innerText}? Essa ação apagará a programação do quadro.`)) {
                             try {
                                 await deleteDoc(doc(db, "programacoes_semanais", d));
-                                carregarHistoricoSidebar(); // Recarrega a barra lateral
-                                if(document.getElementById('dataReuniao').value === d) prepararNovoFormulario(); // Limpa a tela se estiver editando a excluída
+                                carregarHistoricoSidebar(); 
+                                if(document.getElementById('dataReuniao').value === d) prepararNovoFormulario();
                             } catch(err) { alert("Erro ao excluir do banco de dados."); }
                         }
                     };
@@ -465,17 +513,8 @@
             selects.forEach(s => { if(s.value === selecionado) contagem++; });
 
             if(contagem > 1) {
-                alert(`⚠️ TRAVA DE SEGURANÇA:\n\nO(a) publicador(a) "${selecionado}" já foi selecionado(a) para outra parte do Ministério nesta MESMA reunião.\n\nPor favor, escolha outro nome.`);
+                alert(`⚠️ TRAVA DE SEGURANÇA:\n\nO(a) publicador(a) "${selecionado}" já foi selecionado(a) para outra parte nesta MESMA reunião.`);
                 e.target.value = ""; 
-            } else if (dadosSemanaAnterior && dadosSemanaAnterior.ministerio) {
-                const isEstudante = e.target.classList.contains('min-estudante');
-                const isAjudante = e.target.classList.contains('min-ajudante');
-                let func = null;
-                dadosSemanaAnterior.ministerio.forEach(p => {
-                    if (isAjudante && p.ajudante === selecionado) func = "AJUDANTE";
-                    if (isEstudante && p.estudante === selecionado) func = "ESTUDANTE";
-                });
-                if (func) alert(`⚠️ AVISO: ${selecionado} já foi ${func} na semana passada.`);
             }
         });
 
@@ -597,10 +636,8 @@
             try {
                 await setDoc(doc(db, "programacoes_semanais", dataReuniao), programacaoData);
                 msgDiv.style.color = "green"; msgDiv.innerText = "Salvo com sucesso!";
-                
                 carregarHistoricoSidebar();
                 setTimeout(() => { prepararNovoFormulario(); }, 1500);
-
             } catch (error) { msgDiv.style.color = "red"; msgDiv.innerText = "Erro ao salvar."; }
         });
 
@@ -653,9 +690,7 @@
         document.getElementById('btnSalvarConfig').addEventListener('click', async () => {
             const msg = document.getElementById('msgConfig');
             msg.style.color = "blue"; msg.innerText = "Salvando configurações...";
-            
             configGlobal.dia_reuniao = parseInt(document.getElementById('configDiaReuniao').value);
-            
             try {
                 await setDoc(doc(db, "configuracoes", "geral"), configGlobal);
                 atualizarDOMComListas();
@@ -664,60 +699,109 @@
             } catch(e) { msg.style.color = "red"; msg.innerText = "Erro ao salvar."; }
         });
 
-        // --- LÓGICA DE DESIGNAÇÕES (WHATSAPP) ---
+        // --- LÓGICA DE DESIGNAÇÕES (WHATSAPP E GERAÇÃO DE IMAGEM) ---
         const modalDesignacoes = document.getElementById('modalDesignacoes');
         
-        document.getElementById('btnGerarDesignacoes').addEventListener('click', () => {
+        // Função que "tira a foto" do molde S-89
+        async function gerarImagemS89(nome, ajudante, dataStr, parte) {
+            document.getElementById('s89-nome').innerText = nome;
+            document.getElementById('s89-ajudante').innerText = ajudante || '---';
+            document.getElementById('s89-data').innerText = dataStr;
+            document.getElementById('s89-parte').innerText = parte;
+
+            const molde = document.getElementById('molde-s89');
+            const canvas = await html2canvas(molde, { scale: 2, backgroundColor: "#ffffff" });
+            return canvas.toDataURL('image/png');
+        }
+
+        document.getElementById('btnGerarDesignacoes').addEventListener('click', async () => {
             const dataReuniao = document.getElementById('dataReuniao').value;
+            if (!dataReuniao) { alert("Por favor, selecione uma data da reunião no formulário."); return; }
+
+            modalDesignacoes.style.display = 'flex';
+            document.getElementById('loadingImagens').style.display = 'block';
+            document.getElementById('conteudoDesignacoes').style.display = 'none';
+            
             const container = document.getElementById('listaDesignacoesProntas');
             container.innerHTML = '';
-
-            if (!dataReuniao) {
-                alert("Por favor, selecione uma data da reunião no formulário.");
-                return;
-            }
+            designacoesGeradasMemoria = [];
 
             const dataFormatada = dataReuniao.split('-').reverse().join('/');
             let designacoes = [];
 
-            // Puxa a Leitura da Bíblia (Parte 3)
             const leitura = document.getElementById('leituraBiblia').value;
-            if (leitura) {
-                designacoes.push({ nome: leitura, ajudante: "", parte: "Parte 3 - Leitura da Bíblia" });
-            }
+            if (leitura) designacoes.push({ nome: leitura, ajudante: "", parte: "Parte 3 - Leitura da Bíblia" });
 
-            // Puxa o Ministério (Partes 4 em diante)
             document.querySelectorAll('#containerMinisterio .dinamico-item').forEach((item, index) => {
                 const estudante = item.querySelector('.min-estudante').value;
                 const ajudante = item.querySelector('.min-ajudante').value;
-                if (estudante) {
-                    designacoes.push({ nome: estudante, ajudante: ajudante, parte: `Parte ${index + 4}` });
-                }
+                if (estudante) designacoes.push({ nome: estudante, ajudante: ajudante, parte: `Parte ${index + 4}` });
             });
 
             if (designacoes.length === 0) {
+                document.getElementById('loadingImagens').style.display = 'none';
+                document.getElementById('conteudoDesignacoes').style.display = 'block';
+                document.getElementById('btnBaixarTodasImagens').style.display = 'none';
                 container.innerHTML = '<p style="text-align:center; color:#666;">Nenhuma designação de Leitura ou Ministério preenchida ainda.</p>';
-            } else {
-                designacoes.forEach(desig => {
-                    const card = document.createElement('div');
-                    card.className = 'designacao-card';
-                    
-                    const textoMsg = `*DESIGNAÇÃO PARA A REUNIÃO NOSSA VIDA E MINISTÉRIO CRISTÃO*\n\n👤 *Nome:* ${desig.nome}\n👥 *Ajudante:* ${desig.ajudante || '---'}\n📅 *Data:* ${dataFormatada}\n📝 *Número da parte:* ${desig.parte}\n🏢 *Local:* Salão principal\n\n_Observação para o estudante: A lição e a fonte de matéria para a sua designação estão na Apostila da Reunião Vida e Ministério. Veja as instruções para a parte que estão nas Instruções para a Reunião Nossa Vida e Ministério Cristão (S-89)._`;
-                    
-                    const urlWhatsApp = `https://api.whatsapp.com/send?text=${encodeURIComponent(textoMsg)}`;
-
-                    card.innerHTML = `
-                        <strong style="display:block; font-size: 16px; color: #333;">${desig.parte}</strong>
-                        <span style="display:block; font-size: 14px; margin-bottom: 10px;">Estudante: <b>${desig.nome}</b> ${desig.ajudante ? `| Aj: ${desig.ajudante}` : ''}</span>
-                        <a href="${urlWhatsApp}" target="_blank" style="text-decoration: none;">
-                            <button type="button" class="btn-whatsapp">Enviar Designação Oficial</button>
-                        </a>
-                    `;
-                    container.appendChild(card);
-                });
+                return;
             }
 
-            modalDesignacoes.style.display = 'flex';
+            // Gerar imagens e montar os botões
+            for (const desig of designacoes) {
+                // 1. Gera a imagem S-89
+                const imgDataUrl = await gerarImagemS89(desig.nome, desig.ajudante, dataFormatada, desig.parte);
+                const nomeArquivoSeguro = `S89_${desig.nome.replace(/\s+/g, '_')}_${desig.parte.replace(/ /g, '')}.png`;
+                
+                designacoesGeradasMemoria.push({ nomeArquivo: nomeArquivoSeguro, imgBase64: imgDataUrl });
+
+                // 2. Gera o link do WhatsApp
+                const textoMsg = `*DESIGNAÇÃO PARA A REUNIÃO NOSSA VIDA E MINISTÉRIO CRISTÃO*\n\n👤 *Nome:* ${desig.nome}\n👥 *Ajudante:* ${desig.ajudante || '---'}\n📅 *Data:* ${dataFormatada}\n📝 *Número da parte:* ${desig.parte}\n🏢 *Local:* Salão principal\n\n_Observação: A lição e a fonte de matéria estão na Apostila. Veja as instruções para a parte no arquivo S-89._`;
+                const urlWhatsApp = `https://api.whatsapp.com/send?text=${encodeURIComponent(textoMsg)}`;
+
+                // 3. Monta o visual
+                const card = document.createElement('div');
+                card.className = 'designacao-card';
+                card.innerHTML = `
+                    <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 15px;">
+                        <img src="${imgDataUrl}" style="height: 80px; border: 1px solid #ccc; border-radius: 4px;">
+                        <div>
+                            <strong style="display:block; font-size: 16px; color: #333;">${desig.parte}</strong>
+                            <span style="display:block; font-size: 14px; margin-top: 5px;">Estudante: <b>${desig.nome}</b></span>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <a href="${urlWhatsApp}" target="_blank" style="flex: 1; text-decoration: none;">
+                            <button type="button" class="btn-whatsapp">💬 Enviar WhatsApp (Texto)</button>
+                        </a>
+                        <button type="button" class="btn-download-img" style="flex: 1;" onclick="salvarImagemIndividual('${imgDataUrl}', '${nomeArquivoSeguro}')">🖼️ Baixar Imagem S-89</button>
+                    </div>
+                `;
+                container.appendChild(card);
+            }
+
+            document.getElementById('loadingImagens').style.display = 'none';
+            document.getElementById('conteudoDesignacoes').style.display = 'block';
+            document.getElementById('btnBaixarTodasImagens').style.display = 'block';
+        });
+
+        // Função global para o botão de baixar a imagem individual conseguir acessar
+        window.salvarImagemIndividual = function(dataUrl, nomeArquivo) {
+            saveAs(dataUrl, nomeArquivo);
+        };
+
+        // Lógica para empacotar tudo no ZIP
+        document.getElementById('btnBaixarTodasImagens').addEventListener('click', () => {
+            const dataForm = document.getElementById('dataReuniao').value.split('-').reverse().join('-');
+            const zip = new JSZip();
+            
+            designacoesGeradasMemoria.forEach(desig => {
+                const base64Data = desig.imgBase64.split(',')[1];
+                zip.file(desig.nomeArquivo, base64Data, {base64: true});
+            });
+
+            zip.generateAsync({type:"blob"}).then(function(content) {
+                saveAs(content, `Designacoes_Reuniao_${dataForm}.zip`);
+            });
         });
 
         document.getElementById('fecharDesignacoes').addEventListener('click', () => {
