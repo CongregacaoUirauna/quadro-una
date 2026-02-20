@@ -172,7 +172,7 @@
                         <h3>Abertura</h3>
                         <div class="input-group">
                             <input type="number" id="canticoInicial" placeholder="Nº do Cântico" min="1">
-                            <input type="text" id="oracaoInicial" placeholder="Oração Inicial">
+                            <select id="oracaoInicial" class="lista-oracao"></select>
                         </div>
                         <label for="comentariosIniciais">Comentários Iniciais (1 min):</label>
                         <input type="text" id="comentariosIniciais" readonly style="background-color: #e9ecef;">
@@ -227,7 +227,7 @@
                         <label>Conclusão:</label>
                         <div class="input-group">
                             <input type="number" id="canticoFinal" placeholder="Nº do Cântico" min="1">
-                            <input type="text" id="oracaoFinal" placeholder="Oração Final">
+                            <select id="oracaoFinal" class="lista-oracao"></select>
                         </div>
                     </div>
                 </div> 
@@ -266,6 +266,7 @@
                         <option value="presidentes">Aprovados para Presidente</option>
                         <option value="aprovados_ensino">Aprovados para Discursos/Ensino</option>
                         <option value="leitores_estudo">Aprovados para Leitor do Estudo</option>
+                        <option value="aprovados_oracao">Aprovados para Oração</option>
                     </select>
                     
                     <select id="listaItensAtuais" multiple></select>
@@ -324,6 +325,7 @@
         // --- ESTADO GLOBAL ---
         let configGlobal = {
             dia_reuniao: 4, 
+            aprovados_oracao: ["Edinho Freitas", "Elton Freitas", "Francisco Nunes", "Glebston", "Robert César", "Rony Henrique"].sort(),
             presidentes: ["Francisco Nunes", "Glebston", "Robert César"].sort(),
             aprovados_ensino: ["Francisco Nunes", "Glebston", "Robert César"].sort(),
             leitores_estudo: ["Edinho Freitas", "Elton Freitas", "Glebston", "Nicácio", "Robert César", "Rony Henrique"].sort(),
@@ -376,6 +378,7 @@
             document.querySelectorAll('.lista-presidentes').forEach(s => s.innerHTML = gerarOpts(configGlobal.presidentes, "Selecione o Presidente..."));
             document.querySelectorAll('.aprovados-ensino').forEach(s => s.innerHTML = gerarOpts(configGlobal.aprovados_ensino, "Selecione..."));
             document.querySelectorAll('.lista-leitores').forEach(s => s.innerHTML = gerarOpts(configGlobal.leitores_estudo, "Leitor do Estudo..."));
+            document.querySelectorAll('.lista-oracao').forEach(s => s.innerHTML = gerarOpts(configGlobal.aprovados_oracao, "Oração..."));
             document.querySelectorAll('.lista-irmaos').forEach(s => s.innerHTML = gerarOpts(configGlobal.irmaos, "Irmão Designado..."));
             
             document.querySelectorAll('.min-estudante').forEach(s => { const v = s.value; s.innerHTML = gerarOpts(todos, "Estudante"); s.value = v; });
@@ -457,16 +460,26 @@
             sugerirProximaData();
         }
 
-        function sugerirProximaData() {
-            let hoje = new Date();
-            let diaAlvo = parseInt(configGlobal.dia_reuniao);
-            let offset = (diaAlvo - hoje.getDay() + 7) % 7;
-            if (offset === 0) offset = 7; 
+       function sugerirProximaData() {
+            // Tenta pegar a data mais recente que já está salva na barra lateral
+            const ultimaDataSalva = document.querySelector('#listaHistorico .history-item span');
             
-            let prox = new Date(hoje);
-            prox.setDate(hoje.getDate() + offset);
+            if (ultimaDataSalva && ultimaDataSalva.innerText.includes('/')) {
+                const partes = ultimaDataSalva.innerText.split('/');
+                let d = new Date(`${partes[2]}-${partes[1]}-${partes[0]}T12:00:00`);
+                d.setDate(d.getDate() + 7); // Soma 7 dias da última reunião
+                document.getElementById('dataReuniao').value = d.toISOString().split('T')[0];
+            } else {
+                // Se for o primeiro uso (vazio), calcula com base em hoje
+                let hoje = new Date();
+                let diaAlvo = parseInt(configGlobal.dia_reuniao);
+                let offset = (diaAlvo - hoje.getDay() + 7) % 7;
+                if (offset === 0) offset = 7; 
+                let prox = new Date(hoje);
+                prox.setDate(hoje.getDate() + offset);
+                document.getElementById('dataReuniao').value = prox.toISOString().split('T')[0];
+            }
             
-            document.getElementById('dataReuniao').value = prox.toISOString().split('T')[0];
             buscarDadosSemanaAnterior(document.getElementById('dataReuniao').value);
         }
 
@@ -508,6 +521,7 @@
             const selecionado = e.target.value;
             if (!selecionado) return;
 
+            // 1. Verifica se está repetindo na MESMA semana
             const selects = document.querySelectorAll('#containerMinisterio select');
             let contagem = 0;
             selects.forEach(s => { if(s.value === selecionado) contagem++; });
@@ -515,6 +529,21 @@
             if(contagem > 1) {
                 alert(`⚠️ TRAVA DE SEGURANÇA:\n\nO(a) publicador(a) "${selecionado}" já foi selecionado(a) para outra parte nesta MESMA reunião.`);
                 e.target.value = ""; 
+            } 
+            // 2. Verifica se está repetindo a MESMA FUNÇÃO da semana passada
+            else if (dadosSemanaAnterior && dadosSemanaAnterior.ministerio) {
+                const isEstudante = e.target.classList.contains('min-estudante');
+                const isAjudante = e.target.classList.contains('min-ajudante');
+                let func = null;
+                
+                dadosSemanaAnterior.ministerio.forEach(p => {
+                    if (isAjudante && p.ajudante === selecionado) func = "AJUDANTE";
+                    if (isEstudante && p.estudante === selecionado) func = "ESTUDANTE";
+                });
+                
+                if (func) {
+                    alert(`⚠️ AVISO INTELIGENTE:\n\nO(a) publicador(a) "${selecionado}" já atuou como ${func} na semana passada.\n\n.`);
+                }
             }
         });
 
