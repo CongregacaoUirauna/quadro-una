@@ -8,20 +8,30 @@
         body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; background-color: #f9f9f9;}
         .section { background-color: white; border: 1px solid #ddd; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);}
         h1 { color: #333; text-align: center; }
-        h3 { color: #555; border-bottom: 2px solid #eee; padding-bottom: 5px; margin-top: 0; }
+        h3 { color: #555; border-bottom: 2px solid #eee; padding-bottom: 5px; margin-top: 0; display: flex; justify-content: space-between; align-items: center;}
         label { display: block; margin-top: 15px; font-weight: bold; font-size: 14px; color: #444;}
         input { width: 100%; padding: 10px; margin-top: 5px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
-        .input-group { display: flex; gap: 10px; }
+        input[type="checkbox"] { width: auto; margin-right: 10px; transform: scale(1.2); }
+        .checkbox-container { display: flex; align-items: center; background-color: #fff3cd; padding: 10px; border-radius: 5px; border: 1px solid #ffeeba; margin-top: 15px; }
+        .input-group { display: flex; gap: 10px; margin-top: 5px; align-items: center;}
         .input-group input { width: 50%; }
+        
         button { background-color: #4CAF50; color: white; padding: 12px 20px; border: none; cursor: pointer; font-size: 16px; margin-top: 15px; border-radius: 4px; width: 100%; font-weight: bold;}
         button:hover { background-color: #45a049; }
+        
+        .btn-add { background-color: #2196F3; width: auto; padding: 6px 12px; font-size: 12px; margin-top: 0; }
+        .btn-add:hover { background-color: #0b7dda; }
+        .btn-remove { background-color: #f44336; width: auto; padding: 10px; margin-top: 0; font-size: 14px;}
+        .btn-remove:hover { background-color: #d32f2f; }
         .btn-sair { background-color: #f44336; width: auto; float: right; margin-top: 0; padding: 8px 15px;}
         .btn-sair:hover { background-color: #d32f2f; }
+        
         #mensagem, #loginMensagem { margin-top: 15px; font-weight: bold; text-align: center; }
         
-        /* Controle de visibilidade */
         #painelSistema { display: none; } 
         #telaLogin { max-width: 400px; margin: 80px auto; text-align: center; background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);}
+        .dinamico-item { background-color: #f1f1f1; padding: 10px; border-radius: 5px; margin-top: 10px; border: 1px dashed #ccc;}
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
@@ -42,9 +52,13 @@
         <div class="section">
             <label for="dataReuniao">Data da Reunião (Identificador Único):</label>
             <input type="date" id="dataReuniao" required>
-            
             <label for="presidente">Presidente da Reunião:</label>
             <input type="text" id="presidente" placeholder="Ex: Francisco Nunes">
+            
+            <div class="checkbox-container">
+                <input type="checkbox" id="chkVisita">
+                <label for="chkVisita" style="margin-top: 0; color: #856404;">Semana de Visita do Superintendente de Circuito</label>
+            </div>
         </div>
 
         <div class="section">
@@ -68,38 +82,36 @@
         </div>
 
         <div class="section">
-            <h3>Faça seu Melhor no Ministério</h3>
-            <label>Parte 4:</label>
-            <div class="input-group">
-                <input type="text" id="parte4Estudante" placeholder="Estudante (Ex: A. Paula)">
-                <input type="text" id="parte4Ajudante" placeholder="Ajudante (Ex: A. Clara)">
-            </div>
-
-            <label>Parte 5:</label>
-            <div class="input-group">
-                <input type="text" id="parte5Estudante" placeholder="Estudante (Ex: Leticia L.)">
-                <input type="text" id="parte5Ajudante" placeholder="Ajudante (Ex: D. Lia)">
-            </div>
-
-            <label>Parte 6:</label>
-            <div class="input-group">
-                <input type="text" id="parte6Estudante" placeholder="Estudante (Ex: Sabrina)">
-                <input type="text" id="parte6Ajudante" placeholder="Ajudante (Ex: Geralda)">
-            </div>
+            <h3>
+                Faça seu Melhor no Ministério
+                <button type="button" class="btn-add" id="btnAddMinisterio">+ Adicionar Parte</button>
+            </h3>
+            <div id="containerMinisterio">
+                </div>
         </div>
 
         <div class="section">
-            <h3>Nossa Vida Cristã</h3>
+            <h3>
+                Nossa Vida Cristã
+                <button type="button" class="btn-add" id="btnAddVidaCrista">+ Adicionar Parte</button>
+            </h3>
             <label for="canticoIntermediario">Cântico Intermediário (Número):</label>
             <input type="number" id="canticoIntermediario" placeholder="Ex: 118">
 
-            <label for="parte7">Parte 7 (15 min):</label>
-            <input type="text" id="parte7" placeholder="Ex: Francisco Nunes">
+            <div id="containerVidaCrista">
+                </div>
 
-            <label>Estudo Bíblico de Congregação (30 min):</label>
-            <div class="input-group">
-                <input type="text" id="estudoDirigente" placeholder="Dirigente (Ex: Robert C.)">
-                <input type="text" id="estudoLeitor" placeholder="Leitor (Ex: Rony)">
+            <div id="blocoEstudo">
+                <label>Estudo Bíblico de Congregação (30 min):</label>
+                <div class="input-group">
+                    <input type="text" id="estudoDirigente" placeholder="Dirigente">
+                    <input type="text" id="estudoLeitor" placeholder="Leitor">
+                </div>
+            </div>
+
+            <div id="blocoVisita" class="hidden">
+                <label style="color: #856404;">Discurso do Superintendente (30 min):</label>
+                <input type="text" id="discursoViajante" placeholder="Nome do Superintendente">
             </div>
 
             <label for="comentariosFinais">Comentários Finais (3 min):</label>
@@ -135,40 +147,84 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
 
-        const telaLogin = document.getElementById('telaLogin');
-        const painelSistema = document.getElementById('painelSistema');
-        const loginMensagem = document.getElementById('loginMensagem');
-
         // Lógica de Autenticação
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                telaLogin.style.display = 'none';
-                painelSistema.style.display = 'block';
+                document.getElementById('telaLogin').style.display = 'none';
+                document.getElementById('painelSistema').style.display = 'block';
             } else {
-                telaLogin.style.display = 'block';
-                painelSistema.style.display = 'none';
+                document.getElementById('telaLogin').style.display = 'block';
+                document.getElementById('painelSistema').style.display = 'none';
             }
         });
 
         document.getElementById('btnEntrar').addEventListener('click', async () => {
             const email = document.getElementById('emailLogin').value;
             const senha = document.getElementById('senhaLogin').value;
-            loginMensagem.innerText = "Verificando...";
-            loginMensagem.style.color = "#333";
-            
+            const msg = document.getElementById('loginMensagem');
+            msg.innerText = "Verificando...";
+            msg.style.color = "#333";
             try {
                 await signInWithEmailAndPassword(auth, email, senha);
-                loginMensagem.innerText = ""; 
+                msg.innerText = ""; 
             } catch (error) {
-                loginMensagem.style.color = "red";
-                loginMensagem.innerText = "Erro: Verifique e-mail e senha.";
-                console.error(error);
+                msg.style.color = "red";
+                msg.innerText = "Erro: Verifique e-mail e senha.";
             }
         });
 
-        document.getElementById('btnSair').addEventListener('click', () => {
-            signOut(auth);
+        document.getElementById('btnSair').addEventListener('click', () => signOut(auth));
+
+        // Lógica de UI: Checkbox da Visita do Superintendente
+        const chkVisita = document.getElementById('chkVisita');
+        const blocoEstudo = document.getElementById('blocoEstudo');
+        const blocoVisita = document.getElementById('blocoVisita');
+
+        chkVisita.addEventListener('change', (e) => {
+            if(e.target.checked) {
+                blocoEstudo.classList.add('hidden');
+                blocoVisita.classList.remove('hidden');
+            } else {
+                blocoEstudo.classList.remove('hidden');
+                blocoVisita.classList.add('hidden');
+            }
         });
+
+        // Lógica de UI: Adicionar/Remover Partes Dinâmicas
+        function criarParteMinisterio() {
+            const container = document.getElementById('containerMinisterio');
+            const div = document.createElement('div');
+            div.className = 'dinamico-item input-group';
+            div.innerHTML = `
+                <input type="text" class="min-estudante" placeholder="Estudante/Designado">
+                <input type="text" class="min-ajudante" placeholder="Ajudante (se houver)">
+                <button type="button" class="btn-remove" onclick="this.parentElement.remove()">X</button>
+            `;
+            container.appendChild(div);
+        }
+
+        function criarParteVidaCrista() {
+            const container = document.getElementById('containerVidaCrista');
+            const div = document.createElement('div');
+            div.className = 'dinamico-item input-group';
+            div.innerHTML = `
+                <input type="text" class="vc-tempo" placeholder="Tempo (ex: 15 min)" style="width: 30%;">
+                <input type="text" class="vc-designado" placeholder="Designado" style="width: 70%;">
+                <button type="button" class="btn-remove" onclick="this.parentElement.remove()">X</button>
+            `;
+            container.appendChild(div);
+        }
+
+        document.getElementById('btnAddMinisterio').addEventListener('click', criarParteMinisterio);
+        document.getElementById('btnAddVidaCrista').addEventListener('click', criarParteVidaCrista);
+
+        // Criar pelo menos uma parte inicial por padrão
+        window.onload = () => {
+            criarParteMinisterio();
+            criarParteMinisterio();
+            criarParteMinisterio();
+            criarParteVidaCrista();
+        };
 
         // Lógica de Salvamento
         document.getElementById('btnSalvar').addEventListener('click', async () => {
@@ -177,8 +233,7 @@
 
             if (!dataReuniao) {
                 msgDiv.style.color = "red";
-                msgDiv.innerText = "ATENÇÃO: Por favor, selecione a data da reunião.";
-                // Rolar para o topo para usuário ver o aviso
+                msgDiv.innerText = "ATENÇÃO: Selecione a data da reunião.";
                 window.scrollTo({ top: 0, behavior: 'smooth' }); 
                 return;
             }
@@ -186,9 +241,28 @@
             msgDiv.style.color = "blue";
             msgDiv.innerText = "Enviando para o banco de dados...";
 
+            // Capturar array do Ministério
+            const partesMinisterio = [];
+            document.querySelectorAll('#containerMinisterio .dinamico-item').forEach(item => {
+                partesMinisterio.push({
+                    estudante: item.querySelector('.min-estudante').value,
+                    ajudante: item.querySelector('.min-ajudante').value
+                });
+            });
+
+            // Capturar array da Vida Cristã
+            const partesVidaCrista = [];
+            document.querySelectorAll('#containerVidaCrista .dinamico-item').forEach(item => {
+                partesVidaCrista.push({
+                    tempo: item.querySelector('.vc-tempo').value,
+                    designado: item.querySelector('.vc-designado').value
+                });
+            });
+
             const programacaoData = {
                 data: dataReuniao,
                 presidente: document.getElementById('presidente').value,
+                visita_superintendente: chkVisita.checked,
                 abertura: {
                     cantico: document.getElementById('canticoInicial').value,
                     oracao: document.getElementById('oracaoInicial').value,
@@ -199,19 +273,13 @@
                     parte_2: document.getElementById('parte2').value,
                     leitura: document.getElementById('leituraBiblia').value
                 },
-                ministerio: {
-                    parte_4_estudante: document.getElementById('parte4Estudante').value,
-                    parte_4_ajudante: document.getElementById('parte4Ajudante').value,
-                    parte_5_estudante: document.getElementById('parte5Estudante').value,
-                    parte_5_ajudante: document.getElementById('parte5Ajudante').value,
-                    parte_6_estudante: document.getElementById('parte6Estudante').value,
-                    parte_6_ajudante: document.getElementById('parte6Ajudante').value
-                },
+                ministerio: partesMinisterio,
                 vida_crista: {
                     cantico_intermediario: document.getElementById('canticoIntermediario').value,
-                    parte_7: document.getElementById('parte7').value,
+                    partes: partesVidaCrista,
                     estudo_dirigente: document.getElementById('estudoDirigente').value,
                     estudo_leitor: document.getElementById('estudoLeitor').value,
+                    discurso_viajante: document.getElementById('discursoViajante').value,
                     comentarios_finais: document.getElementById('comentariosFinais').value,
                     cantico_final: document.getElementById('canticoFinal').value,
                     oracao_final: document.getElementById('oracaoFinal').value
@@ -221,7 +289,7 @@
             try {
                 await setDoc(doc(db, "programacoes_semanais", dataReuniao), programacaoData);
                 msgDiv.style.color = "green";
-                msgDiv.innerText = "Programação salva com sucesso! O quadro de anúncios já está atualizado.";
+                msgDiv.innerText = "Programação salva com sucesso!";
             } catch (error) {
                 console.error("Erro ao salvar: ", error);
                 msgDiv.style.color = "red";
