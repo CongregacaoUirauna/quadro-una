@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Quadro de Anúncios - Congregação</title>
+    <style>
+        :root {
+            --cor-tesouros: #45818e;
+            --cor-ministerio: #d89b00;
+            --cor-vidacrista: #990000;
+            --cor-fundo: #f0f2f5;
+            --cor-texto: #333;
+            --cor-texto-secundario: #666;
+        }
+
+        body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; background-color: var(--cor-fundo); color: var(--cor-texto); }
+        
+        /* Cabeçalho e Controles */
+        .header { background-color: #fff; padding: 15px 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); text-align: center; position: sticky; top: 0; z-index: 100;}
+        .header h1 { margin: 0; font-size: 20px; color: var(--cor-texto); font-weight: 600; }
+        .seletor-data { margin-top: 10px; }
+        .seletor-data select { padding: 8px 15px; border-radius: 20px; border: 1px solid #ccc; font-size: 14px; background-color: #f8f9fa; outline: none; font-weight: bold; color: var(--cor-texto); cursor: pointer; }
+
+        /* Container Principal */
+        .container { max-width: 600px; margin: 20px auto; padding: 0 15px; }
+        
+        /* Cartão da Programação */
+        .card { background-color: #fff; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); overflow: hidden; margin-bottom: 30px; border: 1px solid #eaeaea; }
+        
+        /* Cabeçalho do Cartão */
+        .card-header { padding: 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: flex-start; }
+        .data-badge { background-color: var(--cor-vidacrista); color: white; padding: 5px 15px; border-radius: 15px; font-weight: bold; font-size: 14px; display: inline-block; margin-bottom: 10px;}
+        .presidente-info { text-align: right; font-size: 14px; color: var(--cor-texto-secundario); }
+        .presidente-info strong { color: var(--cor-texto); display: block; font-size: 15px;}
+
+        /* Lista e Itens Gerais */
+        .section-content { padding: 0 20px 20px 20px; }
+        .item-linha { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed #eee; font-size: 14.5px; align-items: center;}
+        .item-linha:last-child { border-bottom: none; }
+        .item-titulo { color: var(--cor-texto-secundario); flex: 1; padding-right: 15px;}
+        .item-nome { font-weight: 600; color: var(--cor-texto); text-align: right; }
+        .item-duplo { display: flex; flex-direction: column; align-items: flex-end;}
+        .item-duplo span { font-size: 12px; color: var(--cor-texto-secundario); font-weight: normal; margin-top: 2px;}
+
+        /* Títulos das Seções */
+        .titulo-secao { font-size: 16px; font-weight: bold; margin: 20px 0 10px 0; display: flex; align-items: center; gap: 8px; text-transform: uppercase; letter-spacing: 0.5px;}
+        .titulo-tesouros { color: var(--cor-tesouros); }
+        .titulo-ministerio { color: var(--cor-ministerio); }
+        .titulo-vidacrista { color: var(--cor-vidacrista); }
+        
+        /* Blocos de Cânticos (Destaque sutil) */
+        .bloco-cantico { background-color: #f8f9fa; padding: 12px; border-radius: 6px; margin: 10px 0; font-size: 14px; display: flex; justify-content: space-between; align-items: center;}
+        
+        /* Eventos Especiais */
+        .evento-especial { text-align: center; padding: 40px 20px; }
+        .evento-especial h2 { color: var(--cor-tesouros); margin-bottom: 10px;}
+        .evento-especial p { color: var(--cor-texto-secundario); font-size: 16px; line-height: 1.5;}
+        
+        /* Loading */
+        #loading { text-align: center; padding: 50px; color: var(--cor-texto-secundario); font-weight: bold; }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <h1>Quadro de Anúncios</h1>
+        <div class="seletor-data">
+            <select id="selectDatas">
+                <option value="">Carregando semanas...</option>
+            </select>
+        </div>
+    </header>
+
+    <div class="container">
+        <div id="loading">Buscando programação...</div>
+        
+        <div id="board" class="hidden">
+            </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // Configuração do Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyC3U8tyPk5IB_y51-3d7_6V-16qtoqzeI8",
+            authDomain: "quadro-congregacao.firebaseapp.com",
+            projectId: "quadro-congregacao",
+            storageBucket: "quadro-congregacao.firebasestorage.app",
+            messagingSenderId: "1085145636546",
+            appId: "1:1085145636546:web:69d340e69f28814a1de55b"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let todasAsProgramacoes = {};
+
+        async function carregarDados() {
+            try {
+                const querySnapshot = await getDocs(collection(db, "programacoes_semanais"));
+                let datas = [];
+                
+                querySnapshot.forEach((doc) => {
+                    todasAsProgramacoes[doc.id] = doc.data();
+                    datas.push(doc.id);
+                });
+
+                if (datas.length === 0) {
+                    document.getElementById('loading').innerHTML = "Nenhuma programação disponível no momento.";
+                    return;
+                }
+
+                // Ordena as datas (mais antigas para mais novas)
+                datas.sort();
+                
+                const select = document.getElementById('selectDatas');
+                select.innerHTML = '';
+                
+                let dataParaSelecionar = datas[0];
+                const hojeStr = new Date().toISOString().split('T')[0];
+
+                // Descobre qual é a reunião mais relevante (a próxima ou a da semana atual)
+                for (let i = 0; i < datas.length; i++) {
+                    const dataObj = new Date(datas[i] + "T23:59:59");
+                    const dataHoje = new Date();
+                    
+                    // Se a reunião for hoje ou no futuro, seleciona ela e para a busca
+                    if (dataObj >= dataHoje || datas[i] === hojeStr) {
+                        dataParaSelecionar = datas[i];
+                        break;
+                    }
+                    // Se todas estiverem no passado, ele vai acabar selecionando a última (a mais recente)
+                    dataParaSelecionar = datas[i]; 
+                }
+
+                // Preenche o Select
+                datas.reverse().forEach(dataId => { // Reverse para listar da mais nova pra mais velha no menu
+                    const opt = document.createElement('option');
+                    opt.value = dataId;
+                    opt.innerText = formatarDataBR(dataId);
+                    if (dataId === dataParaSelecionar) opt.selected = true;
+                    select.appendChild(opt);
+                });
+
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('board').classList.remove('hidden');
+                
+                // Renderiza a data selecionada automaticamente
+                renderizarProgramacao(todasAsProgramacoes[dataParaSelecionar]);
+
+            } catch (error) {
+                console.error("Erro ao carregar dados", error);
+                document.getElementById('loading').innerHTML = "Erro ao carregar a programação. Tente novamente mais tarde.";
+            }
+        }
+
+        // Listener para quando o irmão mudar a data no seletor
+        document.getElementById('selectDatas').addEventListener('change', (e) => {
+            renderizarProgramacao(todasAsProgramacoes[e.target.value]);
+        });
+
+        function formatarDataBR(dataISO) {
+            return dataISO.split('-').reverse().join('/');
+        }
+
+        function nomeFormatado(nome) {
+            return nome && nome.trim() !== "" ? nome : "<span style='color:#ccc; font-weight:normal;'>A designar</span>";
+        }
+
+        function renderizarProgramacao(dados) {
+            const board = document.getElementById('board');
+            
+            // Cenário 1: Eventos Especiais
+            if (["Assembleia", "Congresso", "Celebracao"].includes(dados.tipo_evento)) {
+                let tituloEvento = dados.tipo_evento === "Celebracao" ? "Celebração da Morte de Cristo" : dados.tipo_evento;
+                board.innerHTML = `
+                    <div class="card">
+                        <div class="evento-especial">
+                            <div class="data-badge">${formatarDataBR(dados.data)}</div>
+                            <h2>${tituloEvento}</h2>
+                            <p>Nesta semana não teremos a nossa Reunião Vida e Ministério devido a este evento especial.</p>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            // Cenário 2: Reunião Normal ou Visita
+            const isVisita = dados.tipo_evento === "Visita";
+            
+            // Montando as partes dinâmicas do Ministério
+            let htmlMinisterio = '';
+            if (dados.ministerio && dados.ministerio.length > 0) {
+                dados.ministerio.forEach((parte, index) => {
+                    const numParte = index + 4; // Começa na Parte 4
+                    htmlMinisterio += `
+                        <div class="item-linha">
+                            <div class="item-titulo">Parte ${numParte}</div>
+                            <div class="item-duplo">
+                                <div class="item-nome">${nomeFormatado(parte.estudante)}</div>
+                                ${parte.ajudante ? `<span>Aj: ${parte.ajudante}</span>` : ''}
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                htmlMinisterio = `<div class="item-linha"><div class="item-titulo">Sem designações cadastradas</div></div>`;
+            }
+
+            // Montando as partes dinâmicas da Vida Cristã
+            let htmlVidaCrista = '';
+            if (dados.vida_crista && dados.vida_crista.partes && dados.vida_crista.partes.length > 0) {
+                dados.vida_crista.partes.forEach((parte, index) => {
+                    htmlVidaCrista += `
+                        <div class="item-linha">
+                            <div class="item-titulo">Parte ${index + 7} ${parte.tempo ? `(${parte.tempo})` : ''}</div>
+                            <div class="item-nome">${nomeFormatado(parte.designado)}</div>
+                        </div>
+                    `;
+                });
+            }
+
+            // Estudo de Congregação ou Discurso do Viajante
+            let htmlBlocoFinal = '';
+            if (isVisita) {
+                htmlBlocoFinal = `
+                    <div class="item-linha" style="background-color: #f0f7ff; padding: 10px; border-radius: 6px;">
+                        <div class="item-titulo" style="color: #1a73e8; font-weight: bold;">Discurso do Superintendente (30 min)</div>
+                        <div class="item-nome">${nomeFormatado(dados.vida_crista?.discurso_viajante)}</div>
+                    </div>
+                `;
+            } else {
+                htmlBlocoFinal = `
+                    <div class="item-linha">
+                        <div class="item-titulo">Estudo Bíblico de Congregação (30 min)</div>
+                        <div class="item-duplo">
+                            <div class="item-nome">${nomeFormatado(dados.vida_crista?.estudo_dirigente)}</div>
+                            <span>Leitor: ${nomeFormatado(dados.vida_crista?.estudo_leitor)}</span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Renderização do Cartão Completo
+            board.innerHTML = `
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <div class="data-badge">${formatarDataBR(dados.data)}</div>
+                            ${isVisita ? `<div style="color: #d89b00; font-size: 13px; font-weight: bold;">Visita do Superintendente</div>` : ''}
+                        </div>
+                        <div class="presidente-info">
+                            Presidente:
+                            <strong>${nomeFormatado(dados.presidente)}</strong>
+                        </div>
+                    </div>
+                    
+                    <div class="section-content">
+                        <div class="bloco-cantico">
+                            <span>🎵 Cântico ${dados.abertura?.cantico || '--'} e Oração</span>
+                            <strong>${nomeFormatado(dados.abertura?.oracao)}</strong>
+                        </div>
+                        <div class="item-linha">
+                            <div class="item-titulo">Comentários Iniciais (1 min)</div>
+                            <div class="item-nome">${nomeFormatado(dados.abertura?.comentarios)}</div>
+                        </div>
+
+                        <div class="titulo-secao titulo-tesouros">💎 Tesouros da Palavra de Deus</div>
+                        <div class="item-linha">
+                            <div class="item-titulo">Parte 1 - Discurso Principal (10 min)</div>
+                            <div class="item-nome">${nomeFormatado(dados.tesouros?.parte_1)}</div>
+                        </div>
+                        <div class="item-linha">
+                            <div class="item-titulo">Parte 2 - Joias Espirituais (10 min)</div>
+                            <div class="item-nome">${nomeFormatado(dados.tesouros?.parte_2)}</div>
+                        </div>
+                        <div class="item-linha">
+                            <div class="item-titulo">Parte 3 - Leitura da Bíblia (4 min)</div>
+                            <div class="item-nome">${nomeFormatado(dados.tesouros?.leitura)}</div>
+                        </div>
+
+                        <div class="titulo-secao titulo-ministerio">🌾 Faça seu Melhor no Ministério</div>
+                        ${htmlMinisterio}
+
+                        <div class="titulo-secao titulo-vidacrista">🐑 Nossa Vida Cristã</div>
+                        <div class="bloco-cantico" style="margin-top: 0;">
+                            <span>🎵 Cântico Intermediário</span>
+                            <strong>Nº ${dados.vida_crista?.cantico_intermediario || '--'}</strong>
+                        </div>
+                        
+                        ${htmlVidaCrista}
+                        ${htmlBlocoFinal}
+
+                        <div class="item-linha">
+                            <div class="item-titulo">Comentários Finais (3 min)</div>
+                            <div class="item-nome">${nomeFormatado(dados.vida_crista?.comentarios_finais)}</div>
+                        </div>
+                        <div class="bloco-cantico" style="margin-bottom: 0;">
+                            <span>🎵 Cântico ${dados.vida_crista?.cantico_final || '--'} e Oração</span>
+                            <strong>${nomeFormatado(dados.vida_crista?.oracao_final)}</strong>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Iniciar aplicação
+        window.onload = carregarDados;
+    </script>
+</body>
+</html>
