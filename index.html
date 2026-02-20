@@ -12,6 +12,7 @@
             --cor-fundo: #f0f2f5;
             --cor-texto: #333;
             --cor-texto-secundario: #666;
+            --cor-destaque: #1a73e8;
         }
 
         body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; background-color: var(--cor-fundo); color: var(--cor-texto); }
@@ -19,8 +20,15 @@
         /* Cabeçalho e Controles */
         .header { background-color: #fff; padding: 15px 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); text-align: center; position: sticky; top: 0; z-index: 100;}
         .header h1 { margin: 0; font-size: 20px; color: var(--cor-texto); font-weight: 600; }
-        .seletor-data { margin-top: 10px; }
-        .seletor-data select { padding: 8px 15px; border-radius: 20px; border: 1px solid #ccc; font-size: 14px; background-color: #f8f9fa; outline: none; font-weight: bold; color: var(--cor-texto); cursor: pointer; }
+        
+        .controles-topo { max-width: 600px; margin: 15px auto 0 auto; display: flex; flex-direction: column; gap: 10px;}
+        
+        .seletor-data select { width: 100%; padding: 10px 15px; border-radius: 8px; border: 1px solid #ccc; font-size: 15px; background-color: #f8f9fa; outline: none; font-weight: bold; color: var(--cor-texto); cursor: pointer; box-sizing: border-box;}
+        
+        .busca-container { position: relative; width: 100%; }
+        .busca-container input { width: 100%; padding: 10px 15px 10px 35px; border-radius: 8px; border: 1px solid #ccc; font-size: 15px; outline: none; box-sizing: border-box; transition: border-color 0.3s;}
+        .busca-container input:focus { border-color: var(--cor-destaque); box-shadow: 0 0 0 2px rgba(26,115,232,0.2);}
+        .busca-icone { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 16px; color: #999; }
 
         /* Container Principal */
         .container { max-width: 600px; margin: 20px auto; padding: 0 15px; }
@@ -57,7 +65,13 @@
         .evento-especial h2 { color: var(--cor-tesouros); margin-bottom: 10px;}
         .evento-especial p { color: var(--cor-texto-secundario); font-size: 16px; line-height: 1.5;}
         
-        /* Loading */
+        /* Resultados de Pesquisa */
+        #painelBusca { background-color: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); }
+        .resultado-item { border-bottom: 1px solid #eee; padding: 15px 0; }
+        .resultado-item:last-child { border-bottom: none; padding-bottom: 0;}
+        .resultado-lista { margin: 10px 0 0 0; padding-left: 20px; color: var(--cor-texto); font-size: 15px; line-height: 1.6;}
+        
+        /* Utilitários */
         #loading { text-align: center; padding: 50px; color: var(--cor-texto-secundario); font-weight: bold; }
         .hidden { display: none !important; }
     </style>
@@ -66,10 +80,16 @@
 
     <header class="header">
         <h1>Quadro de Anúncios</h1>
-        <div class="seletor-data">
-            <select id="selectDatas">
-                <option value="">Carregando semanas...</option>
-            </select>
+        <div class="controles-topo">
+            <div class="busca-container">
+                <span class="busca-icone">🔍</span>
+                <input type="text" id="inputBuscaNome" placeholder="Digite seu nome para buscar suas partes..." autocomplete="off">
+            </div>
+            <div class="seletor-data" id="containerSeletor">
+                <select id="selectDatas">
+                    <option value="">Carregando semanas...</option>
+                </select>
+            </div>
         </div>
     </header>
 
@@ -78,13 +98,17 @@
         
         <div id="board" class="hidden">
             </div>
+
+        <div id="painelBusca" class="hidden">
+            <h3 style="margin-top: 0; color: var(--cor-destaque); border-bottom: 2px solid #eee; padding-bottom: 10px;" id="tituloBusca">Resultados:</h3>
+            <div id="conteudoBusca"></div>
+        </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // Configuração do Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyC3U8tyPk5IB_y51-3d7_6V-16qtoqzeI8",
             authDomain: "quadro-congregacao.firebaseapp.com",
@@ -98,47 +122,41 @@
         const db = getFirestore(app);
 
         let todasAsProgramacoes = {};
+        let datasOrdenadas = [];
 
         async function carregarDados() {
             try {
                 const querySnapshot = await getDocs(collection(db, "programacoes_semanais"));
-                let datas = [];
                 
                 querySnapshot.forEach((doc) => {
                     todasAsProgramacoes[doc.id] = doc.data();
-                    datas.push(doc.id);
+                    datasOrdenadas.push(doc.id);
                 });
 
-                if (datas.length === 0) {
+                if (datasOrdenadas.length === 0) {
                     document.getElementById('loading').innerHTML = "Nenhuma programação disponível no momento.";
                     return;
                 }
 
-                // Ordena as datas (mais antigas para mais novas)
-                datas.sort();
+                datasOrdenadas.sort(); // Antigas para mais novas
                 
                 const select = document.getElementById('selectDatas');
                 select.innerHTML = '';
                 
-                let dataParaSelecionar = datas[0];
+                let dataParaSelecionar = datasOrdenadas[0];
                 const hojeStr = new Date().toISOString().split('T')[0];
 
-                // Descobre qual é a reunião mais relevante (a próxima ou a da semana atual)
-                for (let i = 0; i < datas.length; i++) {
-                    const dataObj = new Date(datas[i] + "T23:59:59");
-                    const dataHoje = new Date();
-                    
-                    // Se a reunião for hoje ou no futuro, seleciona ela e para a busca
-                    if (dataObj >= dataHoje || datas[i] === hojeStr) {
-                        dataParaSelecionar = datas[i];
+                for (let i = 0; i < datasOrdenadas.length; i++) {
+                    const dataObj = new Date(datasOrdenadas[i] + "T23:59:59");
+                    if (dataObj >= new Date() || datasOrdenadas[i] === hojeStr) {
+                        dataParaSelecionar = datasOrdenadas[i];
                         break;
                     }
-                    // Se todas estiverem no passado, ele vai acabar selecionando a última (a mais recente)
-                    dataParaSelecionar = datas[i]; 
+                    dataParaSelecionar = datasOrdenadas[i]; 
                 }
 
-                // Preenche o Select
-                datas.reverse().forEach(dataId => { // Reverse para listar da mais nova pra mais velha no menu
+                // Inverte para exibir mais novas no topo do select
+                [...datasOrdenadas].reverse().forEach(dataId => { 
                     const opt = document.createElement('option');
                     opt.value = dataId;
                     opt.innerText = formatarDataBR(dataId);
@@ -149,7 +167,6 @@
                 document.getElementById('loading').classList.add('hidden');
                 document.getElementById('board').classList.remove('hidden');
                 
-                // Renderiza a data selecionada automaticamente
                 renderizarProgramacao(todasAsProgramacoes[dataParaSelecionar]);
 
             } catch (error) {
@@ -158,23 +175,111 @@
             }
         }
 
-        // Listener para quando o irmão mudar a data no seletor
+        // Eventos
         document.getElementById('selectDatas').addEventListener('change', (e) => {
             renderizarProgramacao(todasAsProgramacoes[e.target.value]);
+            document.getElementById('inputBuscaNome').value = ''; // Limpa a busca ao trocar de data manualmente
+            restaurarQuadroNormal();
         });
 
-        function formatarDataBR(dataISO) {
-            return dataISO.split('-').reverse().join('/');
+        // LÓGICA DE BUSCA INTELIGENTE
+        document.getElementById('inputBuscaNome').addEventListener('input', (e) => {
+            const termo = e.target.value.toLowerCase().trim();
+            const board = document.getElementById('board');
+            const painelBusca = document.getElementById('painelBusca');
+            const conteudoBusca = document.getElementById('conteudoBusca');
+            const containerSeletor = document.getElementById('containerSeletor');
+
+            if (termo.length < 3) {
+                restaurarQuadroNormal();
+                return;
+            }
+
+            // Ativa o Modo de Busca
+            board.classList.add('hidden');
+            containerSeletor.classList.add('hidden'); // Oculta o seletor de datas para evitar confusão
+            painelBusca.classList.remove('hidden');
+            document.getElementById('tituloBusca').innerText = `Procurando por "${e.target.value}"...`;
+
+            let encontrouAlgo = false;
+            let htmlResultados = '';
+
+            // Percorre todas as datas cadastradas (da mais antiga pra mais nova)
+            datasOrdenadas.forEach(data => {
+                const p = todasAsProgramacoes[data];
+                if (["Assembleia", "Congresso", "Celebracao"].includes(p.tipo_evento)) return;
+
+                let partesEncontradas = [];
+
+                const checar = (nomeSalvo, nomeParte) => {
+                    if (nomeSalvo && nomeSalvo.toLowerCase().includes(termo)) {
+                        partesEncontradas.push(nomeParte);
+                    }
+                };
+
+                // Vasculhando cada canto da programação
+                checar(p.presidente, "Presidente da Reunião");
+                checar(p.abertura?.oracao, "Oração Inicial");
+                checar(p.abertura?.comentarios, "Comentários Iniciais");
+                checar(p.tesouros?.parte_1, "Discurso Principal");
+                checar(p.tesouros?.parte_2, "Joias Espirituais");
+                checar(p.tesouros?.leitura, "Leitura da Bíblia");
+
+                if (p.ministerio) {
+                    p.ministerio.forEach((m, i) => {
+                        checar(m.estudante, `Ministério - Parte ${i + 4} (Estudante/Designado)`);
+                        checar(m.ajudante, `Ministério - Parte ${i + 4} (Ajudante)`);
+                    });
+                }
+
+                if (p.vida_crista?.partes) {
+                    p.vida_crista.partes.forEach((vc, i) => {
+                        checar(vc.designado, `Vida Cristã - Parte ${i + 7}`);
+                    });
+                }
+
+                checar(p.vida_crista?.estudo_dirigente, "Dirigente do Estudo de Congregação");
+                checar(p.vida_crista?.estudo_leitor, "Leitor do Estudo de Congregação");
+                checar(p.vida_crista?.discurso_viajante, "Discurso do Superintendente");
+                checar(p.vida_crista?.comentarios_finais, "Comentários Finais");
+                checar(p.vida_crista?.oracao_final, "Oração Final");
+
+                // Se achou o irmão nesta data, monta o bloco dele
+                if (partesEncontradas.length > 0) {
+                    encontrouAlgo = true;
+                    htmlResultados += `
+                        <div class="resultado-item">
+                            <div class="data-badge">${formatarDataBR(data)}</div>
+                            <ul class="resultado-lista">
+                                ${partesEncontradas.map(parte => `<li><strong>${parte}</strong></li>`).join('')}
+                            </ul>
+                        </div>
+                    `;
+                }
+            });
+
+            if (encontrouAlgo) {
+                document.getElementById('tituloBusca').innerText = `Designações para "${e.target.value}":`;
+                conteudoBusca.innerHTML = htmlResultados;
+            } else {
+                conteudoBusca.innerHTML = `<p style="color: var(--cor-texto-secundario); text-align: center; padding: 20px 0;">Nenhuma designação encontrada para este nome nas programações atuais.</p>`;
+            }
+        });
+
+        function restaurarQuadroNormal() {
+            document.getElementById('painelBusca').classList.add('hidden');
+            document.getElementById('board').classList.remove('hidden');
+            document.getElementById('containerSeletor').classList.remove('hidden');
         }
 
-        function nomeFormatado(nome) {
-            return nome && nome.trim() !== "" ? nome : "<span style='color:#ccc; font-weight:normal;'>A designar</span>";
-        }
+        // Funções de formatação e renderização do quadro normal
+        function formatarDataBR(dataISO) { return dataISO.split('-').reverse().join('/'); }
+
+        function nomeFormatado(nome) { return nome && nome.trim() !== "" ? nome : "<span style='color:#ccc; font-weight:normal;'>A designar</span>"; }
 
         function renderizarProgramacao(dados) {
             const board = document.getElementById('board');
             
-            // Cenário 1: Eventos Especiais
             if (["Assembleia", "Congresso", "Celebracao"].includes(dados.tipo_evento)) {
                 let tituloEvento = dados.tipo_evento === "Celebracao" ? "Celebração da Morte de Cristo" : dados.tipo_evento;
                 board.innerHTML = `
@@ -189,14 +294,12 @@
                 return;
             }
 
-            // Cenário 2: Reunião Normal ou Visita
             const isVisita = dados.tipo_evento === "Visita";
             
-            // Montando as partes dinâmicas do Ministério
             let htmlMinisterio = '';
             if (dados.ministerio && dados.ministerio.length > 0) {
                 dados.ministerio.forEach((parte, index) => {
-                    const numParte = index + 4; // Começa na Parte 4
+                    const numParte = index + 4;
                     htmlMinisterio += `
                         <div class="item-linha">
                             <div class="item-titulo">Parte ${numParte}</div>
@@ -207,11 +310,8 @@
                         </div>
                     `;
                 });
-            } else {
-                htmlMinisterio = `<div class="item-linha"><div class="item-titulo">Sem designações cadastradas</div></div>`;
-            }
+            } else { htmlMinisterio = `<div class="item-linha"><div class="item-titulo">Sem designações cadastradas</div></div>`; }
 
-            // Montando as partes dinâmicas da Vida Cristã
             let htmlVidaCrista = '';
             if (dados.vida_crista && dados.vida_crista.partes && dados.vida_crista.partes.length > 0) {
                 dados.vida_crista.partes.forEach((parte, index) => {
@@ -224,7 +324,6 @@
                 });
             }
 
-            // Estudo de Congregação ou Discurso do Viajante
             let htmlBlocoFinal = '';
             if (isVisita) {
                 htmlBlocoFinal = `
@@ -245,7 +344,6 @@
                 `;
             }
 
-            // Renderização do Cartão Completo
             board.innerHTML = `
                 <div class="card">
                     <div class="card-header">
@@ -308,7 +406,6 @@
             `;
         }
 
-        // Iniciar aplicação
         window.onload = carregarDados;
     </script>
 </body>
