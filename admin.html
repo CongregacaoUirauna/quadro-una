@@ -853,7 +853,7 @@
 
             const container = document.getElementById('molde-s140-container');
             
-            // Montagem dinâmica do HTML do S-140 (Espelhando o Word)
+            // Montagem dinâmica do HTML do S-140 (Sem a coluna de horários)
             const colunasHeader = usarSalaB 
                 ? `<th class="s140-col-sala">Sala B</th><th class="s140-col-sala">Salão principal</th>` 
                 : `<th class="s140-col-sala" colspan="2">Salão principal</th>`;
@@ -870,7 +870,6 @@
                 
                 minHTML += `
                 <tr>
-                    <td class="s140-col-hora">0:00</td>
                     <td class="s140-col-tema">${index + 4}. ${tema}</td>
                     ${usarSalaB ? `<td>${estAjuB}</td>` : ''}
                     <td ${usarSalaB ? '' : 'colspan="2"'}>${estAjuP}</td>
@@ -883,7 +882,6 @@
                 const tema = formataMin(item.querySelector('.vc-tema').value, item.querySelector('.vc-tempo').value);
                 vcHTML += `
                 <tr>
-                    <td class="s140-col-hora">0:00</td>
                     <td class="s140-col-tema" ${usarSalaB ? 'colspan="2"' : ''}>${index + 7}. ${tema}</td>
                     <td ${usarSalaB ? '' : 'colspan="2"'}>${item.querySelector('.vc-designado').value || "---"}</td>
                 </tr>`;
@@ -891,7 +889,7 @@
 
             // Conselheiro Sala B header fix
             const conselheiroRow = usarSalaB 
-                ? `<tr><td colspan="2" style="border:none;"></td><td colspan="2" style="border:none; text-align:right; padding-bottom:10px;">Conselheiro da sala B: <strong>${document.getElementById('conselheiroSalaB').value || "---"}</strong></td></tr>`
+                ? `<tr><td style="border:none;"></td><td colspan="2" style="border:none; text-align:right; padding-bottom:10px;">Conselheiro da sala B: <strong>${document.getElementById('conselheiroSalaB').value || "---"}</strong></td></tr>`
                 : '';
 
             const leituraSemanalStr = document.getElementById('leituraSemanal').value || "---";
@@ -902,71 +900,62 @@
                 <table class="s140-table">
                     <tr>
                         <td colspan="2" style="border:none; font-weight:bold; padding-bottom:10px;">${dataBR} | LEITURA SEMANAL DA BÍBLIA: ${leituraSemanalStr}</td>
-                        <td colspan="2" style="border:none; text-align:right; padding-bottom:10px;">Presidente: <strong>${document.getElementById('presidente').value || "---"}</strong></td>
+                        <td style="border:none; text-align:right; padding-bottom:10px;">Presidente: <strong>${document.getElementById('presidente').value || "---"}</strong></td>
                     </tr>
                     ${conselheiroRow}
                     <tr>
-                        <td class="s140-col-hora">0:00</td>
                         <td class="s140-col-tema" colspan="2">Cântico ${document.getElementById('canticoInicial').value || "---"} e Oração</td>
                         <td>${document.getElementById('oracaoInicial').value || "---"}</td>
                     </tr>
                     <tr>
-                        <td class="s140-col-hora">0:00</td>
                         <td class="s140-col-tema" colspan="3">Comentários iniciais (1 min)</td>
                     </tr>
                     
                     <tr class="s140-section-header bg-tesouros">
-                        <td colspan="2">TESOUROS DA PALAVRA DE DEUS</td>
+                        <td>TESOUROS DA PALAVRA DE DEUS</td>
                         ${colunasHeader}
                     </tr>
                     <tr>
-                        <td class="s140-col-hora">0:00</td>
                         <td class="s140-col-tema" ${usarSalaB ? 'colspan="2"' : ''}>1. ${document.getElementById('temaParte1').value || "---"} (10 min)</td>
                         <td ${usarSalaB ? '' : 'colspan="2"'}>${document.getElementById('parte1').value || "---"}</td>
                     </tr>
                     <tr>
-                        <td class="s140-col-hora">0:00</td>
                         <td class="s140-col-tema" ${usarSalaB ? 'colspan="2"' : ''}>2. ${document.getElementById('temaParte2').value || "---"} (10 min)</td>
                         <td ${usarSalaB ? '' : 'colspan="2"'}>${document.getElementById('parte2').value || "---"}</td>
                     </tr>
                     <tr>
-                        <td class="s140-col-hora">0:00</td>
                         <td class="s140-col-tema">3. Leitura da Bíblia (4 min) <span style="font-weight: normal;">${trechoLeituraStr}</span></td>
                         ${usarSalaB ? `<td>---</td>` : ''}
                         <td ${usarSalaB ? '' : 'colspan="2"'}>Est: ${document.getElementById('leituraBiblia').value || "---"}</td>
                     </tr>
 
                     <tr class="s140-section-header bg-ministerio">
-                        <td colspan="2">FAÇA SEU MELHOR NO MINISTÉRIO</td>
+                        <td>FAÇA SEU MELHOR NO MINISTÉRIO</td>
                         ${colunasHeader}
                     </tr>
                     ${minHTML}
 
                     <tr class="s140-section-header bg-vidacrista">
-                        <td colspan="4">NOSSA VIDA CRISTÃ</td>
+                        <td colspan="3">NOSSA VIDA CRISTÃ</td>
                     </tr>
                     <tr>
-                        <td class="s140-col-hora">0:00</td>
                         <td class="s140-col-tema" colspan="3">Cântico ${document.getElementById('canticoIntermediario').value || "---"}</td>
                     </tr>
                     ${vcHTML}
                     <tr>
-                        <td class="s140-col-hora">0:00</td>
                         <td class="s140-col-tema" ${usarSalaB ? 'colspan="2"' : ''}>Estudo bíblico de congregação (30 min)</td>
                         <td ${usarSalaB ? '' : 'colspan="2"'}>Dir: ${document.getElementById('estudoDirigente').value || "---"}<br><span class="s140-sub">Lei: ${document.getElementById('estudoLeitor').value || "---"}</span></td>
                     </tr>
                     <tr>
-                        <td class="s140-col-hora">0:00</td>
                         <td class="s140-col-tema" colspan="3">Comentários finais (3 min)</td>
                     </tr>
                     <tr>
-                        <td class="s140-col-hora">0:00</td>
                         <td class="s140-col-tema" colspan="2">Cântico ${document.getElementById('canticoFinal').value || "---"} e Oração</td>
                         <td>${document.getElementById('oracaoFinal').value || "---"}</td>
                     </tr>
                 </table>
             `;
-
+            
             try {
                 const canvas = await html2canvas(container, { scale: 2, backgroundColor: "#ffffff" });
                 const imgDataUrl = canvas.toDataURL('image/png');
