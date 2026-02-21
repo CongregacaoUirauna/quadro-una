@@ -34,7 +34,7 @@
         
         /* Formulário & Seções */
         .container { max-width: 850px; margin: 0 auto; padding-bottom: 40px;}
-        .topo-acoes { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .topo-acoes { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;}
         .btn-config { background-color: #fbbc05; color: #333; padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 14px;}
         .btn-config:hover { background-color: #f2a600; }
         .btn-sair { background-color: #ea4335; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 14px;}
@@ -46,7 +46,7 @@
         label { display: block; margin-top: 15px; font-weight: bold; font-size: 14px; color: #444;}
         input, select { width: 100%; padding: 10px; margin-top: 5px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; font-size: 14px;}
         .input-group { display: flex; gap: 10px; margin-top: 5px; align-items: center;}
-        .input-group input, .input-group select { width: 50%; }
+        .input-group input, .input-group select { width: 100%; } /* Ajustado para flexibilidade */
         
         button.btn-salvar { background-color: #1a73e8; color: white; padding: 12px 20px; border: none; cursor: pointer; font-size: 16px; margin-top: 15px; border-radius: 4px; width: 100%; font-weight: bold;}
         button.btn-salvar:hover { background-color: #1557b0; }
@@ -96,6 +96,22 @@
         .s89-box { width: 16px; height: 16px; border: 2px solid #000; display: inline-block; }
         .s89-box-checked { background-color: #000; }
         .s89-obs { margin-top: 30px; font-size: 13px; text-align: justify; line-height: 1.4; }
+
+        /* Molde Oculto S-140 para gerar a Tabela Física */
+        #molde-s140-container {
+            position: absolute; left: -9999px; top: -9999px; /* Oculto fora da tela */
+            width: 800px; background-color: white; padding: 40px; 
+            font-family: Arial, sans-serif; color: black; z-index: -1;
+        }
+        .s140-titulo-geral { text-align: center; font-weight: bold; font-size: 18px; text-transform: uppercase; margin-bottom: 20px;}
+        .s140-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        .s140-table th, .s140-table td { padding: 8px 5px; border-bottom: 1px solid #000; text-align: left; vertical-align: top;}
+        .s140-section-header { background-color: #f2f2f2; border-top: 2px solid #000; border-bottom: 2px solid #000; font-weight: bold; text-transform: uppercase;}
+        .s140-col-hora { width: 50px; font-weight: bold;}
+        .s140-col-tema { width: auto; font-weight: bold;}
+        .s140-col-sala { width: 22%; }
+        .s140-sub { font-size: 12px; font-weight: normal; font-style: italic; }
+
     </style>
 </head>
 <body>
@@ -117,6 +133,8 @@
         </div>
     </div>
 
+    <div id="molde-s140-container"></div>
+
     <div id="telaLogin">
         <h2 style="color: #1a73e8; margin-top: 0;">Acesso Restrito</h2>
         <p style="color: #666; font-size: 14px;">Insira suas credenciais para gerenciar a escala.</p>
@@ -137,9 +155,10 @@
     <div id="painelSistema">
         <div class="container">
             <div class="topo-acoes">
-                <div style="display: flex; gap: 10px;">
-                    <button type="button" id="btnConfig" class="btn-config">⚙️ Configurações & Listas</button>
-                    <button type="button" id="btnGerarDesignacoes" class="btn-config" style="background-color: #25D366; color: white;">📱 Enviar Designações</button>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button type="button" id="btnConfig" class="btn-config">⚙️ Configurações</button>
+                    <button type="button" id="btnGerarDesignacoes" class="btn-config" style="background-color: #25D366; color: white;">📱 S-89 / WhatsApp</button>
+                    <button type="button" id="btnGerarS140" class="btn-config" style="background-color: #9c27b0; color: white;">🖨️ Gerar Quadro S-140</button>
                 </div>
                 <button type="button" id="btnSair" class="btn-sair">Sair do Sistema</button>
             </div>
@@ -159,20 +178,28 @@
                         <option value="Congresso">Congresso</option>
                         <option value="Celebracao">Celebração da Morte de Cristo</option>
                     </select>
+
+                    <label style="display: flex; align-items: center; gap: 10px; margin-top: 15px; cursor: pointer;">
+                        <input type="checkbox" id="usarSalaB" style="width: auto; margin: 0; transform: scale(1.3);">
+                        <span style="color: #1a73e8; font-weight: bold;">Habilitar uso da Sala B nesta reunião</span>
+                    </label>
                 </div>
 
                 <div id="formSections">
                     <div class="section">
-                        <label for="presidente" style="margin-top: 0;">Presidente da Reunião:</label>
-                        <select id="presidente" class="lista-presidentes"></select>
-                        <small style="color: #666;">Os Comentários Iniciais e Finais acompanharão este nome.</small>
+                        <label for="presidente" style="margin-top: 0;">Presidente da Reunião e Conselheiro (Sala B):</label>
+                        <div class="input-group">
+                            <select id="presidente" class="lista-presidentes" style="width: 50%;"></select>
+                            <select id="conselheiroSalaB" class="aprovados-ensino" style="width: 50%;"></select>
+                        </div>
+                        <small style="color: #666;">O Conselheiro da Sala B só será impresso no quadro se a Sala B estiver habilitada acima.</small>
                     </div>
 
                     <div class="section">
                         <h3>Abertura</h3>
                         <div class="input-group">
-                            <input type="number" id="canticoInicial" placeholder="Nº do Cântico" min="1">
-                            <select id="oracaoInicial" class="lista-oracao"></select>
+                            <input type="number" id="canticoInicial" placeholder="Nº do Cântico Inicial" min="1" style="width: 30%;">
+                            <select id="oracaoInicial" class="lista-oracao" style="width: 70%;"></select>
                         </div>
                         <label for="comentariosIniciais">Comentários Iniciais (1 min):</label>
                         <input type="text" id="comentariosIniciais" readonly style="background-color: #e9ecef;">
@@ -180,14 +207,24 @@
 
                     <div class="section">
                         <h3>Tesouros da Palavra de Deus</h3>
-                        <label for="parte1">Parte 1 - Discurso Principal (10 min):</label>
-                        <select id="parte1" class="aprovados-ensino"></select>
                         
-                        <label for="parte2">Parte 2 - Joias Espirituais (10 min):</label>
-                        <select id="parte2" class="aprovados-ensino"></select>
+                        <label>Parte 1 - Discurso Principal (10 min):</label>
+                        <div class="input-group">
+                            <input type="text" id="temaParte1" placeholder="Tema do Discurso" style="width: 60%;">
+                            <select id="parte1" class="aprovados-ensino" style="width: 40%;"></select>
+                        </div>
                         
-                        <label for="leituraBiblia">Parte 3 - Leitura da Bíblia (4 min):</label>
-                        <select id="leituraBiblia" class="lista-irmaos"></select>
+                        <label>Parte 2 - Joias Espirituais (10 min):</label>
+                        <div class="input-group">
+                            <input type="text" id="temaParte2" placeholder="Tema das Joias" style="width: 60%;">
+                            <select id="parte2" class="aprovados-ensino" style="width: 40%;"></select>
+                        </div>
+                        
+                        <label>Parte 3 - Leitura da Bíblia (4 min):</label>
+                        <div class="input-group">
+                            <input type="text" id="capitulosLeitura" placeholder="Capítulos (Ex: Salmos 1-5)" style="width: 60%;">
+                            <select id="leituraBiblia" class="lista-irmaos" style="width: 40%;"></select>
+                        </div>
                     </div>
 
                     <div class="section">
@@ -203,7 +240,7 @@
                             Nossa Vida Cristã
                             <button type="button" class="btn-add" id="btnAddVidaCrista">+ Adicionar Parte</button>
                         </h3>
-                        <label for="canticoIntermediario">Cântico Intermediário (Número):</label>
+                        <label for="canticoIntermediario">Cântico Intermediário:</label>
                         <input type="number" id="canticoIntermediario" placeholder="Nº do Cântico" min="1">
 
                         <div id="containerVidaCrista"></div>
@@ -226,8 +263,8 @@
 
                         <label>Conclusão:</label>
                         <div class="input-group">
-                            <input type="number" id="canticoFinal" placeholder="Nº do Cântico" min="1">
-                            <select id="oracaoFinal" class="lista-oracao"></select>
+                            <input type="number" id="canticoFinal" placeholder="Nº do Cântico Final" min="1" style="width: 30%;">
+                            <select id="oracaoFinal" class="lista-oracao" style="width: 70%;"></select>
                         </div>
                     </div>
                 </div> 
@@ -244,17 +281,19 @@
             <h2 style="color: #1a73e8; margin-top: 0;">Configurações e Listas</h2>
             
             <div class="section" style="padding: 15px; margin-bottom: 10px;">
-                <label for="configDiaReuniao" style="margin-top:0;">Dia da Reunião na Semana:</label>
+                <label for="configNomeCongregacao" style="margin-top:0;">Nome da Congregação (Para o S-140):</label>
+                <input type="text" id="configNomeCongregacao" placeholder="Ex: CONGREGAÇÃO CENTRO">
+                
+                <label for="configDiaReuniao">Dia da Reunião na Semana:</label>
                 <select id="configDiaReuniao">
                     <option value="1">Segunda-feira</option>
                     <option value="2">Terça-feira</option>
                     <option value="3">Quarta-feira</option>
-                    <option value="4" selected>Quinta-feira</option>
+                    <option value="4">Quinta-feira</option>
                     <option value="5">Sexta-feira</option>
                     <option value="6">Sábado</option>
                     <option value="0">Domingo</option>
                 </select>
-                <small style="color:#666;">A data sugerida no painel usará este dia como padrão.</small>
             </div>
 
             <div class="config-grid">
@@ -287,19 +326,17 @@
     <div id="modalDesignacoes" class="modal-bg">
         <div class="modal-content">
             <span class="modal-close" id="fecharDesignacoes">&times;</span>
-            <h2 style="color: #25D366; margin-top: 0;">📱 Designações Geradas</h2>
+            <h2 style="color: #25D366; margin-top: 0;" id="tituloModalGerar">📱 Designações Geradas</h2>
             
             <div id="loadingImagens" style="text-align: center; padding: 20px; font-weight: bold; color: #1a73e8; display: none;">
-                ⏳ Processando imagens, por favor aguarde...
+                ⏳ Processando, por favor aguarde...
             </div>
 
             <div id="conteudoDesignacoes">
                 <button type="button" id="btnBaixarTodasImagens" class="btn-salvar" style="background-color: #fbbc05; color: #333; margin-top: 0; margin-bottom: 20px; display: none;">
                     📦 Baixar TODAS as Imagens (Arquivo ZIP)
                 </button>
-                
-                <div id="listaDesignacoesProntas" style="max-height: 50vh; overflow-y: auto; padding-right: 10px;">
-                    </div>
+                <div id="listaDesignacoesProntas" style="max-height: 50vh; overflow-y: auto; padding-right: 10px;"></div>
             </div>
         </div>
     </div>
@@ -324,6 +361,7 @@
 
         // --- ESTADO GLOBAL ---
         let configGlobal = {
+            nome_congregacao: "SUA CONGREGAÇÃO",
             dia_reuniao: 4, 
             aprovados_oracao: ["Edinho Freitas", "Elton Freitas", "Francisco Nunes", "Glebston", "Robert César", "Rony Henrique"].sort(),
             presidentes: ["Francisco Nunes", "Glebston", "Robert César"].sort(),
@@ -333,7 +371,7 @@
             irmas: ["Ana Paula", "Anna Clara", "Bruna", "Cleonice", "Conceição", "Dona Lia", "Francinete", "Geralda", "Gerlândia", "Giudeth", "Helena", "Jaiara", "Joelma Sobreira", "Kleitiane", "Leticia Lima", "Letícia Angélica", "Libetânia", "Luci", "Maria Helena", "Mayane", "Remédios", "Sabrina", "Silmara", "Silvia", "Sonilde", "Suelene", "Terezinha", "Vitoria", "Vânia", "Zildilene", "Zuilha"].sort()
         };
         let dadosSemanaAnterior = null;
-        let designacoesGeradasMemoria = []; // Guarda as imagens geradas
+        let designacoesGeradasMemoria = []; 
 
         // --- LÓGICA DE AUTENTICAÇÃO ---
         onAuthStateChanged(auth, async (user) => {
@@ -366,13 +404,11 @@
             try {
                 const docSnap = await getDoc(doc(db, "configuracoes", "geral"));
                 if (docSnap.exists()) {
-                    // Mescla os dados do banco com as listas locais para não perder as novidades
                     configGlobal = { ...configGlobal, ...docSnap.data() };
                 } else {
                     await setDoc(doc(db, "configuracoes", "geral"), configGlobal);
                 }
                 
-                // Trava de segurança: Se a lista de oração ainda não existir no banco, ele injeta e salva
                 if (!configGlobal.aprovados_oracao) {
                     configGlobal.aprovados_oracao = ["Edinho Freitas", "Elton Freitas", "Francisco Nunes", "Glebston", "Robert César", "Rony Henrique"].sort();
                     await setDoc(doc(db, "configuracoes", "geral"), configGlobal);
@@ -392,12 +428,21 @@
             document.querySelectorAll('.lista-oracao').forEach(s => s.innerHTML = gerarOpts(configGlobal.aprovados_oracao, "Oração..."));
             document.querySelectorAll('.lista-irmaos').forEach(s => s.innerHTML = gerarOpts(configGlobal.irmaos, "Irmão Designado..."));
             
-            document.querySelectorAll('.min-estudante').forEach(s => { const v = s.value; s.innerHTML = gerarOpts(todos, "Estudante"); s.value = v; });
-            document.querySelectorAll('.min-ajudante').forEach(s => { const v = s.value; s.innerHTML = gerarOpts(todos, "Ajudante (se houver)"); s.value = v; });
+            // Atualiza os dinâmicos sem perder o valor atual
+            document.querySelectorAll('.min-estudante, .min-estudante-b').forEach(s => { const v = s.value; s.innerHTML = gerarOpts(todos, "Estudante"); s.value = v; });
+            document.querySelectorAll('.min-ajudante, .min-ajudante-b').forEach(s => { const v = s.value; s.innerHTML = gerarOpts(todos, "Ajudante"); s.value = v; });
             document.querySelectorAll('.vc-designado').forEach(s => { const v = s.value; s.innerHTML = gerarOpts(configGlobal.aprovados_ensino, "Designado"); s.value = v; });
+            
+            document.getElementById('conselheiroSalaB').innerHTML = gerarOpts(configGlobal.aprovados_ensino, "Conselheiro Sala B...");
         }
 
-        // --- SIDEBAR E FLUXO DE LIMPEZA COM BOTÃO DE EXCLUIR ---
+        // --- CONTROLE DE EXIBIÇÃO DA SALA B ---
+        document.getElementById('usarSalaB').addEventListener('change', (e) => {
+            const display = e.target.checked ? 'flex' : 'none';
+            document.querySelectorAll('.sala-b-group').forEach(el => el.style.display = display);
+        });
+
+        // --- SIDEBAR E FLUXO DE LIMPEZA ---
         async function carregarHistoricoSidebar() {
             const lista = document.getElementById('listaHistorico');
             lista.innerHTML = '<li class="history-item">Carregando...</li>';
@@ -431,7 +476,7 @@
                     btnExcluir.title = "Excluir Reunião";
                     btnExcluir.onclick = async (e) => {
                         e.stopPropagation(); 
-                        if(confirm(`⚠️ ATENÇÃO: Tem certeza que deseja EXCLUIR permanentemente a reunião do dia ${spanData.innerText}? Essa ação apagará a programação do quadro.`)) {
+                        if(confirm(`⚠️ ATENÇÃO: Tem certeza que deseja EXCLUIR permanentemente a reunião do dia ${spanData.innerText}?`)) {
                             try {
                                 await deleteDoc(doc(db, "programacoes_semanais", d));
                                 carregarHistoricoSidebar(); 
@@ -457,6 +502,7 @@
 
         function prepararNovoFormulario() {
             document.getElementById('formReuniao').reset();
+            document.getElementById('usarSalaB').dispatchEvent(new Event('change')); // Reseta visual da sala B
             document.getElementById('tituloAcao').innerText = "Nova Programação";
             document.getElementById('mensagem').innerText = "";
             document.getElementById('formSections').classList.remove('hidden');
@@ -472,16 +518,13 @@
         }
 
        function sugerirProximaData() {
-            // Tenta pegar a data mais recente que já está salva na barra lateral
             const ultimaDataSalva = document.querySelector('#listaHistorico .history-item span');
-            
             if (ultimaDataSalva && ultimaDataSalva.innerText.includes('/')) {
                 const partes = ultimaDataSalva.innerText.split('/');
                 let d = new Date(`${partes[2]}-${partes[1]}-${partes[0]}T12:00:00`);
-                d.setDate(d.getDate() + 7); // Soma 7 dias da última reunião
+                d.setDate(d.getDate() + 7);
                 document.getElementById('dataReuniao').value = d.toISOString().split('T')[0];
             } else {
-                // Se for o primeiro uso (vazio), calcula com base em hoje
                 let hoje = new Date();
                 let diaAlvo = parseInt(configGlobal.dia_reuniao);
                 let offset = (diaAlvo - hoje.getDay() + 7) % 7;
@@ -490,23 +533,12 @@
                 prox.setDate(hoje.getDate() + offset);
                 document.getElementById('dataReuniao').value = prox.toISOString().split('T')[0];
             }
-            
             buscarDadosSemanaAnterior(document.getElementById('dataReuniao').value);
         }
 
-        // --- INTELIGÊNCIA DE EVENTOS E DATAS ---
         document.getElementById('tipoEvento').addEventListener('change', (e) => {
             const val = e.target.value;
             const formSections = document.getElementById('formSections');
-            const dataInput = document.getElementById('dataReuniao');
-
-            if (val === "Visita" && dataInput.value) {
-                let d = new Date(dataInput.value + "T12:00:00");
-                let diff = 2 - d.getDay(); 
-                d.setDate(d.getDate() + diff);
-                dataInput.value = d.toISOString().split('T')[0];
-            }
-
             if (["Assembleia", "Congresso", "Celebracao"].includes(val)) {
                 formSections.classList.add('hidden');
             } else {
@@ -526,50 +558,42 @@
             document.getElementById('comentariosFinais').value = e.target.value;
         });
 
-       // --- VALIDAÇÃO ANTI-DUPLICIDADE E REGRA DA SEMANA ANTERIOR ---
-        // Aplicando para o Ministério e para a Leitura da Bíblia
+       // --- VALIDAÇÃO ANTI-DUPLICIDADE (ATUALIZADA PARA SALA B) ---
         document.getElementById('formSections').addEventListener('change', (e) => {
             if (e.target.tagName !== 'SELECT') return;
             const selecionado = e.target.value;
             if (!selecionado) return;
 
-            const isEstudante = e.target.classList.contains('min-estudante');
-            const isAjudante = e.target.classList.contains('min-ajudante');
+            const isEstudante = e.target.classList.contains('min-estudante') || e.target.classList.contains('min-estudante-b');
+            const isAjudante = e.target.classList.contains('min-ajudante') || e.target.classList.contains('min-ajudante-b');
             const isLeitura = e.target.id === 'leituraBiblia';
 
-            // Se a mudança não foi em nenhum desses 3 campos sensíveis, ignoramos
             if (!isEstudante && !isAjudante && !isLeitura) return;
 
-            // 1. Verifica se está repetindo na MESMA semana (Trava para o Ministério)
             if (isEstudante || isAjudante) {
                 const selects = document.querySelectorAll('#containerMinisterio select');
                 let contagem = 0;
                 selects.forEach(s => { if(s.value === selecionado) contagem++; });
 
                 if(contagem > 1) {
-                    alert(`⚠️ TRAVA DE SEGURANÇA:\n\nO(a) publicador(a) "${selecionado}" já foi selecionado(a) para outra parte nesta MESMA reunião.`);
+                    alert(`⚠️ TRAVA DE SEGURANÇA:\n\nO(a) publicador(a) "${selecionado}" já foi selecionado(a) para outra parte (ou sala) nesta MESMA reunião.`);
                     e.target.value = ""; 
-                    return; // Para aqui e não exibe o alerta de semana passada
+                    return; 
                 }
             }
 
-            // 2. Verifica se está repetindo a MESMA FUNÇÃO da semana passada
             if (dadosSemanaAnterior) {
                 let func = null;
-                
-                // Checa a Leitura da Bíblia
                 if (isLeitura && dadosSemanaAnterior.tesouros && dadosSemanaAnterior.tesouros.leitura === selecionado) {
                     func = "LEITOR DA BÍBLIA";
                 } 
-                // Checa o Estudante e Ajudante do Ministério
                 else if ((isEstudante || isAjudante) && dadosSemanaAnterior.ministerio) {
                     dadosSemanaAnterior.ministerio.forEach(p => {
-                        if (isAjudante && p.ajudante === selecionado) func = "AJUDANTE";
-                        if (isEstudante && p.estudante === selecionado) func = "ESTUDANTE";
+                        if (isAjudante && (p.ajudante === selecionado || p.ajudante_b === selecionado)) func = "AJUDANTE";
+                        if (isEstudante && (p.estudante === selecionado || p.estudante_b === selecionado)) func = "ESTUDANTE";
                     });
                 }
                 
-                // Dispara o alerta se a função for idêntica
                 if (func) {
                     alert(`⚠️ AVISO INTELIGENTE:\n\nO(a) publicador(a) "${selecionado}" já participou como ${func} na semana passada.\n\n`);
                 }
@@ -587,37 +611,54 @@
         }
         document.getElementById('dataReuniao').addEventListener('change', (e) => buscarDadosSemanaAnterior(e.target.value));
 
-        // --- PARTES DINÂMICAS ---
-        function criarParteMinisterio(est = "", aju = "") {
+        // --- PARTES DINÂMICAS (ATUALIZADO COM TEMAS E SALA B) ---
+        function criarParteMinisterio(tema="", tempo="", est="", aju="", estB="", ajuB="") {
             const todos = [...configGlobal.irmaos, ...configGlobal.irmas].sort();
             const gerarOpts = (arr, ph, sel) => `<option value="">${ph}</option>` + arr.map(n => `<option value="${n}" ${n===sel?'selected':''}>${n}</option>`).join('');
             
+            const displaySalaB = document.getElementById('usarSalaB').checked ? 'flex' : 'none';
+
             const div = document.createElement('div');
-            div.className = 'dinamico-item input-group';
+            div.className = 'dinamico-item';
+            div.style.display = 'flex'; div.style.flexDirection = 'column'; div.style.gap = '5px';
             div.innerHTML = `
-                <select class="min-estudante">${gerarOpts(todos, "Estudante", est)}</select>
-                <select class="min-ajudante">${gerarOpts(todos, "Ajudante", aju)}</select>
-                <button type="button" class="btn-remove" onclick="this.parentElement.remove()">X</button>
+                <div class="input-group">
+                    <input type="text" class="min-tema" placeholder="Tema da Parte" style="width: 60%; font-weight: bold;" value="${tema}">
+                    <input type="number" class="min-tempo" placeholder="Min" style="width: 20%;" value="${tempo}">
+                    <button type="button" class="btn-remove" style="width: 20%;" onclick="this.parentElement.parentElement.remove()">X</button>
+                </div>
+                <div class="input-group">
+                    <select class="min-estudante" style="width: 50%;">${gerarOpts(todos, "Principal: Estudante", est)}</select>
+                    <select class="min-ajudante" style="width: 50%;">${gerarOpts(todos, "Principal: Ajudante", aju)}</select>
+                </div>
+                <div class="input-group sala-b-group" style="display: ${displaySalaB}; margin-top: 5px; border-top: 1px dashed #ccc; padding-top: 5px;">
+                    <select class="min-estudante-b" style="width: 50%; border-color: #1a73e8;">${gerarOpts(todos, "Sala B: Estudante", estB)}</select>
+                    <select class="min-ajudante-b" style="width: 50%; border-color: #1a73e8;">${gerarOpts(todos, "Sala B: Ajudante", ajuB)}</select>
+                </div>
             `;
             document.getElementById('containerMinisterio').appendChild(div);
         }
 
-        function criarParteVidaCrista(tmp = "", des = "") {
+        function criarParteVidaCrista(tema="", tmp="", des="") {
             const gerarOpts = (arr, ph, sel) => `<option value="">${ph}</option>` + arr.map(n => `<option value="${n}" ${n===sel?'selected':''}>${n}</option>`).join('');
             
             const div = document.createElement('div');
-            div.className = 'dinamico-item input-group';
+            div.className = 'dinamico-item';
+            div.style.display = 'flex'; div.style.flexDirection = 'column'; div.style.gap = '5px';
             div.innerHTML = `
-                <input type="text" class="vc-tempo" placeholder="Tempo (ex: 15 min)" style="width: 30%;" value="${tmp}">
-                <select class="vc-designado aprovados-ensino" style="width: 70%;">${gerarOpts(configGlobal.aprovados_ensino, "Designado", des)}</select>
-                <button type="button" class="btn-remove" onclick="this.parentElement.remove()">X</button>
+                <div class="input-group">
+                    <input type="text" class="vc-tema" placeholder="Tema da Parte" style="width: 60%; font-weight: bold;" value="${tema}">
+                    <input type="number" class="vc-tempo" placeholder="Min" style="width: 20%;" value="${tmp}">
+                    <button type="button" class="btn-remove" style="width: 20%;" onclick="this.parentElement.parentElement.remove()">X</button>
+                </div>
+                <select class="vc-designado aprovados-ensino" style="width: 100%;">${gerarOpts(configGlobal.aprovados_ensino, "Designado do Salão Principal", des)}</select>
             `;
             document.getElementById('containerVidaCrista').appendChild(div);
         }
         document.getElementById('btnAddMinisterio').addEventListener('click', () => criarParteMinisterio());
         document.getElementById('btnAddVidaCrista').addEventListener('click', () => criarParteVidaCrista());
 
-        // --- EDIÇÃO ---
+        // --- EDIÇÃO (RETROCOMPATÍVEL) ---
         async function carregarProgramacaoEdicao(dataId, liElement) {
             document.querySelectorAll('.history-item').forEach(i => i.classList.remove('active'));
             liElement.classList.add('active');
@@ -631,23 +672,31 @@
                     document.getElementById('dataReuniao').value = d.data;
                     document.getElementById('tipoEvento').value = d.tipo_evento || "Normal";
                     document.getElementById('tipoEvento').dispatchEvent(new Event('change')); 
+
+                    document.getElementById('usarSalaB').checked = d.usar_sala_b || false;
+                    document.getElementById('usarSalaB').dispatchEvent(new Event('change'));
                     
                     if (!["Assembleia", "Congresso", "Celebracao"].includes(d.tipo_evento)) {
                         document.getElementById('presidente').value = d.presidente || "";
+                        document.getElementById('conselheiroSalaB').value = d.conselheiro_sala_b || "";
                         document.getElementById('presidente').dispatchEvent(new Event('change'));
                         
                         document.getElementById('canticoInicial').value = d.abertura?.cantico || "";
                         document.getElementById('oracaoInicial').value = d.abertura?.oracao || "";
+                        
+                        document.getElementById('temaParte1').value = d.tesouros?.tema_1 || "";
                         document.getElementById('parte1').value = d.tesouros?.parte_1 || "";
+                        document.getElementById('temaParte2').value = d.tesouros?.tema_2 || "";
                         document.getElementById('parte2').value = d.tesouros?.parte_2 || "";
+                        document.getElementById('capitulosLeitura').value = d.tesouros?.capitulos || "";
                         document.getElementById('leituraBiblia').value = d.tesouros?.leitura || "";
                         
                         document.getElementById('containerMinisterio').innerHTML = '';
-                        if(d.ministerio) d.ministerio.forEach(p => criarParteMinisterio(p.estudante, p.ajudante));
+                        if(d.ministerio) d.ministerio.forEach(p => criarParteMinisterio(p.tema, p.tempo, p.estudante, p.ajudante, p.estudante_b, p.ajudante_b));
                         
                         document.getElementById('canticoIntermediario').value = d.vida_crista?.cantico_intermediario || "";
                         document.getElementById('containerVidaCrista').innerHTML = '';
-                        if(d.vida_crista?.partes) d.vida_crista.partes.forEach(p => criarParteVidaCrista(p.tempo, p.designado));
+                        if(d.vida_crista?.partes) d.vida_crista.partes.forEach(p => criarParteVidaCrista(p.tema, p.tempo, p.designado));
                         
                         document.getElementById('estudoDirigente').value = d.vida_crista?.estudo_dirigente || "";
                         document.getElementById('estudoLeitor').value = d.vida_crista?.estudo_leitor || "";
@@ -670,17 +719,38 @@
             if (!dataReuniao) { msgDiv.style.color = "red"; msgDiv.innerText = "ATENÇÃO: Selecione a data."; return; }
             msgDiv.style.color = "blue"; msgDiv.innerText = "Salvando no banco de dados...";
 
-            let programacaoData = { data: dataReuniao, tipo_evento: tipoEvento };
+            let programacaoData = { 
+                data: dataReuniao, 
+                tipo_evento: tipoEvento,
+                usar_sala_b: document.getElementById('usarSalaB').checked 
+            };
 
             if (!["Assembleia", "Congresso", "Celebracao"].includes(tipoEvento)) {
                 const min = [], vc = [];
-                document.querySelectorAll('#containerMinisterio .dinamico-item').forEach(i => min.push({estudante: i.querySelector('.min-estudante').value, ajudante: i.querySelector('.min-ajudante').value}));
-                document.querySelectorAll('#containerVidaCrista .dinamico-item').forEach(i => vc.push({tempo: i.querySelector('.vc-tempo').value, designado: i.querySelector('.vc-designado').value}));
+                document.querySelectorAll('#containerMinisterio .dinamico-item').forEach(i => {
+                    min.push({
+                        tema: i.querySelector('.min-tema').value, tempo: i.querySelector('.min-tempo').value,
+                        estudante: i.querySelector('.min-estudante').value, ajudante: i.querySelector('.min-ajudante').value,
+                        estudante_b: i.querySelector('.min-estudante-b').value, ajudante_b: i.querySelector('.min-ajudante-b').value
+                    });
+                });
+                
+                document.querySelectorAll('#containerVidaCrista .dinamico-item').forEach(i => {
+                    vc.push({
+                        tema: i.querySelector('.vc-tema').value, tempo: i.querySelector('.vc-tempo').value, 
+                        designado: i.querySelector('.vc-designado').value
+                    });
+                });
                 
                 programacaoData = { ...programacaoData,
                     presidente: document.getElementById('presidente').value,
+                    conselheiro_sala_b: document.getElementById('conselheiroSalaB').value,
                     abertura: { cantico: document.getElementById('canticoInicial').value, oracao: document.getElementById('oracaoInicial').value, comentarios: document.getElementById('comentariosIniciais').value },
-                    tesouros: { parte_1: document.getElementById('parte1').value, parte_2: document.getElementById('parte2').value, leitura: document.getElementById('leituraBiblia').value },
+                    tesouros: { 
+                        tema_1: document.getElementById('temaParte1').value, parte_1: document.getElementById('parte1').value, 
+                        tema_2: document.getElementById('temaParte2').value, parte_2: document.getElementById('parte2').value, 
+                        capitulos: document.getElementById('capitulosLeitura').value, leitura: document.getElementById('leituraBiblia').value 
+                    },
                     ministerio: min,
                     vida_crista: {
                         cantico_intermediario: document.getElementById('canticoIntermediario').value, partes: vc,
@@ -706,6 +776,7 @@
 
         document.getElementById('btnConfig').addEventListener('click', () => {
             document.getElementById('configDiaReuniao').value = configGlobal.dia_reuniao;
+            document.getElementById('configNomeCongregacao').value = configGlobal.nome_congregacao || "";
             renderizarListaConfig();
             modalConfig.style.display = 'flex';
         });
@@ -729,13 +800,9 @@
             const tipo = selectListaAtiva.value;
             const nomeStr = input.value.trim();
             if(!nomeStr) return;
-            
             const nomes = nomeStr.split(',').map(n => n.trim()).filter(n => n);
             nomes.forEach(n => { if(!configGlobal[tipo].includes(n)) configGlobal[tipo].push(n); });
-            
-            configGlobal[tipo].sort();
-            input.value = '';
-            renderizarListaConfig();
+            configGlobal[tipo].sort(); input.value = ''; renderizarListaConfig();
         });
 
         document.getElementById('btnRemoverNome').addEventListener('click', () => {
@@ -749,6 +816,7 @@
             const msg = document.getElementById('msgConfig');
             msg.style.color = "blue"; msg.innerText = "Salvando configurações...";
             configGlobal.dia_reuniao = parseInt(document.getElementById('configDiaReuniao').value);
+            configGlobal.nome_congregacao = document.getElementById('configNomeCongregacao').value.toUpperCase();
             try {
                 await setDoc(doc(db, "configuracoes", "geral"), configGlobal);
                 atualizarDOMComListas();
@@ -757,15 +825,158 @@
             } catch(e) { msg.style.color = "red"; msg.innerText = "Erro ao salvar."; }
         });
 
-        // --- LÓGICA DE DESIGNAÇÕES (WHATSAPP E GERAÇÃO DE IMAGEM) ---
+        // --- GERAÇÃO QUADRO S-140 (O NOVO MOTOR FÍSICO) ---
+        document.getElementById('btnGerarS140').addEventListener('click', async () => {
+            const dataReuniao = document.getElementById('dataReuniao').value;
+            if (!dataReuniao) { alert("Selecione uma data antes de gerar o quadro."); return; }
+            
+            // Trava de segurança: garantir que foi salvo antes de gerar
+            const msgDiv = document.getElementById('mensagem');
+            msgDiv.style.color = "blue"; msgDiv.innerText = "Gerando Quadro S-140...";
+
+            const usarSalaB = document.getElementById('usarSalaB').checked;
+            const dataBR = dataReuniao.split('-').reverse().join('/');
+            const caps = document.getElementById('capitulosLeitura').value || "---";
+            const nomeCong = configGlobal.nome_congregacao || "CONGREGAÇÃO";
+
+            const container = document.getElementById('molde-s140-container');
+            
+            // Montagem dinâmica do HTML do S-140 (Espelhando o Word)
+            const colunasHeader = usarSalaB 
+                ? `<th class="s140-col-sala">Sala B</th><th class="s140-col-sala">Salão principal</th>` 
+                : `<th class="s140-col-sala" colspan="2">Salão principal</th>`;
+
+            const txtAju = (aju) => aju ? `<br><span class="s140-sub">Aj: ${aju}</span>` : "";
+            const formataMin = (tema, tmp) => `${tema || "---"} ${tmp ? `(${tmp} min)` : ""}`;
+            
+            // Extraindo Ministério dinâmico
+            let minHTML = '';
+            document.querySelectorAll('#containerMinisterio .dinamico-item').forEach((item, index) => {
+                const tema = formataMin(item.querySelector('.min-tema').value, item.querySelector('.min-tempo').value);
+                const estAjuP = `Est: ${item.querySelector('.min-estudante').value || "---"}${txtAju(item.querySelector('.min-ajudante').value)}`;
+                const estAjuB = usarSalaB ? `Est: ${item.querySelector('.min-estudante-b').value || "---"}${txtAju(item.querySelector('.min-ajudante-b').value)}` : "";
+                
+                minHTML += `
+                <tr>
+                    <td class="s140-col-hora">0:00</td>
+                    <td class="s140-col-tema">${index + 4}. ${tema}</td>
+                    ${usarSalaB ? `<td>${estAjuB}</td>` : ''}
+                    <td ${usarSalaB ? '' : 'colspan="2"'}>${estAjuP}</td>
+                </tr>`;
+            });
+
+            // Extraindo Vida Cristã dinâmica
+            let vcHTML = '';
+            document.querySelectorAll('#containerVidaCrista .dinamico-item').forEach((item, index) => {
+                const tema = formataMin(item.querySelector('.vc-tema').value, item.querySelector('.vc-tempo').value);
+                vcHTML += `
+                <tr>
+                    <td class="s140-col-hora">0:00</td>
+                    <td class="s140-col-tema" ${usarSalaB ? 'colspan="2"' : ''}>${index + 7}. ${tema}</td>
+                    <td ${usarSalaB ? '' : 'colspan="2"'}>${item.querySelector('.vc-designado').value || "---"}</td>
+                </tr>`;
+            });
+
+            // Conselheiro Sala B header fix
+            const conselheiroRow = usarSalaB 
+                ? `<tr><td colspan="2" style="border:none;"></td><td colspan="2" style="border:none; text-align:right; padding-bottom:10px;">Conselheiro da sala B: <strong>${document.getElementById('conselheiroSalaB').value || "---"}</strong></td></tr>`
+                : '';
+
+            container.innerHTML = `
+                <div class="s140-titulo-geral">${nomeCong}<br>Programação da reunião do meio de semana</div>
+                <table class="s140-table">
+                    <tr>
+                        <td colspan="2" style="border:none; font-weight:bold; padding-bottom:10px;">${dataBR} | LEITURA SEMANAL DA BÍBLIA: ${caps}</td>
+                        <td colspan="2" style="border:none; text-align:right; padding-bottom:10px;">Presidente: <strong>${document.getElementById('presidente').value || "---"}</strong></td>
+                    </tr>
+                    ${conselheiroRow}
+                    <tr>
+                        <td class="s140-col-hora">0:00</td>
+                        <td class="s140-col-tema" colspan="2">Cântico ${document.getElementById('canticoInicial').value || "---"} e Oração</td>
+                        <td>${document.getElementById('oracaoInicial').value || "---"}</td>
+                    </tr>
+                    <tr>
+                        <td class="s140-col-hora">0:00</td>
+                        <td class="s140-col-tema" colspan="3">Comentários iniciais (1 min)</td>
+                    </tr>
+                    
+                    <tr class="s140-section-header">
+                        <td colspan="2">TESOUROS DA PALAVRA DE DEUS</td>
+                        ${colunasHeader}
+                    </tr>
+                    <tr>
+                        <td class="s140-col-hora">0:00</td>
+                        <td class="s140-col-tema" ${usarSalaB ? 'colspan="2"' : ''}>1. ${document.getElementById('temaParte1').value || "---"} (10 min)</td>
+                        <td ${usarSalaB ? '' : 'colspan="2"'}>${document.getElementById('parte1').value || "---"}</td>
+                    </tr>
+                    <tr>
+                        <td class="s140-col-hora">0:00</td>
+                        <td class="s140-col-tema" ${usarSalaB ? 'colspan="2"' : ''}>2. ${document.getElementById('temaParte2').value || "---"} (10 min)</td>
+                        <td ${usarSalaB ? '' : 'colspan="2"'}>${document.getElementById('parte2').value || "---"}</td>
+                    </tr>
+                    <tr>
+                        <td class="s140-col-hora">0:00</td>
+                        <td class="s140-col-tema">3. Leitura da Bíblia (4 min)</td>
+                        ${usarSalaB ? `<td>---</td>` : ''}
+                        <td ${usarSalaB ? '' : 'colspan="2"'}>Est: ${document.getElementById('leituraBiblia').value || "---"}</td>
+                    </tr>
+
+                    <tr class="s140-section-header">
+                        <td colspan="2">FAÇA SEU MELHOR NO MINISTÉRIO</td>
+                        ${colunasHeader}
+                    </tr>
+                    ${minHTML}
+
+                    <tr class="s140-section-header">
+                        <td colspan="4">NOSSA VIDA CRISTÃ</td>
+                    </tr>
+                    <tr>
+                        <td class="s140-col-hora">0:00</td>
+                        <td class="s140-col-tema" colspan="3">Cântico ${document.getElementById('canticoIntermediario').value || "---"}</td>
+                    </tr>
+                    ${vcHTML}
+                    <tr>
+                        <td class="s140-col-hora">0:00</td>
+                        <td class="s140-col-tema" ${usarSalaB ? 'colspan="2"' : ''}>Estudo bíblico de congregação (30 min)</td>
+                        <td ${usarSalaB ? '' : 'colspan="2"'}>Dir: ${document.getElementById('estudoDirigente').value || "---"}<br><span class="s140-sub">Lei: ${document.getElementById('estudoLeitor').value || "---"}</span></td>
+                    </tr>
+                    <tr>
+                        <td class="s140-col-hora">0:00</td>
+                        <td class="s140-col-tema" colspan="3">Comentários finais (3 min)</td>
+                    </tr>
+                    <tr>
+                        <td class="s140-col-hora">0:00</td>
+                        <td class="s140-col-tema" colspan="2">Cântico ${document.getElementById('canticoFinal').value || "---"} e Oração</td>
+                        <td>${document.getElementById('oracaoFinal').value || "---"}</td>
+                    </tr>
+                </table>
+            `;
+
+            try {
+                const canvas = await html2canvas(container, { scale: 2, backgroundColor: "#ffffff" });
+                const imgDataUrl = canvas.toDataURL('image/png');
+                saveAs(imgDataUrl, `S140_Quadro_${dataReuniao}.png`);
+                msgDiv.style.color = "green"; msgDiv.innerText = "Quadro S-140 baixado com sucesso!";
+                setTimeout(() => { msgDiv.innerText = ""; }, 3000);
+            } catch (err) {
+                msgDiv.style.color = "red"; msgDiv.innerText = "Erro ao gerar imagem.";
+            }
+        });
+
+        // --- LÓGICA DE DESIGNAÇÕES S-89 / WHATSAPP ---
         const modalDesignacoes = document.getElementById('modalDesignacoes');
         
-        // Função que "tira a foto" do molde S-89
-        async function gerarImagemS89(nome, ajudante, dataStr, parte) {
+        async function gerarImagemS89(nome, ajudante, dataStr, parte, local) {
             document.getElementById('s89-nome').innerText = nome;
             document.getElementById('s89-ajudante').innerText = ajudante || '---';
             document.getElementById('s89-data').innerText = dataStr;
             document.getElementById('s89-parte').innerText = parte;
+            
+            // Controle visual dos checkboxes do local no S-89
+            const boxes = document.querySelectorAll('.s89-box');
+            boxes.forEach(b => b.classList.remove('s89-box-checked'));
+            if(local === "Sala B") boxes[1].classList.add('s89-box-checked');
+            else boxes[0].classList.add('s89-box-checked');
 
             const molde = document.getElementById('molde-s89');
             const canvas = await html2canvas(molde, { scale: 2, backgroundColor: "#ffffff" });
@@ -776,6 +987,7 @@
             const dataReuniao = document.getElementById('dataReuniao').value;
             if (!dataReuniao) { alert("Por favor, selecione uma data da reunião no formulário."); return; }
 
+            document.getElementById('tituloModalGerar').innerText = "📱 Designações S-89 / WhatsApp";
             modalDesignacoes.style.display = 'flex';
             document.getElementById('loadingImagens').style.display = 'block';
             document.getElementById('conteudoDesignacoes').style.display = 'none';
@@ -786,52 +998,55 @@
 
             const dataFormatada = dataReuniao.split('-').reverse().join('/');
             let designacoes = [];
+            const usarSalaB = document.getElementById('usarSalaB').checked;
 
             const leitura = document.getElementById('leituraBiblia').value;
-            if (leitura) designacoes.push({ nome: leitura, ajudante: "", parte: "Parte 3 - Leitura da Bíblia" });
+            if (leitura) designacoes.push({ nome: leitura, ajudante: "", parte: "Parte 3 - Leitura da Bíblia", local: "Salão principal" });
 
             document.querySelectorAll('#containerMinisterio .dinamico-item').forEach((item, index) => {
-                const estudante = item.querySelector('.min-estudante').value;
-                const ajudante = item.querySelector('.min-ajudante').value;
-                if (estudante) designacoes.push({ nome: estudante, ajudante: ajudante, parte: `Parte ${index + 4}` });
+                const estP = item.querySelector('.min-estudante').value;
+                const ajuP = item.querySelector('.min-ajudante').value;
+                if (estP) designacoes.push({ nome: estP, ajudante: ajuP, parte: `Parte ${index + 4}`, local: "Salão principal" });
+                
+                if (usarSalaB) {
+                    const estB = item.querySelector('.min-estudante-b').value;
+                    const ajuB = item.querySelector('.min-ajudante-b').value;
+                    if (estB) designacoes.push({ nome: estB, ajudante: ajuB, parte: `Parte ${index + 4}`, local: "Sala B" });
+                }
             });
 
             if (designacoes.length === 0) {
                 document.getElementById('loadingImagens').style.display = 'none';
                 document.getElementById('conteudoDesignacoes').style.display = 'block';
                 document.getElementById('btnBaixarTodasImagens').style.display = 'none';
-                container.innerHTML = '<p style="text-align:center; color:#666;">Nenhuma designação de Leitura ou Ministério preenchida ainda.</p>';
+                container.innerHTML = '<p style="text-align:center; color:#666;">Nenhuma designação de Leitura ou Ministério preenchida.</p>';
                 return;
             }
 
-            // Gerar imagens e montar os botões
             for (const desig of designacoes) {
-                // 1. Gera a imagem S-89
-                const imgDataUrl = await gerarImagemS89(desig.nome, desig.ajudante, dataFormatada, desig.parte);
+                const imgDataUrl = await gerarImagemS89(desig.nome, desig.ajudante, dataFormatada, desig.parte, desig.local);
                 const nomeArquivoSeguro = `S89_${desig.nome.replace(/\s+/g, '_')}_${desig.parte.replace(/ /g, '')}.png`;
                 
                 designacoesGeradasMemoria.push({ nomeArquivo: nomeArquivoSeguro, imgBase64: imgDataUrl });
 
-                // 2. Gera o link do WhatsApp
-                const textoMsg = `*DESIGNAÇÃO PARA A REUNIÃO NOSSA VIDA E MINISTÉRIO CRISTÃO*\n\n👤 *Nome:* ${desig.nome}\n👥 *Ajudante:* ${desig.ajudante || '---'}\n📅 *Data:* ${dataFormatada}\n📝 *Número da parte:* ${desig.parte}\n🏢 *Local:* Salão principal\n\n_Observação: A lição e a fonte de matéria estão na Apostila. Veja as instruções para a parte no arquivo S-89._`;
+                const textoMsg = `*DESIGNAÇÃO PARA A REUNIÃO*\n\n👤 *Nome:* ${desig.nome}\n👥 *Ajudante:* ${desig.ajudante || '---'}\n📅 *Data:* ${dataFormatada}\n📝 *Parte:* ${desig.parte}\n🏢 *Local:* ${desig.local}\n\n_Veja as instruções na Apostila._`;
                 const urlWhatsApp = `https://api.whatsapp.com/send?text=${encodeURIComponent(textoMsg)}`;
 
-                // 3. Monta o visual
                 const card = document.createElement('div');
                 card.className = 'designacao-card';
                 card.innerHTML = `
                     <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 15px;">
                         <img src="${imgDataUrl}" style="height: 80px; border: 1px solid #ccc; border-radius: 4px;">
                         <div>
-                            <strong style="display:block; font-size: 16px; color: #333;">${desig.parte}</strong>
+                            <strong style="display:block; font-size: 16px; color: #333;">${desig.parte} (${desig.local})</strong>
                             <span style="display:block; font-size: 14px; margin-top: 5px;">Estudante: <b>${desig.nome}</b></span>
                         </div>
                     </div>
                     <div style="display: flex; gap: 10px;">
                         <a href="${urlWhatsApp}" target="_blank" style="flex: 1; text-decoration: none;">
-                            <button type="button" class="btn-whatsapp">💬 Enviar WhatsApp (Texto)</button>
+                            <button type="button" class="btn-whatsapp">💬 WhatsApp</button>
                         </a>
-                        <button type="button" class="btn-download-img" style="flex: 1;" onclick="salvarImagemIndividual('${imgDataUrl}', '${nomeArquivoSeguro}')">🖼️ Baixar Imagem S-89</button>
+                        <button type="button" class="btn-download-img" style="flex: 1;" onclick="salvarImagemIndividual('${imgDataUrl}', '${nomeArquivoSeguro}')">🖼️ Baixar S-89</button>
                     </div>
                 `;
                 container.appendChild(card);
@@ -842,29 +1057,16 @@
             document.getElementById('btnBaixarTodasImagens').style.display = 'block';
         });
 
-        // Função global para o botão de baixar a imagem individual conseguir acessar
-        window.salvarImagemIndividual = function(dataUrl, nomeArquivo) {
-            saveAs(dataUrl, nomeArquivo);
-        };
+        window.salvarImagemIndividual = function(dataUrl, nomeArquivo) { saveAs(dataUrl, nomeArquivo); };
 
-        // Lógica para empacotar tudo no ZIP
         document.getElementById('btnBaixarTodasImagens').addEventListener('click', () => {
             const dataForm = document.getElementById('dataReuniao').value.split('-').reverse().join('-');
             const zip = new JSZip();
-            
-            designacoesGeradasMemoria.forEach(desig => {
-                const base64Data = desig.imgBase64.split(',')[1];
-                zip.file(desig.nomeArquivo, base64Data, {base64: true});
-            });
-
-            zip.generateAsync({type:"blob"}).then(function(content) {
-                saveAs(content, `Designacoes_Reuniao_${dataForm}.zip`);
-            });
+            designacoesGeradasMemoria.forEach(desig => { zip.file(desig.nomeArquivo, desig.imgBase64.split(',')[1], {base64: true}); });
+            zip.generateAsync({type:"blob"}).then(function(content) { saveAs(content, `Designacoes_${dataForm}.zip`); });
         });
 
-        document.getElementById('fecharDesignacoes').addEventListener('click', () => {
-            modalDesignacoes.style.display = 'none';
-        });
+        document.getElementById('fecharDesignacoes').addEventListener('click', () => { modalDesignacoes.style.display = 'none'; });
     </script>
 </body>
 </html>
