@@ -111,7 +111,13 @@
         .s140-col-tema { width: auto; font-weight: bold;}
         .s140-col-sala { width: 22%; }
         .s140-sub { font-size: 12px; font-weight: normal; font-style: italic; }
-
+        
+        /* Cores Oficiais do S-140 */
+        .bg-tesouros { background-color: #5b6770 !important; color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact;}
+        .bg-ministerio { background-color: #d89b00 !important; color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact;}
+        .bg-vidacrista { background-color: #990000 !important; color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact;}
+        .s140-section-header td { padding: 4px 8px; border-bottom: 2px solid #000; }
+        
     </style>
 </head>
 <body>
@@ -208,6 +214,9 @@
                     <div class="section">
                         <h3>Tesouros da Palavra de Deus</h3>
                         
+                        <label style="color: #45818e;">Leitura Semanal da Bíblia (Congregação):</label>
+                        <input type="text" id="leituraSemanal" placeholder="Ex: ISAÍAS 38-40" style="margin-bottom: 15px; border-color: #45818e; font-weight: bold;">
+                        
                         <label>Parte 1 - Discurso Principal (10 min):</label>
                         <div class="input-group">
                             <input type="text" id="temaParte1" placeholder="Tema do Discurso" style="width: 60%;">
@@ -220,9 +229,9 @@
                             <select id="parte2" class="aprovados-ensino" style="width: 40%;"></select>
                         </div>
                         
-                        <label>Parte 3 - Leitura da Bíblia (4 min):</label>
+                        <label>Parte 3 - Leitura da Bíblia (Estudante - 4 min):</label>
                         <div class="input-group">
-                            <input type="text" id="capitulosLeitura" placeholder="Capítulos (Ex: Salmos 1-5)" style="width: 60%;">
+                            <input type="text" id="trechoLeitura" placeholder="Ex: Isa. 40:21-31 (th lição 11)" style="width: 60%;">
                             <select id="leituraBiblia" class="lista-irmaos" style="width: 40%;"></select>
                         </div>
                     </div>
@@ -688,7 +697,9 @@
                         document.getElementById('parte1').value = d.tesouros?.parte_1 || "";
                         document.getElementById('temaParte2').value = d.tesouros?.tema_2 || "";
                         document.getElementById('parte2').value = d.tesouros?.parte_2 || "";
-                        document.getElementById('capitulosLeitura').value = d.tesouros?.capitulos || "";
+                        
+                        document.getElementById('leituraSemanal').value = d.tesouros?.leitura_semanal || "";
+                        document.getElementById('trechoLeitura').value = d.tesouros?.trecho_leitura || "";
                         document.getElementById('leituraBiblia').value = d.tesouros?.leitura || "";
                         
                         document.getElementById('containerMinisterio').innerHTML = '';
@@ -746,10 +757,12 @@
                     presidente: document.getElementById('presidente').value,
                     conselheiro_sala_b: document.getElementById('conselheiroSalaB').value,
                     abertura: { cantico: document.getElementById('canticoInicial').value, oracao: document.getElementById('oracaoInicial').value, comentarios: document.getElementById('comentariosIniciais').value },
-                    tesouros: { 
+                   tesouros: { 
                         tema_1: document.getElementById('temaParte1').value, parte_1: document.getElementById('parte1').value, 
                         tema_2: document.getElementById('temaParte2').value, parte_2: document.getElementById('parte2').value, 
-                        capitulos: document.getElementById('capitulosLeitura').value, leitura: document.getElementById('leituraBiblia').value 
+                        leitura_semanal: document.getElementById('leituraSemanal').value, 
+                        trecho_leitura: document.getElementById('trechoLeitura').value, 
+                        leitura: document.getElementById('leituraBiblia').value 
                     },
                     ministerio: min,
                     vida_crista: {
@@ -882,11 +895,14 @@
                 ? `<tr><td colspan="2" style="border:none;"></td><td colspan="2" style="border:none; text-align:right; padding-bottom:10px;">Conselheiro da sala B: <strong>${document.getElementById('conselheiroSalaB').value || "---"}</strong></td></tr>`
                 : '';
 
+            const leituraSemanalStr = document.getElementById('leituraSemanal').value || "---";
+            const trechoLeituraStr = document.getElementById('trechoLeitura').value || "";
+
             container.innerHTML = `
                 <div class="s140-titulo-geral">${nomeCong}<br>Programação da reunião do meio de semana</div>
                 <table class="s140-table">
                     <tr>
-                        <td colspan="2" style="border:none; font-weight:bold; padding-bottom:10px;">${dataBR} | LEITURA SEMANAL DA BÍBLIA: ${caps}</td>
+                        <td colspan="2" style="border:none; font-weight:bold; padding-bottom:10px;">${dataBR} | LEITURA SEMANAL DA BÍBLIA: ${leituraSemanalStr}</td>
                         <td colspan="2" style="border:none; text-align:right; padding-bottom:10px;">Presidente: <strong>${document.getElementById('presidente').value || "---"}</strong></td>
                     </tr>
                     ${conselheiroRow}
@@ -900,7 +916,7 @@
                         <td class="s140-col-tema" colspan="3">Comentários iniciais (1 min)</td>
                     </tr>
                     
-                    <tr class="s140-section-header">
+                    <tr class="s140-section-header bg-tesouros">
                         <td colspan="2">TESOUROS DA PALAVRA DE DEUS</td>
                         ${colunasHeader}
                     </tr>
@@ -916,18 +932,18 @@
                     </tr>
                     <tr>
                         <td class="s140-col-hora">0:00</td>
-                        <td class="s140-col-tema">3. Leitura da Bíblia (4 min)</td>
+                        <td class="s140-col-tema">3. Leitura da Bíblia (4 min) <span style="font-weight: normal;">${trechoLeituraStr}</span></td>
                         ${usarSalaB ? `<td>---</td>` : ''}
                         <td ${usarSalaB ? '' : 'colspan="2"'}>Est: ${document.getElementById('leituraBiblia').value || "---"}</td>
                     </tr>
 
-                    <tr class="s140-section-header">
+                    <tr class="s140-section-header bg-ministerio">
                         <td colspan="2">FAÇA SEU MELHOR NO MINISTÉRIO</td>
                         ${colunasHeader}
                     </tr>
                     ${minHTML}
 
-                    <tr class="s140-section-header">
+                    <tr class="s140-section-header bg-vidacrista">
                         <td colspan="4">NOSSA VIDA CRISTÃ</td>
                     </tr>
                     <tr>
