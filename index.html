@@ -182,9 +182,12 @@
             restaurarQuadroNormal();
         });
 
-        // LÓGICA DE BUSCA INTELIGENTE
+        // LÓGICA DE BUSCA INTELIGENTE (AGORA COM IGNORADOR DE ACENTOS)
         document.getElementById('inputBuscaNome').addEventListener('input', (e) => {
-            const termo = e.target.value.toLowerCase().trim();
+            // Função que tira acentos e joga tudo para minúsculo
+            const normalizar = (str) => str ? str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") : "";
+            
+            const termo = normalizar(e.target.value.trim());
             const board = document.getElementById('board');
             const painelBusca = document.getElementById('painelBusca');
             const conteudoBusca = document.getElementById('conteudoBusca');
@@ -195,24 +198,23 @@
                 return;
             }
 
-            // Ativa o Modo de Busca
             board.classList.add('hidden');
-            containerSeletor.classList.add('hidden'); // Oculta o seletor de datas para evitar confusão
+            containerSeletor.classList.add('hidden');
             painelBusca.classList.remove('hidden');
             document.getElementById('tituloBusca').innerText = `Procurando por "${e.target.value}"...`;
 
             let encontrouAlgo = false;
             let htmlResultados = '';
 
-            // Percorre todas as datas cadastradas (da mais antiga pra mais nova)
             datasOrdenadas.forEach(data => {
                 const p = todasAsProgramacoes[data];
                 if (["Assembleia", "Congresso", "Celebracao"].includes(p.tipo_evento)) return;
 
                 let partesEncontradas = [];
 
+                // Agora o checar compara a versão sem acentos
                 const checar = (nomeSalvo, nomeParte) => {
-                    if (nomeSalvo && nomeSalvo.toLowerCase().includes(termo)) {
+                    if (normalizar(nomeSalvo).includes(termo)) {
                         partesEncontradas.push(nomeParte);
                     }
                 };
@@ -225,13 +227,18 @@
                 checar(p.tesouros?.parte_2, "Joias Espirituais");
                 checar(p.tesouros?.leitura, "Leitura da Bíblia");
 
-                if (p.ministerio) {
+               if (p.ministerio) {
                     p.ministerio.forEach((m, i) => {
-                        checar(m.estudante, `Ministério - Parte ${i + 4} (Estudante/Designado)`);
-                        checar(m.ajudante, `Ministério - Parte ${i + 4} (Ajudante)`);
+                        checar(m.estudante, `Ministério - Parte ${i + 4} (Salão Principal)`);
+                        checar(m.ajudante, `Ministério - Parte ${i + 4} (Ajudante - Principal)`);
+                        // Nova verificação para a Sala B
+                        if (p.usar_sala_b) {
+                            checar(m.estudante_b, `Ministério - Parte ${i + 4} (Sala B)`);
+                            checar(m.ajudante_b, `Ministério - Parte ${i + 4} (Ajudante - Sala B)`);
+                        }
                     });
                 }
-
+                
                 if (p.vida_crista?.partes) {
                     p.vida_crista.partes.forEach((vc, i) => {
                         checar(vc.designado, `Vida Cristã - Parte ${i + 7}`);
@@ -296,28 +303,47 @@
 
             const isVisita = dados.tipo_evento === "Visita";
             
+            // O MOTOR DE NUMERAÇÃO INTELIGENTE
+            let proxParteNum = 4; // O Ministério sempre começa na parte 4
+            
             let htmlMinisterio = '';
             if (dados.ministerio && dados.ministerio.length > 0) {
-                dados.ministerio.forEach((parte, index) => {
-                    const numParte = index + 4;
+                dados.ministerio.forEach((parte) => {
+                    const numParte = proxParteNum++; // Grava o número atual e já soma +1 pra próxima
+                    
+                    // Bloco do Salão Principal
                     htmlMinisterio += `
                         <div class="item-linha">
-                            <div class="item-titulo">Parte ${numParte}</div>
+                            <div class="item-titulo">Parte ${numParte} ${parte.tempo ? `(${parte.tempo} min)` : ''} ${dados.usar_sala_b ? '<br><small style="color:var(--cor-destaque);">Principal</small>' : ''}</div>
                             <div class="item-duplo">
                                 <div class="item-nome">${nomeFormatado(parte.estudante)}</div>
                                 ${parte.ajudante ? `<span>Aj: ${parte.ajudante}</span>` : ''}
                             </div>
                         </div>
                     `;
+                    
+                    // Bloco da Sala B (só aparece se estiver habilitada e se tiver nomes)
+                    if (dados.usar_sala_b && (parte.estudante_b || parte.ajudante_b)) {
+                        htmlMinisterio += `
+                            <div class="item-linha" style="background-color: #f8f9fa;">
+                                <div class="item-titulo">Parte ${numParte} ${parte.tempo ? `(${parte.tempo} min)` : ''} <br><small style="color:var(--cor-ministerio);">Sala B</small></div>
+                                <div class="item-duplo">
+                                    <div class="item-nome">${nomeFormatado(parte.estudante_b)}</div>
+                                    ${parte.ajudante_b ? `<span>Aj: ${parte.ajudante_b}</span>` : ''}
+                                </div>
+                            </div>
+                        `;
+                    }
                 });
             } else { htmlMinisterio = `<div class="item-linha"><div class="item-titulo">Sem designações cadastradas</div></div>`; }
 
             let htmlVidaCrista = '';
             if (dados.vida_crista && dados.vida_crista.partes && dados.vida_crista.partes.length > 0) {
-                dados.vida_crista.partes.forEach((parte, index) => {
+                dados.vida_crista.partes.forEach((parte) => {
+                    const numParte = proxParteNum++; // Continua a numeração exatamente de onde o Ministério parou!
                     htmlVidaCrista += `
                         <div class="item-linha">
-                            <div class="item-titulo">Parte ${index + 7} ${parte.tempo ? `(${parte.tempo})` : ''}</div>
+                            <div class="item-titulo">Parte ${numParte} ${parte.tempo ? `(${parte.tempo} min)` : ''}</div>
                             <div class="item-nome">${nomeFormatado(parte.designado)}</div>
                         </div>
                     `;
@@ -349,7 +375,10 @@
                     <div class="card-header">
                         <div>
                             <div class="data-badge">${formatarDataBR(dados.data)}</div>
-                            ${isVisita ? `<div style="color: #d89b00; font-size: 13px; font-weight: bold;">Visita do Superintendente</div>` : ''}
+                            <div style="font-size: 13px; color: var(--cor-texto-secundario); margin-top: 5px; font-weight: bold;">
+                                📖 ${dados.tesouros?.leitura_semanal || '---'}
+                            </div>
+                            ${isVisita ? `<div style="color: #d89b00; font-size: 13px; font-weight: bold; margin-top: 5px;">Visita do Superintendente</div>` : ''}
                         </div>
                         <div class="presidente-info">
                             Presidente:
