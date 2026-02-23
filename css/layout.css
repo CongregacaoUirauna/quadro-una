@@ -1,0 +1,158 @@
+/* =========================================
+   ESTRUTURA GLOBAL E LAYOUT PRINCIPAL
+   ========================================= */
+body { 
+    font-family: 'Segoe UI', Arial, sans-serif; 
+    margin: 0; 
+    padding: 0; 
+    background-color: #f0f2f5; 
+    display: flex; 
+    height: 100vh; 
+    overflow: hidden; 
+}
+
+/* Sidebar: Fixa à esquerda */
+#painelSidebar { 
+    display: none; 
+    width: 250px; 
+    background-color: #fff; 
+    border-right: 1px solid #ddd; 
+    flex-direction: column; 
+    height: 100vh; 
+    box-shadow: 2px 0 5px rgba(0,0,0,0.05); 
+    z-index: 10;
+}
+
+.sidebar-header { 
+    padding: 20px; 
+    background-color: #1a73e8; 
+    color: white; 
+    text-align: center; 
+}
+
+.sidebar-header h2 { 
+    margin: 0; 
+    font-size: 18px; 
+}
+
+/* Painel Principal: Ocupa o resto do espaço */
+#painelSistema { 
+    display: none; 
+    flex: 1; 
+    overflow-y: auto; 
+    padding: 20px; 
+    box-sizing: border-box; 
+    height: 100vh; 
+    position: relative; 
+}
+
+.container { 
+    max-width: 850px; 
+    margin: 0 auto; 
+    padding-bottom: 40px;
+}
+
+/* =========================================
+   LISTA DE HISTÓRICO (SIDEBAR)
+   ========================================= */
+.history-list { 
+    list-style: none; 
+    padding: 0; 
+    margin: 0; 
+    overflow-y: auto; 
+    flex: 1; 
+}
+
+.history-item { 
+    padding: 12px 20px; 
+    border-bottom: 1px solid #eee; 
+    cursor: pointer; 
+    color: #333; 
+    font-weight: bold; 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center;
+}
+
+.history-item:hover { background-color: #f1f3f4; color: #1a73e8; }
+.history-item.active { background-color: #e8f0fe; color: #1a73e8; border-left: 4px solid #1a73e8; }
+.history-item-actions { display: flex; align-items: center; gap: 5px; }
+
+/* =========================================
+   BOTÕES GERAIS E AÇÕES
+   ========================================= */
+#btnNovaProgramacao { 
+    background-color: #34a853; color: white; border: none; padding: 10px; 
+    margin: 15px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 14px; 
+}
+#btnNovaProgramacao:hover { background-color: #2b803e; }
+
+.btn-config { 
+    background-color: #fbbc05; color: #333; padding: 8px 15px; border: none; 
+    border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 14px;
+}
+.btn-config:hover { background-color: #f2a600; }
+
+.btn-sair { 
+    background-color: #ea4335; color: white; border: none; padding: 8px 15px; 
+    border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 14px;
+}
+.btn-sair:hover { background-color: #c5221f; }
+
+button.btn-salvar { 
+    background-color: #1a73e8; color: white; padding: 12px 20px; border: none; 
+    cursor: pointer; font-size: 16px; margin-top: 15px; border-radius: 4px; width: 100%; font-weight: bold;
+}
+button.btn-salvar:hover { background-color: #1557b0; }
+
+.btn-add { background-color: #34a853; color: white; width: auto; padding: 6px 12px; font-size: 12px; border: none; border-radius: 4px; cursor: pointer;}
+.btn-add:hover { background-color: #2b803e; }
+
+.btn-remove { background-color: #ea4335; color: white; width: auto; padding: 10px; margin-top: 0; font-size: 14px; border: none; border-radius: 4px; cursor: pointer;}
+.btn-remove:hover { background-color: #c5221f; }
+
+.btn-delete-history { background: none; border: none; cursor: pointer; color: #ea4335; font-size: 14px; padding: 0 5px;}
+.btn-delete-history:hover { color: #c5221f; transform: scale(1.2);}
+
+/* Botões do Card S-89 */
+.btn-whatsapp { background-color: #25D366; color: white; border: none; padding: 8px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 8px;}
+.btn-whatsapp:hover { background-color: #128C7E; }
+.btn-download-img { background-color: #1a73e8; color: white; border: none; padding: 8px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 8px;}
+.btn-download-img:hover { background-color: #1557b0; }
+
+/* =========================================
+   FORMULÁRIOS, SEÇÕES E INPUTS
+   ========================================= */
+.topo-acoes { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;}
+.section { background-color: white; border: 1px solid #ddd; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);}
+
+h1 { color: #1a73e8; text-align: center; margin-top: 0;}
+h3 { color: #333; border-bottom: 2px solid #eee; padding-bottom: 5px; margin-top: 0; display: flex; justify-content: space-between; align-items: center;}
+
+label { display: block; margin-top: 15px; font-weight: bold; font-size: 14px; color: #444;}
+input, select { width: 100%; padding: 10px; margin-top: 5px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; font-size: 14px;}
+.input-group { display: flex; gap: 10px; margin-top: 5px; align-items: center;}
+.input-group input, .input-group select { width: 100%; }
+
+.dinamico-item { background-color: #f8f9fa; padding: 10px; border-radius: 5px; margin-top: 10px; border: 1px dashed #ccc;}
+.evento-destaque { background-color: #e8f0fe; border-color: #d2e3fc; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid;}
+.designacao-card { border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; border-radius: 8px; background-color: #f9f9f9;}
+
+/* =========================================
+   TELA DE LOGIN E MODAIS
+   ========================================= */
+#telaLogin { max-width: 400px; margin: auto; text-align: center; background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); width: 100%;}
+#loginMensagem, #mensagem { margin-top: 15px; font-weight: bold; text-align: center; }
+
+.modal-bg { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 100; justify-content: center; align-items: center;}
+.modal-content { background-color: #fff; padding: 20px; border-radius: 8px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; position: relative;}
+.modal-close { position: absolute; top: 15px; right: 15px; font-size: 20px; cursor: pointer; color: #666; font-weight: bold;}
+
+.config-grid { display: grid; grid-template-columns: 1fr; gap: 15px; margin-top: 15px;}
+.lista-manager { border: 1px solid #ddd; padding: 10px; border-radius: 5px; background: #fafafa;}
+.lista-manager select { height: 100px; margin-bottom: 10px;}
+
+/* =========================================
+   UTILITÁRIOS
+   ========================================= */
+.hidden { display: none !important; }
