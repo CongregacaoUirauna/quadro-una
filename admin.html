@@ -182,8 +182,59 @@
             </div>
 
             <div id="painel-escala-abas" class="hidden">
-                <h2 style="color: #666; text-align: center; margin-top: 50px;">O Módulo de Escalas e Tabelas Mensais será implementado aqui.</h2>
+    <div class="container-escala">
+        <div class="escala-header" style="display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #ddd;">
+            <div>
+                <label for="mesReferencia" style="margin: 0; font-weight: bold; color: #1a73e8;">Mês de Programação:</label>
+                <input type="month" id="mesReferencia" class="btn-config" style="background: white; border: 1px solid #ccc; width: auto; margin-left: 10px;">
             </div>
+            <div id="status-salvamento-mensal" style="font-weight: bold; font-size: 14px;"></div>
+        </div>
+
+        <div class="sub-nav" style="display: flex; gap: 5px; margin-bottom: -1px;">
+            <button id="sub-aba-estudantes" class="tab-active" style="padding: 10px 20px; border: 1px solid #ddd; border-bottom: none; border-radius: 8px 8px 0 0; cursor: pointer; background: #fff; font-weight: bold; color: #1a73e8;">📖 Designações de Estudantes</button>
+            <button id="sub-aba-geral" style="padding: 10px 20px; border: 1px solid #ddd; border-bottom: none; border-radius: 8px 8px 0 0; cursor: pointer; background: #f1f1f1; color: #666;">🏛️ Reunião Geral</button>
+        </div>
+
+        <div class="tab-content" style="border: 1px solid #ddd; padding: 20px; border-radius: 0 0 8px 8px; background: #fff;">
+            
+            <div id="container-tab-estudantes">
+                <div class="table-responsive">
+                    <table class="tabela-mensal" id="tabela-estudantes" style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background: #e3f2fd; color: #1a73e8;">
+                                <th style="padding: 12px; border: 1px solid #ddd; width: 15%;">Data</th>
+                                <th style="padding: 12px; border: 1px solid #ddd; width: 25%;">Leitura Bíblica</th>
+                                <th style="padding: 12px; border: 1px solid #ddd;">Partes do Ministério (Titular / Ajudante)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="corpo-tabela-estudantes">
+                            </tbody>
+                    </table>
+                </div>
+                <button type="button" id="btnSalvarEstudantesMensal" class="btn-salvar" style="margin-top: 20px; background-color: #1a73e8;">💾 Salvar Estudantes do Mês</button>
+            </div>
+
+            <div id="container-tab-geral" class="hidden">
+                <div class="table-responsive">
+                    <table class="tabela-mensal" id="tabela-geral" style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background: #f3e5f5; color: #9c27b0;">
+                                <th style="padding: 12px; border: 1px solid #ddd; width: 15%;">Data</th>
+                                <th style="padding: 12px; border: 1px solid #ddd; width: 40%;">Tesouros e Abertura</th>
+                                <th style="padding: 12px; border: 1px solid #ddd; width: 45%;">Nossa Vida Cristã</th>
+                            </tr>
+                        </thead>
+                        <tbody id="corpo-tabela-geral">
+                            </tbody>
+                    </table>
+                </div>
+                <button type="button" id="btnSalvarGeralMensal" class="btn-salvar" style="margin-top: 20px; background-color: #9c27b0;">💾 Salvar Reunião Geral do Mês</button>
+            </div>
+
+        </div>
+    </div>
+</div>
         </div>
     </div>
 
