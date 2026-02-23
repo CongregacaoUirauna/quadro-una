@@ -9,116 +9,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
-    <style>
-        /* Bloqueia a rolagem global da janela para criar um layout de app moderno */
-        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 0; background-color: #f0f2f5; display: flex; height: 100vh; overflow: hidden; }
-        
-        /* Sidebar: Fixa à esquerda, ocupando 100% da altura */
-        #painelSidebar { display: none; width: 250px; background-color: #fff; border-right: 1px solid #ddd; flex-direction: column; height: 100vh; box-shadow: 2px 0 5px rgba(0,0,0,0.05); z-index: 10;}
-        
-        /* Painel Principal: Ocupa o resto do espaço (flex: 1) e tem rolagem própria (overflow-y: auto) */
-        #painelSistema { display: none; flex: 1; overflow-y: auto; padding: 20px; box-sizing: border-box; height: 100vh; position: relative; }
-        
-        /* Sidebar Elements */
-        .sidebar-header { padding: 20px; background-color: #1a73e8; color: white; text-align: center; }
-        .sidebar-header h2 { margin: 0; font-size: 18px; }
-        #btnNovaProgramacao { background-color: #34a853; color: white; border: none; padding: 10px; margin: 15px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 14px; }
-        #btnNovaProgramacao:hover { background-color: #2b803e; }
-        .history-list { list-style: none; padding: 0; margin: 0; overflow-y: auto; flex: 1; }
-        .history-item { padding: 12px 20px; border-bottom: 1px solid #eee; cursor: pointer; color: #333; font-weight: bold; display: flex; justify-content: space-between; align-items: center;}
-        .history-item:hover { background-color: #f1f3f4; color: #1a73e8; }
-        .history-item.active { background-color: #e8f0fe; color: #1a73e8; border-left: 4px solid #1a73e8; }
-        .btn-delete-history { background: none; border: none; cursor: pointer; color: #ea4335; font-size: 14px; padding: 0 5px;}
-        .btn-delete-history:hover { color: #c5221f; transform: scale(1.2);}
-        .history-item-actions { display: flex; align-items: center; gap: 5px; }
-        
-        /* Formulário & Seções */
-        .container { max-width: 850px; margin: 0 auto; padding-bottom: 40px;}
-        .topo-acoes { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;}
-        .btn-config { background-color: #fbbc05; color: #333; padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 14px;}
-        .btn-config:hover { background-color: #f2a600; }
-        .btn-sair { background-color: #ea4335; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 14px;}
-        .btn-sair:hover { background-color: #c5221f; }
-        
-        .section { background-color: white; border: 1px solid #ddd; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);}
-        h1 { color: #1a73e8; text-align: center; margin-top: 0;}
-        h3 { color: #333; border-bottom: 2px solid #eee; padding-bottom: 5px; margin-top: 0; display: flex; justify-content: space-between; align-items: center;}
-        label { display: block; margin-top: 15px; font-weight: bold; font-size: 14px; color: #444;}
-        input, select { width: 100%; padding: 10px; margin-top: 5px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; font-size: 14px;}
-        .input-group { display: flex; gap: 10px; margin-top: 5px; align-items: center;}
-        .input-group input, .input-group select { width: 100%; } /* Ajustado para flexibilidade */
-        
-        button.btn-salvar { background-color: #1a73e8; color: white; padding: 12px 20px; border: none; cursor: pointer; font-size: 16px; margin-top: 15px; border-radius: 4px; width: 100%; font-weight: bold;}
-        button.btn-salvar:hover { background-color: #1557b0; }
-        
-        .btn-add { background-color: #34a853; color: white; width: auto; padding: 6px 12px; font-size: 12px; border: none; border-radius: 4px; cursor: pointer;}
-        .btn-add:hover { background-color: #2b803e; }
-        .btn-remove { background-color: #ea4335; color: white; width: auto; padding: 10px; margin-top: 0; font-size: 14px; border: none; border-radius: 4px; cursor: pointer;}
-        .btn-remove:hover { background-color: #c5221f; }
-        
-        #mensagem, #loginMensagem { margin-top: 15px; font-weight: bold; text-align: center; }
-        
-        .dinamico-item { background-color: #f8f9fa; padding: 10px; border-radius: 5px; margin-top: 10px; border: 1px dashed #ccc;}
-        .hidden { display: none !important; }
-        .evento-destaque { background-color: #e8f0fe; border-color: #d2e3fc; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid;}
-        
-        /* Tela de Login Centralizada */
-        #telaLogin { max-width: 400px; margin: auto; text-align: center; background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); width: 100%;}
-        
-        /* Modais */
-        .modal-bg { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 100; justify-content: center; align-items: center;}
-        .modal-content { background-color: #fff; padding: 20px; border-radius: 8px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; position: relative;}
-        .modal-close { position: absolute; top: 15px; right: 15px; font-size: 20px; cursor: pointer; color: #666; font-weight: bold;}
-        .config-grid { display: grid; grid-template-columns: 1fr; gap: 15px; margin-top: 15px;}
-        .lista-manager { border: 1px solid #ddd; padding: 10px; border-radius: 5px; background: #fafafa;}
-        .lista-manager select { height: 100px; margin-bottom: 10px;}
-        
-        /* Ações do Card de Designação */
-        .designacao-card { border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; border-radius: 8px; background-color: #f9f9f9;}
-        .btn-whatsapp { background-color: #25D366; color: white; border: none; padding: 8px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 8px;}
-        .btn-whatsapp:hover { background-color: #128C7E; }
-        .btn-download-img { background-color: #1a73e8; color: white; border: none; padding: 8px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 8px;}
-        .btn-download-img:hover { background-color: #1557b0; }
-
-        /* Molde Oculto S-89 para gerar a Imagem */
-        #molde-s89 {
-            position: absolute; left: -9999px; top: -9999px; /* Oculto fora da tela */
-            width: 480px; background-color: white; padding: 30px; 
-            font-family: Arial, sans-serif; color: black; z-index: -1;
-            border: 2px solid #fff; /* Evita bordas cortadas na geração */
-        }
-        .s89-titulo { text-align: center; font-weight: 900; font-size: 18px; text-transform: uppercase; margin-bottom: 30px; line-height: 1.3; }
-        .s89-linha { display: flex; align-items: flex-end; margin-bottom: 15px; font-size: 18px;}
-        .s89-label { font-weight: bold; margin-right: 8px; white-space: nowrap; }
-        .s89-campo { flex-grow: 1; border-bottom: 2px dotted #000; font-family: 'Courier New', Courier, monospace; font-weight: bold; padding-left: 10px;}
-        .s89-local-titulo { font-weight: bold; font-size: 18px; margin-top: 25px; margin-bottom: 10px;}
-        .s89-checkbox { font-size: 18px; margin-bottom: 5px; display: flex; align-items: center; gap: 10px;}
-        .s89-box { width: 16px; height: 16px; border: 2px solid #000; display: inline-block; }
-        .s89-box-checked { background-color: #000; }
-        .s89-obs { margin-top: 30px; font-size: 13px; text-align: justify; line-height: 1.4; }
-
-        /* Molde Oculto S-140 para gerar a Tabela Física */
-        #molde-s140-container {
-            position: absolute; left: -9999px; top: -9999px; /* Oculto fora da tela */
-            width: 800px; background-color: white; padding: 40px; 
-            font-family: Arial, sans-serif; color: black; z-index: -1;
-        }
-        .s140-titulo-geral { text-align: center; font-weight: bold; font-size: 18px; text-transform: uppercase; margin-bottom: 20px;}
-        .s140-table { width: 100%; border-collapse: collapse; font-size: 14px; }
-        .s140-table th, .s140-table td { padding: 8px 5px; border-bottom: 1px solid #000; text-align: left; vertical-align: top;}
-        .s140-section-header { background-color: #f2f2f2; border-top: 2px solid #000; border-bottom: 2px solid #000; font-weight: bold; text-transform: uppercase;}
-        .s140-col-hora { width: 50px; font-weight: bold;}
-        .s140-col-tema { width: auto; font-weight: bold;}
-        .s140-col-sala { width: 22%; }
-        .s140-sub { font-size: 12px; font-weight: normal; font-style: italic; }
-        
-        /* Cores Oficiais do S-140 */
-        .bg-tesouros { background-color: #5b6770 !important; color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact;}
-        .bg-ministerio { background-color: #d89b00 !important; color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact;}
-        .bg-vidacrista { background-color: #990000 !important; color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact;}
-        .s140-section-header td { padding: 4px 8px; border-bottom: 2px solid #000; }
-        
-    </style>
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/print.css">
 </head>
 <body>
 
@@ -168,119 +60,130 @@
                 </div>
                 <button type="button" id="btnSair" class="btn-sair">Sair do Sistema</button>
             </div>
+
+            <div id="nav-abas-principais" style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #ddd; padding-bottom: 15px;">
+                <button id="aba-temas" class="btn-salvar" style="margin-top: 0; width: auto; background-color: #1a73e8;">📋 Temas e Cânticos</button>
+                <button id="aba-escalas" class="btn-config" style="margin-top: 0; width: auto; background-color: #e0e0e0; color: #666;">📅 Tabela Mensal (Em Breve)</button>
+            </div>
             
-            <h1 id="tituloAcao">Nova Programação</h1>
-            
-            <form id="formReuniao">
-                <div class="evento-destaque">
-                    <label for="dataReuniao" style="margin-top: 0;">Data da Reunião:</label>
-                    <input type="date" id="dataReuniao" required>
-                    
-                    <label for="tipoEvento">Tipo de Programação:</label>
-                    <select id="tipoEvento">
-                        <option value="Normal">Reunião Normal</option>
-                        <option value="Visita">Visita do Superintendente de Circuito</option>
-                        <option value="Assembleia">Assembleia</option>
-                        <option value="Congresso">Congresso</option>
-                        <option value="Celebracao">Celebração da Morte de Cristo</option>
-                    </select>
+            <div id="painel-estrutural-temas">
+                <h1 id="tituloAcao">Nova Programação</h1>
+                
+                <form id="formReuniao">
+                    <div class="evento-destaque">
+                        <label for="dataReuniao" style="margin-top: 0;">Data da Reunião:</label>
+                        <input type="date" id="dataReuniao" required>
+                        
+                        <label for="tipoEvento">Tipo de Programação:</label>
+                        <select id="tipoEvento">
+                            <option value="Normal">Reunião Normal</option>
+                            <option value="Visita">Visita do Superintendente de Circuito</option>
+                            <option value="Assembleia">Assembleia</option>
+                            <option value="Congresso">Congresso</option>
+                            <option value="Celebracao">Celebração da Morte de Cristo</option>
+                        </select>
 
-                    <label style="display: flex; align-items: center; gap: 10px; margin-top: 15px; cursor: pointer;">
-                        <input type="checkbox" id="usarSalaB" style="width: auto; margin: 0; transform: scale(1.3);">
-                        <span style="color: #1a73e8; font-weight: bold;">Habilitar uso da Sala B nesta reunião</span>
-                    </label>
-                </div>
-
-                <div id="formSections">
-                    <div class="section">
-                        <label for="presidente" style="margin-top: 0;">Presidente da Reunião e Conselheiro (Sala B):</label>
-                        <div class="input-group">
-                            <select id="presidente" class="lista-presidentes" style="width: 50%;"></select>
-                            <select id="conselheiroSalaB" class="aprovados-ensino" style="width: 50%;"></select>
-                        </div>
-                        <small style="color: #666;">O Conselheiro da Sala B só será impresso no quadro se a Sala B estiver habilitada acima.</small>
+                        <label style="display: flex; align-items: center; gap: 10px; margin-top: 15px; cursor: pointer;">
+                            <input type="checkbox" id="usarSalaB" style="width: auto; margin: 0; transform: scale(1.3);">
+                            <span style="color: #1a73e8; font-weight: bold;">Habilitar uso da Sala B nesta reunião</span>
+                        </label>
                     </div>
 
-                    <div class="section">
-                        <h3>Abertura</h3>
-                        <div class="input-group">
-                            <input type="number" id="canticoInicial" placeholder="Nº do Cântico Inicial" min="1" style="width: 30%;">
-                            <select id="oracaoInicial" class="lista-oracao" style="width: 70%;"></select>
-                        </div>
-                        <label for="comentariosIniciais">Comentários Iniciais (1 min):</label>
-                        <input type="text" id="comentariosIniciais" readonly style="background-color: #e9ecef;">
-                    </div>
-
-                    <div class="section">
-                        <h3>Tesouros da Palavra de Deus</h3>
-                        
-                        <label style="color: #45818e;">Leitura Semanal da Bíblia (Congregação):</label>
-                        <input type="text" id="leituraSemanal" placeholder="Ex: ISAÍAS 38-40" style="margin-bottom: 15px; border-color: #45818e; font-weight: bold;">
-                        
-                        <label>Parte 1 - Discurso Principal (10 min):</label>
-                        <div class="input-group">
-                            <input type="text" id="temaParte1" placeholder="Tema do Discurso" style="width: 60%;">
-                            <select id="parte1" class="aprovados-ensino" style="width: 40%;"></select>
-                        </div>
-                        
-                        <label>Parte 2 - Joias Espirituais (10 min):</label>
-                        <div class="input-group">
-                            <input type="text" id="temaParte2" placeholder="Tema das Joias" style="width: 60%;">
-                            <select id="parte2" class="aprovados-ensino" style="width: 40%;"></select>
-                        </div>
-                        
-                        <label>Parte 3 - Leitura da Bíblia (Estudante - 4 min):</label>
-                        <div class="input-group">
-                            <input type="text" id="trechoLeitura" placeholder="Ex: Isa. 40:21-31 (th lição 11)" style="width: 60%;">
-                            <select id="leituraBiblia" class="lista-irmaos" style="width: 40%;"></select>
-                        </div>
-                    </div>
-
-                    <div class="section">
-                        <h3>
-                            Faça seu Melhor no Ministério
-                            <button type="button" class="btn-add" id="btnAddMinisterio">+ Adicionar Parte</button>
-                        </h3>
-                        <div id="containerMinisterio"></div>
-                    </div>
-
-                    <div class="section">
-                        <h3>
-                            Nossa Vida Cristã
-                            <button type="button" class="btn-add" id="btnAddVidaCrista">+ Adicionar Parte</button>
-                        </h3>
-                        <label for="canticoIntermediario">Cântico Intermediário:</label>
-                        <input type="number" id="canticoIntermediario" placeholder="Nº do Cântico" min="1">
-
-                        <div id="containerVidaCrista"></div>
-
-                        <div id="blocoEstudo">
-                            <label>Estudo Bíblico de Congregação (30 min):</label>
+                    <div id="formSections">
+                        <div class="section">
+                            <label for="presidente" style="margin-top: 0;">Presidente da Reunião e Conselheiro (Sala B):</label>
                             <div class="input-group">
-                                <select id="estudoDirigente" class="aprovados-ensino"></select>
-                                <select id="estudoLeitor" class="lista-leitores"></select>
+                                <select id="presidente" class="lista-presidentes" style="width: 50%;"></select>
+                                <select id="conselheiroSalaB" class="aprovados-ensino" style="width: 50%;"></select>
+                            </div>
+                            <small style="color: #666;">O Conselheiro da Sala B só será impresso no quadro se a Sala B estiver habilitada acima.</small>
+                        </div>
+
+                        <div class="section">
+                            <h3>Abertura</h3>
+                            <div class="input-group">
+                                <input type="number" id="canticoInicial" placeholder="Nº do Cântico Inicial" min="1" style="width: 30%;">
+                                <select id="oracaoInicial" class="lista-oracao" style="width: 70%;"></select>
+                            </div>
+                            <label for="comentariosIniciais">Comentários Iniciais (1 min):</label>
+                            <input type="text" id="comentariosIniciais" readonly style="background-color: #e9ecef;">
+                        </div>
+
+                        <div class="section">
+                            <h3>Tesouros da Palavra de Deus</h3>
+                            
+                            <label style="color: #45818e;">Leitura Semanal da Bíblia (Congregação):</label>
+                            <input type="text" id="leituraSemanal" placeholder="Ex: ISAÍAS 38-40" style="margin-bottom: 15px; border-color: #45818e; font-weight: bold;">
+                            
+                            <label>Parte 1 - Discurso Principal (10 min):</label>
+                            <div class="input-group">
+                                <input type="text" id="temaParte1" placeholder="Tema do Discurso" style="width: 60%;">
+                                <select id="parte1" class="aprovados-ensino" style="width: 40%;"></select>
+                            </div>
+                            
+                            <label>Parte 2 - Joias Espirituais (10 min):</label>
+                            <div class="input-group">
+                                <input type="text" id="temaParte2" placeholder="Tema das Joias" style="width: 60%;">
+                                <select id="parte2" class="aprovados-ensino" style="width: 40%;"></select>
+                            </div>
+                            
+                            <label>Parte 3 - Leitura da Bíblia (Estudante - 4 min):</label>
+                            <div class="input-group">
+                                <input type="text" id="trechoLeitura" placeholder="Ex: Isa. 40:21-31 (th lição 11)" style="width: 60%;">
+                                <select id="leituraBiblia" class="lista-irmaos" style="width: 40%;"></select>
                             </div>
                         </div>
 
-                        <div id="blocoVisita" class="hidden">
-                            <label style="color: #1a73e8;">Discurso do Superintendente (30 min):</label>
-                            <input type="text" id="discursoViajante" placeholder="Nome do Superintendente">
+                        <div class="section">
+                            <h3>
+                                Faça seu Melhor no Ministério
+                                <button type="button" class="btn-add" id="btnAddMinisterio">+ Adicionar Parte</button>
+                            </h3>
+                            <div id="containerMinisterio"></div>
                         </div>
 
-                        <label for="comentariosFinais">Comentários Finais (3 min):</label>
-                        <input type="text" id="comentariosFinais" readonly style="background-color: #e9ecef;">
+                        <div class="section">
+                            <h3>
+                                Nossa Vida Cristã
+                                <button type="button" class="btn-add" id="btnAddVidaCrista">+ Adicionar Parte</button>
+                            </h3>
+                            <label for="canticoIntermediario">Cântico Intermediário:</label>
+                            <input type="number" id="canticoIntermediario" placeholder="Nº do Cântico" min="1">
 
-                        <label>Conclusão:</label>
-                        <div class="input-group">
-                            <input type="number" id="canticoFinal" placeholder="Nº do Cântico Final" min="1" style="width: 30%;">
-                            <select id="oracaoFinal" class="lista-oracao" style="width: 70%;"></select>
+                            <div id="containerVidaCrista"></div>
+
+                            <div id="blocoEstudo">
+                                <label>Estudo Bíblico de Congregação (30 min):</label>
+                                <div class="input-group">
+                                    <select id="estudoDirigente" class="aprovados-ensino"></select>
+                                    <select id="estudoLeitor" class="lista-leitores"></select>
+                                </div>
+                            </div>
+
+                            <div id="blocoVisita" class="hidden">
+                                <label style="color: #1a73e8;">Discurso do Superintendente (30 min):</label>
+                                <input type="text" id="discursoViajante" placeholder="Nome do Superintendente">
+                            </div>
+
+                            <label for="comentariosFinais">Comentários Finais (3 min):</label>
+                            <input type="text" id="comentariosFinais" readonly style="background-color: #e9ecef;">
+
+                            <label>Conclusão:</label>
+                            <div class="input-group">
+                                <input type="number" id="canticoFinal" placeholder="Nº do Cântico Final" min="1" style="width: 30%;">
+                                <select id="oracaoFinal" class="lista-oracao" style="width: 70%;"></select>
+                            </div>
                         </div>
-                    </div>
-                </div> 
+                    </div> 
 
-                <button type="button" class="btn-salvar" id="btnSalvar">Salvar Programação</button>
-                <div id="mensagem"></div>
-            </form>
+                    <button type="button" class="btn-salvar" id="btnSalvar">Salvar Programação</button>
+                    <div id="mensagem"></div>
+                </form>
+            </div>
+
+            <div id="painel-escala-abas" class="hidden">
+                <h2 style="color: #666; text-align: center; margin-top: 50px;">O Módulo de Escalas e Tabelas Mensais será implementado aqui.</h2>
+            </div>
         </div>
     </div>
 
@@ -351,46 +254,32 @@
     </div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, doc, setDoc, getDoc, getDocs, collection, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        
+        // Nossas importações modulares
+        import { auth } from './js/firebase-config.js';
+        import { carregarConfiguracoes, carregarHistoricoSidebar } from './js/estado-global.js';
+        import { initMotorPDF } from './js/motor-pdf.js';
+        import { initModuloTemas, prepararNovoFormulario, carregarProgramacaoEdicao } from './js/modulo-temas.js';
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyC3U8tyPk5IB_y51-3d7_6V-16qtoqzeI8",
-            authDomain: "quadro-congregacao.firebaseapp.com",
-            projectId: "quadro-congregacao",
-            storageBucket: "quadro-congregacao.firebasestorage.app",
-            messagingSenderId: "1085145636546",
-            appId: "1:1085145636546:web:69d340e69f28814a1de55b"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
-
-        // --- ESTADO GLOBAL ---
-        let configGlobal = {
-            nome_congregacao: "SUA CONGREGAÇÃO",
-            dia_reuniao: 4, 
-            aprovados_oracao: ["Edinho Freitas", "Elton Freitas", "Francisco Nunes", "Glebston", "Robert César", "Rony Henrique"].sort(),
-            presidentes: ["Francisco Nunes", "Glebston", "Robert César"].sort(),
-            aprovados_ensino: ["Francisco Nunes", "Glebston", "Robert César"].sort(),
-            leitores_estudo: ["Edinho Freitas", "Elton Freitas", "Glebston", "Nicácio", "Robert César", "Rony Henrique"].sort(),
-            irmaos: ["Antônio Duarte", "Celso Dornellys", "David Gabriel", "Edglê", "Edinho Freitas", "Elton Freitas", "Francisco Nunes", "Genival", "Glebston", "Leonel", "Nicácio", "Robert César", "Rony Henrique", "Sávio Samuel"].sort(),
-            irmas: ["Ana Paula", "Anna Clara", "Bruna", "Cleonice", "Conceição", "Dona Lia", "Francinete", "Geralda", "Gerlândia", "Giudeth", "Helena", "Jaiara", "Joelma Sobreira", "Kleitiane", "Leticia Lima", "Letícia Angélica", "Libetânia", "Luci", "Maria Helena", "Mayane", "Remédios", "Sabrina", "Silmara", "Silvia", "Sonilde", "Suelene", "Terezinha", "Vitoria", "Vânia", "Zildilene", "Zuilha"].sort()
-        };
-        let dadosSemanaAnterior = null;
-        let designacoesGeradasMemoria = []; 
-
-        // --- LÓGICA DE AUTENTICAÇÃO ---
+        // --- GERENCIAMENTO DE ESTADO DE AUTENTICAÇÃO ---
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 document.getElementById('telaLogin').style.display = 'none';
                 document.getElementById('painelSidebar').style.display = 'flex';
                 document.getElementById('painelSistema').style.display = 'block';
+                
+                // Inicializa os dados
                 await carregarConfiguracoes();
-                carregarHistoricoSidebar();
+                
+                // Passamos os callbacks para a Sidebar interagir com o form sem se acoplarem fortemente
+                carregarHistoricoSidebar(carregarProgramacaoEdicao, prepararNovoFormulario);
+                
+                // Prepara a interface
                 prepararNovoFormulario();
+                initMotorPDF();
+                initModuloTemas();
+                
             } else {
                 document.getElementById('telaLogin').style.display = 'block';
                 document.getElementById('painelSidebar').style.display = 'none';
@@ -398,679 +287,48 @@
             }
         });
 
+        // --- FLUXO DE LOGIN/LOGOUT ---
         document.getElementById('btnEntrar').addEventListener('click', async () => {
             const email = document.getElementById('emailLogin').value;
             const senha = document.getElementById('senhaLogin').value;
-            document.getElementById('loginMensagem').innerText = "Acessando...";
-            try { await signInWithEmailAndPassword(auth, email, senha); } 
-            catch (error) { document.getElementById('loginMensagem').innerText = "Erro: Verifique e-mail e senha."; document.getElementById('loginMensagem').style.color = "red"; }
+            const msg = document.getElementById('loginMensagem');
+            msg.innerText = "Acessando...";
+            msg.style.color = "#333";
+            try { 
+                await signInWithEmailAndPassword(auth, email, senha); 
+            } catch (error) { 
+                msg.innerText = "Erro: Verifique e-mail e senha."; 
+                msg.style.color = "red"; 
+            }
         });
 
         document.getElementById('btnSair').addEventListener('click', () => signOut(auth));
 
-        // --- BANCO DE DADOS: CONFIGURAÇÕES GLOBAIS ---
-        async function carregarConfiguracoes() {
-            try {
-                const docSnap = await getDoc(doc(db, "configuracoes", "geral"));
-                if (docSnap.exists()) {
-                    configGlobal = { ...configGlobal, ...docSnap.data() };
-                } else {
-                    await setDoc(doc(db, "configuracoes", "geral"), configGlobal);
-                }
-                
-                if (!configGlobal.aprovados_oracao) {
-                    configGlobal.aprovados_oracao = ["Edinho Freitas", "Elton Freitas", "Francisco Nunes", "Glebston", "Robert César", "Rony Henrique"].sort();
-                    await setDoc(doc(db, "configuracoes", "geral"), configGlobal);
-                }
+        // --- CONTROLE DE NAVEGAÇÃO ENTRE ABAS (TEMAS VS ESCALAS) ---
+        // Preparamos os botões para quando implementarmos a aba 2
+        const btnAbaTemas = document.getElementById('aba-temas');
+        const btnAbaEscalas = document.getElementById('aba-escalas');
+        const painelTemas = document.getElementById('painel-estrutural-temas');
+        const painelEscalas = document.getElementById('painel-escala-abas');
 
-                atualizarDOMComListas();
-            } catch (err) { console.error("Erro ao carregar configurações", err); }
-        }
-
-        function atualizarDOMComListas() {
-            const todos = [...configGlobal.irmaos, ...configGlobal.irmas].sort();
-            const gerarOpts = (arr, ph) => `<option value="">${ph}</option>` + arr.map(n => `<option value="${n}">${n}</option>`).join('');
-            
-            document.querySelectorAll('.lista-presidentes').forEach(s => s.innerHTML = gerarOpts(configGlobal.presidentes, "Selecione o Presidente..."));
-            document.querySelectorAll('.aprovados-ensino').forEach(s => s.innerHTML = gerarOpts(configGlobal.aprovados_ensino, "Selecione..."));
-            document.querySelectorAll('.lista-leitores').forEach(s => s.innerHTML = gerarOpts(configGlobal.leitores_estudo, "Leitor do Estudo..."));
-            document.querySelectorAll('.lista-oracao').forEach(s => s.innerHTML = gerarOpts(configGlobal.aprovados_oracao, "Oração..."));
-            document.querySelectorAll('.lista-irmaos').forEach(s => s.innerHTML = gerarOpts(configGlobal.irmaos, "Irmão Designado..."));
-            
-            // Atualiza os dinâmicos sem perder o valor atual
-            document.querySelectorAll('.min-estudante, .min-estudante-b').forEach(s => { const v = s.value; s.innerHTML = gerarOpts(todos, "Estudante"); s.value = v; });
-            document.querySelectorAll('.min-ajudante, .min-ajudante-b').forEach(s => { const v = s.value; s.innerHTML = gerarOpts(todos, "Ajudante"); s.value = v; });
-            document.querySelectorAll('.vc-designado').forEach(s => { const v = s.value; s.innerHTML = gerarOpts(configGlobal.aprovados_ensino, "Designado"); s.value = v; });
-            
-            document.getElementById('conselheiroSalaB').innerHTML = gerarOpts(configGlobal.aprovados_ensino, "Conselheiro Sala B...");
-        }
-
-        // --- CONTROLE DE EXIBIÇÃO DA SALA B ---
-        document.getElementById('usarSalaB').addEventListener('change', (e) => {
-            const display = e.target.checked ? 'flex' : 'none';
-            document.querySelectorAll('.sala-b-group').forEach(el => el.style.display = display);
+        btnAbaTemas.addEventListener('click', () => {
+            painelTemas.classList.remove('hidden');
+            painelEscalas.classList.add('hidden');
+            btnAbaTemas.style.backgroundColor = '#1a73e8';
+            btnAbaTemas.style.color = '#fff';
+            btnAbaEscalas.style.backgroundColor = '#e0e0e0';
+            btnAbaEscalas.style.color = '#666';
         });
 
-        // --- SIDEBAR E FLUXO DE LIMPEZA ---
-        async function carregarHistoricoSidebar() {
-            const lista = document.getElementById('listaHistorico');
-            lista.innerHTML = '<li class="history-item">Carregando...</li>';
-            try {
-                const querySnapshot = await getDocs(collection(db, "programacoes_semanais"));
-                let datas = [];
-                querySnapshot.forEach(doc => datas.push(doc.id));
-                datas.sort((a,b) => b.localeCompare(a)); 
-
-                lista.innerHTML = '';
-                datas.forEach(d => {
-                    const li = document.createElement('li');
-                    li.className = 'history-item';
-                    
-                    const spanData = document.createElement('span');
-                    spanData.innerText = d.split('-').reverse().join('/');
-                    spanData.style.flex = "1";
-                    spanData.onclick = () => carregarProgramacaoEdicao(d, li);
-
-                    const divAcoes = document.createElement('div');
-                    divAcoes.className = 'history-item-actions';
-                    
-                    const btnEditar = document.createElement('span');
-                    btnEditar.innerText = '✏️';
-                    btnEditar.style.cursor = 'pointer';
-                    btnEditar.onclick = () => carregarProgramacaoEdicao(d, li);
-
-                    const btnExcluir = document.createElement('button');
-                    btnExcluir.innerHTML = '🗑️';
-                    btnExcluir.className = 'btn-delete-history';
-                    btnExcluir.title = "Excluir Reunião";
-                    btnExcluir.onclick = async (e) => {
-                        e.stopPropagation(); 
-                        if(confirm(`⚠️ ATENÇÃO: Tem certeza que deseja EXCLUIR permanentemente a reunião do dia ${spanData.innerText}?`)) {
-                            try {
-                                await deleteDoc(doc(db, "programacoes_semanais", d));
-                                carregarHistoricoSidebar(); 
-                                if(document.getElementById('dataReuniao').value === d) prepararNovoFormulario();
-                            } catch(err) { alert("Erro ao excluir do banco de dados."); }
-                        }
-                    };
-
-                    divAcoes.appendChild(btnEditar);
-                    divAcoes.appendChild(btnExcluir);
-                    
-                    li.appendChild(spanData);
-                    li.appendChild(divAcoes);
-                    lista.appendChild(li);
-                });
-            } catch(e) { lista.innerHTML = '<li class="history-item">Erro ao carregar</li>'; }
-        }
-
-        document.getElementById('btnNovaProgramacao').addEventListener('click', () => {
-            document.querySelectorAll('.history-item').forEach(i => i.classList.remove('active'));
-            prepararNovoFormulario();
+        btnAbaEscalas.addEventListener('click', () => {
+            painelEscalas.classList.remove('hidden');
+            painelTemas.classList.add('hidden');
+            btnAbaEscalas.style.backgroundColor = '#1a73e8';
+            btnAbaEscalas.style.color = '#fff';
+            btnAbaTemas.style.backgroundColor = '#e0e0e0';
+            btnAbaTemas.style.color = '#666';
         });
 
-        function prepararNovoFormulario() {
-            document.getElementById('formReuniao').reset();
-            document.getElementById('usarSalaB').dispatchEvent(new Event('change')); // Reseta visual da sala B
-            document.getElementById('tituloAcao').innerText = "Nova Programação";
-            document.getElementById('mensagem').innerText = "";
-            document.getElementById('formSections').classList.remove('hidden');
-            document.getElementById('blocoVisita').classList.add('hidden');
-            document.getElementById('blocoEstudo').classList.remove('hidden');
-            
-            document.getElementById('containerMinisterio').innerHTML = '';
-            document.getElementById('containerVidaCrista').innerHTML = '';
-            criarParteMinisterio(); criarParteMinisterio(); criarParteMinisterio();
-            criarParteVidaCrista();
-            
-            sugerirProximaData();
-        }
-
-       function sugerirProximaData() {
-            const ultimaDataSalva = document.querySelector('#listaHistorico .history-item span');
-            if (ultimaDataSalva && ultimaDataSalva.innerText.includes('/')) {
-                const partes = ultimaDataSalva.innerText.split('/');
-                let d = new Date(`${partes[2]}-${partes[1]}-${partes[0]}T12:00:00`);
-                d.setDate(d.getDate() + 7);
-                document.getElementById('dataReuniao').value = d.toISOString().split('T')[0];
-            } else {
-                let hoje = new Date();
-                let diaAlvo = parseInt(configGlobal.dia_reuniao);
-                let offset = (diaAlvo - hoje.getDay() + 7) % 7;
-                if (offset === 0) offset = 7; 
-                let prox = new Date(hoje);
-                prox.setDate(hoje.getDate() + offset);
-                document.getElementById('dataReuniao').value = prox.toISOString().split('T')[0];
-            }
-            buscarDadosSemanaAnterior(document.getElementById('dataReuniao').value);
-        }
-
-        document.getElementById('tipoEvento').addEventListener('change', (e) => {
-            const val = e.target.value;
-            const formSections = document.getElementById('formSections');
-            if (["Assembleia", "Congresso", "Celebracao"].includes(val)) {
-                formSections.classList.add('hidden');
-            } else {
-                formSections.classList.remove('hidden');
-                if (val === "Visita") {
-                    document.getElementById('blocoEstudo').classList.add('hidden');
-                    document.getElementById('blocoVisita').classList.remove('hidden');
-                } else {
-                    document.getElementById('blocoEstudo').classList.remove('hidden');
-                    document.getElementById('blocoVisita').classList.add('hidden');
-                }
-            }
-        });
-
-        document.getElementById('presidente').addEventListener('change', (e) => {
-            document.getElementById('comentariosIniciais').value = e.target.value;
-            document.getElementById('comentariosFinais').value = e.target.value;
-        });
-
-       // --- VALIDAÇÃO ANTI-DUPLICIDADE (ATUALIZADA PARA SALA B) ---
-        document.getElementById('formSections').addEventListener('change', (e) => {
-            if (e.target.tagName !== 'SELECT') return;
-            const selecionado = e.target.value;
-            if (!selecionado) return;
-
-            const isEstudante = e.target.classList.contains('min-estudante') || e.target.classList.contains('min-estudante-b');
-            const isAjudante = e.target.classList.contains('min-ajudante') || e.target.classList.contains('min-ajudante-b');
-            const isLeitura = e.target.id === 'leituraBiblia';
-
-            if (!isEstudante && !isAjudante && !isLeitura) return;
-
-            if (isEstudante || isAjudante) {
-                const selects = document.querySelectorAll('#containerMinisterio select');
-                let contagem = 0;
-                selects.forEach(s => { if(s.value === selecionado) contagem++; });
-
-                if(contagem > 1) {
-                    alert(`⚠️ TRAVA DE SEGURANÇA:\n\nO(a) publicador(a) "${selecionado}" já foi selecionado(a) para outra parte (ou sala) nesta MESMA reunião.`);
-                    e.target.value = ""; 
-                    return; 
-                }
-            }
-
-            if (dadosSemanaAnterior) {
-                let func = null;
-                if (isLeitura && dadosSemanaAnterior.tesouros && dadosSemanaAnterior.tesouros.leitura === selecionado) {
-                    func = "LEITOR DA BÍBLIA";
-                } 
-                else if ((isEstudante || isAjudante) && dadosSemanaAnterior.ministerio) {
-                    dadosSemanaAnterior.ministerio.forEach(p => {
-                        if (isAjudante && (p.ajudante === selecionado || p.ajudante_b === selecionado)) func = "AJUDANTE";
-                        if (isEstudante && (p.estudante === selecionado || p.estudante_b === selecionado)) func = "ESTUDANTE";
-                    });
-                }
-                
-                if (func) {
-                    alert(`⚠️ AVISO INTELIGENTE:\n\nO(a) publicador(a) "${selecionado}" já participou como ${func} na semana passada.\n\n`);
-                }
-            }
-        });
-
-        async function buscarDadosSemanaAnterior(dataAtualStr) {
-            if(!dataAtualStr) return;
-            const d = new Date(dataAtualStr + "T12:00:00"); 
-            d.setDate(d.getDate() - 7);
-            try {
-                const docSnap = await getDoc(doc(db, "programacoes_semanais", d.toISOString().split('T')[0]));
-                dadosSemanaAnterior = docSnap.exists() ? docSnap.data() : null;
-            } catch(err) { dadosSemanaAnterior = null; }
-        }
-        document.getElementById('dataReuniao').addEventListener('change', (e) => buscarDadosSemanaAnterior(e.target.value));
-
-        // --- PARTES DINÂMICAS (ATUALIZADO COM TEMAS E SALA B) ---
-        function criarParteMinisterio(tema="", tempo="", est="", aju="", estB="", ajuB="") {
-            const todos = [...configGlobal.irmaos, ...configGlobal.irmas].sort();
-            const gerarOpts = (arr, ph, sel) => `<option value="">${ph}</option>` + arr.map(n => `<option value="${n}" ${n===sel?'selected':''}>${n}</option>`).join('');
-            
-            const displaySalaB = document.getElementById('usarSalaB').checked ? 'flex' : 'none';
-
-            const div = document.createElement('div');
-            div.className = 'dinamico-item';
-            div.style.display = 'flex'; div.style.flexDirection = 'column'; div.style.gap = '5px';
-            div.innerHTML = `
-                <div class="input-group">
-                    <input type="text" class="min-tema" placeholder="Tema da Parte" style="width: 60%; font-weight: bold;" value="${tema}">
-                    <input type="number" class="min-tempo" placeholder="Min" style="width: 20%;" value="${tempo}">
-                    <button type="button" class="btn-remove" style="width: 20%;" onclick="this.parentElement.parentElement.remove()">X</button>
-                </div>
-                <div class="input-group">
-                    <select class="min-estudante" style="width: 50%;">${gerarOpts(todos, "Principal: Estudante", est)}</select>
-                    <select class="min-ajudante" style="width: 50%;">${gerarOpts(todos, "Principal: Ajudante", aju)}</select>
-                </div>
-                <div class="input-group sala-b-group" style="display: ${displaySalaB}; margin-top: 5px; border-top: 1px dashed #ccc; padding-top: 5px;">
-                    <select class="min-estudante-b" style="width: 50%; border-color: #1a73e8;">${gerarOpts(todos, "Sala B: Estudante", estB)}</select>
-                    <select class="min-ajudante-b" style="width: 50%; border-color: #1a73e8;">${gerarOpts(todos, "Sala B: Ajudante", ajuB)}</select>
-                </div>
-            `;
-            document.getElementById('containerMinisterio').appendChild(div);
-        }
-
-        function criarParteVidaCrista(tema="", tmp="", des="") {
-            const gerarOpts = (arr, ph, sel) => `<option value="">${ph}</option>` + arr.map(n => `<option value="${n}" ${n===sel?'selected':''}>${n}</option>`).join('');
-            
-            const div = document.createElement('div');
-            div.className = 'dinamico-item';
-            div.style.display = 'flex'; div.style.flexDirection = 'column'; div.style.gap = '5px';
-            div.innerHTML = `
-                <div class="input-group">
-                    <input type="text" class="vc-tema" placeholder="Tema da Parte" style="width: 60%; font-weight: bold;" value="${tema}">
-                    <input type="number" class="vc-tempo" placeholder="Min" style="width: 20%;" value="${tmp}">
-                    <button type="button" class="btn-remove" style="width: 20%;" onclick="this.parentElement.parentElement.remove()">X</button>
-                </div>
-                <select class="vc-designado aprovados-ensino" style="width: 100%;">${gerarOpts(configGlobal.aprovados_ensino, "Designado do Salão Principal", des)}</select>
-            `;
-            document.getElementById('containerVidaCrista').appendChild(div);
-        }
-        document.getElementById('btnAddMinisterio').addEventListener('click', () => criarParteMinisterio());
-        document.getElementById('btnAddVidaCrista').addEventListener('click', () => criarParteVidaCrista());
-
-        // --- EDIÇÃO (RETROCOMPATÍVEL) ---
-        async function carregarProgramacaoEdicao(dataId, liElement) {
-            document.querySelectorAll('.history-item').forEach(i => i.classList.remove('active'));
-            liElement.classList.add('active');
-            document.getElementById('mensagem').innerText = "Carregando dados...";
-            
-            try {
-                const docSnap = await getDoc(doc(db, "programacoes_semanais", dataId));
-                if(docSnap.exists()) {
-                    const d = docSnap.data();
-                    document.getElementById('tituloAcao').innerText = `Editando: ${dataId.split('-').reverse().join('/')}`;
-                    document.getElementById('dataReuniao').value = d.data;
-                    document.getElementById('tipoEvento').value = d.tipo_evento || "Normal";
-                    document.getElementById('tipoEvento').dispatchEvent(new Event('change')); 
-
-                    document.getElementById('usarSalaB').checked = d.usar_sala_b || false;
-                    document.getElementById('usarSalaB').dispatchEvent(new Event('change'));
-                    
-                    if (!["Assembleia", "Congresso", "Celebracao"].includes(d.tipo_evento)) {
-                        document.getElementById('presidente').value = d.presidente || "";
-                        document.getElementById('conselheiroSalaB').value = d.conselheiro_sala_b || "";
-                        document.getElementById('presidente').dispatchEvent(new Event('change'));
-                        
-                        document.getElementById('canticoInicial').value = d.abertura?.cantico || "";
-                        document.getElementById('oracaoInicial').value = d.abertura?.oracao || "";
-                        
-                        document.getElementById('temaParte1').value = d.tesouros?.tema_1 || "";
-                        document.getElementById('parte1').value = d.tesouros?.parte_1 || "";
-                        document.getElementById('temaParte2').value = d.tesouros?.tema_2 || "";
-                        document.getElementById('parte2').value = d.tesouros?.parte_2 || "";
-                        
-                        document.getElementById('leituraSemanal').value = d.tesouros?.leitura_semanal || "";
-                        document.getElementById('trechoLeitura').value = d.tesouros?.trecho_leitura || "";
-                        document.getElementById('leituraBiblia').value = d.tesouros?.leitura || "";
-                        
-                        document.getElementById('containerMinisterio').innerHTML = '';
-                        if(d.ministerio) d.ministerio.forEach(p => criarParteMinisterio(p.tema, p.tempo, p.estudante, p.ajudante, p.estudante_b, p.ajudante_b));
-                        
-                        document.getElementById('canticoIntermediario').value = d.vida_crista?.cantico_intermediario || "";
-                        document.getElementById('containerVidaCrista').innerHTML = '';
-                        if(d.vida_crista?.partes) d.vida_crista.partes.forEach(p => criarParteVidaCrista(p.tema, p.tempo, p.designado));
-                        
-                        document.getElementById('estudoDirigente').value = d.vida_crista?.estudo_dirigente || "";
-                        document.getElementById('estudoLeitor').value = d.vida_crista?.estudo_leitor || "";
-                        document.getElementById('discursoViajante').value = d.vida_crista?.discurso_viajante || "";
-                        
-                        document.getElementById('canticoFinal').value = d.vida_crista?.cantico_final || "";
-                        document.getElementById('oracaoFinal').value = d.vida_crista?.oracao_final || "";
-                    }
-                    document.getElementById('mensagem').innerText = "";
-                }
-            } catch(e) { document.getElementById('mensagem').innerText = "Erro ao carregar edição."; }
-        }
-
-        // --- SALVAMENTO ---
-        document.getElementById('btnSalvar').addEventListener('click', async () => {
-            const dataReuniao = document.getElementById('dataReuniao').value;
-            const tipoEvento = document.getElementById('tipoEvento').value;
-            const msgDiv = document.getElementById('mensagem');
-
-            if (!dataReuniao) { msgDiv.style.color = "red"; msgDiv.innerText = "ATENÇÃO: Selecione a data."; return; }
-            msgDiv.style.color = "blue"; msgDiv.innerText = "Salvando no banco de dados...";
-
-            let programacaoData = { 
-                data: dataReuniao, 
-                tipo_evento: tipoEvento,
-                usar_sala_b: document.getElementById('usarSalaB').checked 
-            };
-
-            if (!["Assembleia", "Congresso", "Celebracao"].includes(tipoEvento)) {
-                const min = [], vc = [];
-                document.querySelectorAll('#containerMinisterio .dinamico-item').forEach(i => {
-                    min.push({
-                        tema: i.querySelector('.min-tema').value, tempo: i.querySelector('.min-tempo').value,
-                        estudante: i.querySelector('.min-estudante').value, ajudante: i.querySelector('.min-ajudante').value,
-                        estudante_b: i.querySelector('.min-estudante-b').value, ajudante_b: i.querySelector('.min-ajudante-b').value
-                    });
-                });
-                
-                document.querySelectorAll('#containerVidaCrista .dinamico-item').forEach(i => {
-                    vc.push({
-                        tema: i.querySelector('.vc-tema').value, tempo: i.querySelector('.vc-tempo').value, 
-                        designado: i.querySelector('.vc-designado').value
-                    });
-                });
-                
-                programacaoData = { ...programacaoData,
-                    presidente: document.getElementById('presidente').value,
-                    conselheiro_sala_b: document.getElementById('conselheiroSalaB').value,
-                    abertura: { cantico: document.getElementById('canticoInicial').value, oracao: document.getElementById('oracaoInicial').value, comentarios: document.getElementById('comentariosIniciais').value },
-                   tesouros: { 
-                        tema_1: document.getElementById('temaParte1').value, parte_1: document.getElementById('parte1').value, 
-                        tema_2: document.getElementById('temaParte2').value, parte_2: document.getElementById('parte2').value, 
-                        leitura_semanal: document.getElementById('leituraSemanal').value, 
-                        trecho_leitura: document.getElementById('trechoLeitura').value, 
-                        leitura: document.getElementById('leituraBiblia').value 
-                    },
-                    ministerio: min,
-                    vida_crista: {
-                        cantico_intermediario: document.getElementById('canticoIntermediario').value, partes: vc,
-                        estudo_dirigente: document.getElementById('estudoDirigente').value, estudo_leitor: document.getElementById('estudoLeitor').value,
-                        discurso_viajante: document.getElementById('discursoViajante').value, comentarios_finais: document.getElementById('comentariosFinais').value,
-                        cantico_final: document.getElementById('canticoFinal').value, oracao_final: document.getElementById('oracaoFinal').value
-                    }
-                };
-            }
-
-            try {
-                await setDoc(doc(db, "programacoes_semanais", dataReuniao), programacaoData);
-                msgDiv.style.color = "green"; msgDiv.innerText = "Salvo com sucesso!";
-                carregarHistoricoSidebar();
-                setTimeout(() => { prepararNovoFormulario(); }, 1500);
-            } catch (error) { msgDiv.style.color = "red"; msgDiv.innerText = "Erro ao salvar."; }
-        });
-
-        // --- MODAL CONFIGURAÇÕES ---
-        const modalConfig = document.getElementById('modalConfig');
-        const selectListaAtiva = document.getElementById('tipoListaEdicao');
-        const boxItens = document.getElementById('listaItensAtuais');
-
-        document.getElementById('btnConfig').addEventListener('click', () => {
-            document.getElementById('configDiaReuniao').value = configGlobal.dia_reuniao;
-            document.getElementById('configNomeCongregacao').value = configGlobal.nome_congregacao || "";
-            renderizarListaConfig();
-            modalConfig.style.display = 'flex';
-        });
-        
-        document.getElementById('fecharConfig').addEventListener('click', () => modalConfig.style.display = 'none');
-        selectListaAtiva.addEventListener('change', renderizarListaConfig);
-
-        function renderizarListaConfig() {
-            const tipo = selectListaAtiva.value;
-            boxItens.innerHTML = '';
-            const arrayAtual = configGlobal[tipo] || [];
-            arrayAtual.forEach(nome => {
-                const opt = document.createElement('option');
-                opt.value = nome; opt.innerText = nome;
-                boxItens.appendChild(opt);
-            });
-        }
-
-        document.getElementById('btnAdicionarNome').addEventListener('click', () => {
-            const input = document.getElementById('novoNome');
-            const tipo = selectListaAtiva.value;
-            const nomeStr = input.value.trim();
-            if(!nomeStr) return;
-            const nomes = nomeStr.split(',').map(n => n.trim()).filter(n => n);
-            nomes.forEach(n => { if(!configGlobal[tipo].includes(n)) configGlobal[tipo].push(n); });
-            configGlobal[tipo].sort(); input.value = ''; renderizarListaConfig();
-        });
-
-        document.getElementById('btnRemoverNome').addEventListener('click', () => {
-            const tipo = selectListaAtiva.value;
-            const selecionados = Array.from(boxItens.selectedOptions).map(o => o.value);
-            configGlobal[tipo] = configGlobal[tipo].filter(n => !selecionados.includes(n));
-            renderizarListaConfig();
-        });
-
-        document.getElementById('btnSalvarConfig').addEventListener('click', async () => {
-            const msg = document.getElementById('msgConfig');
-            msg.style.color = "blue"; msg.innerText = "Salvando configurações...";
-            configGlobal.dia_reuniao = parseInt(document.getElementById('configDiaReuniao').value);
-            configGlobal.nome_congregacao = document.getElementById('configNomeCongregacao').value.toUpperCase();
-            try {
-                await setDoc(doc(db, "configuracoes", "geral"), configGlobal);
-                atualizarDOMComListas();
-                msg.style.color = "green"; msg.innerText = "Configurações salvas!";
-                setTimeout(() => { modalConfig.style.display = 'none'; msg.innerText=""; }, 1500);
-            } catch(e) { msg.style.color = "red"; msg.innerText = "Erro ao salvar."; }
-        });
-
-        // --- GERAÇÃO QUADRO S-140 (O NOVO MOTOR FÍSICO) ---
-        document.getElementById('btnGerarS140').addEventListener('click', async () => {
-            const dataReuniao = document.getElementById('dataReuniao').value;
-            if (!dataReuniao) { alert("Selecione uma data antes de gerar o quadro."); return; }
-            
-            // Trava de segurança: garantir que foi salvo antes de gerar
-            const msgDiv = document.getElementById('mensagem');
-            msgDiv.style.color = "blue"; msgDiv.innerText = "Gerando Quadro S-140...";
-
-            const usarSalaB = document.getElementById('usarSalaB').checked;
-            const dataBR = dataReuniao.split('-').reverse().join('/');
-            const nomeCong = configGlobal.nome_congregacao || "CONGREGAÇÃO";
-
-            const container = document.getElementById('molde-s140-container');
-            
-            // Montagem dinâmica do HTML do S-140 (Sem a coluna de horários)
-            const colunasHeader = usarSalaB 
-                ? `<th class="s140-col-sala">Sala B</th><th class="s140-col-sala">Salão principal</th>` 
-                : `<th class="s140-col-sala" colspan="2">Salão principal</th>`;
-
-            const txtAju = (aju) => aju ? `<br><span class="s140-sub">Aj: ${aju}</span>` : "";
-            const formataMin = (tema, tmp) => `${tema || "---"} ${tmp ? `(${tmp} min)` : ""}`;
-            
-            // Extraindo Ministério dinâmico
-            let minHTML = '';
-            document.querySelectorAll('#containerMinisterio .dinamico-item').forEach((item, index) => {
-                const tema = formataMin(item.querySelector('.min-tema').value, item.querySelector('.min-tempo').value);
-                const estAjuP = `Est: ${item.querySelector('.min-estudante').value || "---"}${txtAju(item.querySelector('.min-ajudante').value)}`;
-                const estAjuB = usarSalaB ? `Est: ${item.querySelector('.min-estudante-b').value || "---"}${txtAju(item.querySelector('.min-ajudante-b').value)}` : "";
-                
-                minHTML += `
-                <tr>
-                    <td class="s140-col-tema">${index + 4}. ${tema}</td>
-                    ${usarSalaB ? `<td>${estAjuB}</td>` : ''}
-                    <td ${usarSalaB ? '' : 'colspan="2"'}>${estAjuP}</td>
-                </tr>`;
-            });
-
-            // Extraindo Vida Cristã dinâmica
-            let vcHTML = '';
-            document.querySelectorAll('#containerVidaCrista .dinamico-item').forEach((item, index) => {
-                const tema = formataMin(item.querySelector('.vc-tema').value, item.querySelector('.vc-tempo').value);
-                vcHTML += `
-                <tr>
-                    <td class="s140-col-tema" ${usarSalaB ? 'colspan="2"' : ''}>${index + 7}. ${tema}</td>
-                    <td ${usarSalaB ? '' : 'colspan="2"'}>${item.querySelector('.vc-designado').value || "---"}</td>
-                </tr>`;
-            });
-
-            // Conselheiro Sala B header fix
-            const conselheiroRow = usarSalaB 
-                ? `<tr><td style="border:none;"></td><td colspan="2" style="border:none; text-align:right; padding-bottom:10px;">Conselheiro da sala B: <strong>${document.getElementById('conselheiroSalaB').value || "---"}</strong></td></tr>`
-                : '';
-
-            const leituraSemanalStr = document.getElementById('leituraSemanal').value || "---";
-            const trechoLeituraStr = document.getElementById('trechoLeitura').value || "";
-
-            container.innerHTML = `
-                <div class="s140-titulo-geral">${nomeCong}<br>Programação da reunião do meio de semana</div>
-                <table class="s140-table">
-                    <tr>
-                        <td colspan="2" style="border:none; font-weight:bold; padding-bottom:10px;">${dataBR} | LEITURA SEMANAL DA BÍBLIA: ${leituraSemanalStr}</td>
-                        <td style="border:none; text-align:right; padding-bottom:10px;">Presidente: <strong>${document.getElementById('presidente').value || "---"}</strong></td>
-                    </tr>
-                    ${conselheiroRow}
-                    <tr>
-                        <td class="s140-col-tema" colspan="2">Cântico ${document.getElementById('canticoInicial').value || "---"} e Oração</td>
-                        <td>${document.getElementById('oracaoInicial').value || "---"}</td>
-                    </tr>
-                    <tr>
-                        <td class="s140-col-tema" colspan="3">Comentários iniciais (1 min)</td>
-                    </tr>
-                    
-                    <tr class="s140-section-header bg-tesouros">
-                        <td>TESOUROS DA PALAVRA DE DEUS</td>
-                        ${colunasHeader}
-                    </tr>
-                    <tr>
-                        <td class="s140-col-tema" ${usarSalaB ? 'colspan="2"' : ''}>1. ${document.getElementById('temaParte1').value || "---"} (10 min)</td>
-                        <td ${usarSalaB ? '' : 'colspan="2"'}>${document.getElementById('parte1').value || "---"}</td>
-                    </tr>
-                    <tr>
-                        <td class="s140-col-tema" ${usarSalaB ? 'colspan="2"' : ''}>2. ${document.getElementById('temaParte2').value || "---"} (10 min)</td>
-                        <td ${usarSalaB ? '' : 'colspan="2"'}>${document.getElementById('parte2').value || "---"}</td>
-                    </tr>
-                    <tr>
-                        <td class="s140-col-tema">3. Leitura da Bíblia (4 min) <span style="font-weight: normal;">${trechoLeituraStr}</span></td>
-                        ${usarSalaB ? `<td>---</td>` : ''}
-                        <td ${usarSalaB ? '' : 'colspan="2"'}>Est: ${document.getElementById('leituraBiblia').value || "---"}</td>
-                    </tr>
-
-                    <tr class="s140-section-header bg-ministerio">
-                        <td>FAÇA SEU MELHOR NO MINISTÉRIO</td>
-                        ${colunasHeader}
-                    </tr>
-                    ${minHTML}
-
-                    <tr class="s140-section-header bg-vidacrista">
-                        <td colspan="3">NOSSA VIDA CRISTÃ</td>
-                    </tr>
-                    <tr>
-                        <td class="s140-col-tema" colspan="3">Cântico ${document.getElementById('canticoIntermediario').value || "---"}</td>
-                    </tr>
-                    ${vcHTML}
-                    <tr>
-                        <td class="s140-col-tema" ${usarSalaB ? 'colspan="2"' : ''}>Estudo bíblico de congregação (30 min)</td>
-                        <td ${usarSalaB ? '' : 'colspan="2"'}>Dir: ${document.getElementById('estudoDirigente').value || "---"}<br><span class="s140-sub">Lei: ${document.getElementById('estudoLeitor').value || "---"}</span></td>
-                    </tr>
-                    <tr>
-                        <td class="s140-col-tema" colspan="3">Comentários finais (3 min)</td>
-                    </tr>
-                    <tr>
-                        <td class="s140-col-tema" colspan="2">Cântico ${document.getElementById('canticoFinal').value || "---"} e Oração</td>
-                        <td>${document.getElementById('oracaoFinal').value || "---"}</td>
-                    </tr>
-                </table>
-            `;
-            
-            try {
-                const canvas = await html2canvas(container, { scale: 2, backgroundColor: "#ffffff" });
-                const imgDataUrl = canvas.toDataURL('image/png');
-                saveAs(imgDataUrl, `S140_Quadro_${dataReuniao}.png`);
-                msgDiv.style.color = "green"; msgDiv.innerText = "Quadro S-140 baixado com sucesso!";
-                setTimeout(() => { msgDiv.innerText = ""; }, 3000);
-            } catch (err) {
-                msgDiv.style.color = "red"; msgDiv.innerText = "Erro ao gerar imagem.";
-            }
-        });
-
-        // --- LÓGICA DE DESIGNAÇÕES S-89 / WHATSAPP ---
-        const modalDesignacoes = document.getElementById('modalDesignacoes');
-        
-        async function gerarImagemS89(nome, ajudante, dataStr, parte, local) {
-            document.getElementById('s89-nome').innerText = nome;
-            document.getElementById('s89-ajudante').innerText = ajudante || '---';
-            document.getElementById('s89-data').innerText = dataStr;
-            document.getElementById('s89-parte').innerText = parte;
-            
-            // Controle visual dos checkboxes do local no S-89
-            const boxes = document.querySelectorAll('.s89-box');
-            boxes.forEach(b => b.classList.remove('s89-box-checked'));
-            if(local === "Sala B") boxes[1].classList.add('s89-box-checked');
-            else boxes[0].classList.add('s89-box-checked');
-
-            const molde = document.getElementById('molde-s89');
-            const canvas = await html2canvas(molde, { scale: 2, backgroundColor: "#ffffff" });
-            return canvas.toDataURL('image/png');
-        }
-
-        document.getElementById('btnGerarDesignacoes').addEventListener('click', async () => {
-            const dataReuniao = document.getElementById('dataReuniao').value;
-            if (!dataReuniao) { alert("Por favor, selecione uma data da reunião no formulário."); return; }
-
-            document.getElementById('tituloModalGerar').innerText = "📱 Designações S-89 / WhatsApp";
-            modalDesignacoes.style.display = 'flex';
-            document.getElementById('loadingImagens').style.display = 'block';
-            document.getElementById('conteudoDesignacoes').style.display = 'none';
-            
-            const container = document.getElementById('listaDesignacoesProntas');
-            container.innerHTML = '';
-            designacoesGeradasMemoria = [];
-
-            const dataFormatada = dataReuniao.split('-').reverse().join('/');
-            let designacoes = [];
-            const usarSalaB = document.getElementById('usarSalaB').checked;
-
-            const leitura = document.getElementById('leituraBiblia').value;
-            if (leitura) designacoes.push({ nome: leitura, ajudante: "", parte: "Parte 3 - Leitura da Bíblia", local: "Salão principal" });
-
-            document.querySelectorAll('#containerMinisterio .dinamico-item').forEach((item, index) => {
-                const estP = item.querySelector('.min-estudante').value;
-                const ajuP = item.querySelector('.min-ajudante').value;
-                if (estP) designacoes.push({ nome: estP, ajudante: ajuP, parte: `Parte ${index + 4}`, local: "Salão principal" });
-                
-                if (usarSalaB) {
-                    const estB = item.querySelector('.min-estudante-b').value;
-                    const ajuB = item.querySelector('.min-ajudante-b').value;
-                    if (estB) designacoes.push({ nome: estB, ajudante: ajuB, parte: `Parte ${index + 4}`, local: "Sala B" });
-                }
-            });
-
-            if (designacoes.length === 0) {
-                document.getElementById('loadingImagens').style.display = 'none';
-                document.getElementById('conteudoDesignacoes').style.display = 'block';
-                document.getElementById('btnBaixarTodasImagens').style.display = 'none';
-                container.innerHTML = '<p style="text-align:center; color:#666;">Nenhuma designação de Leitura ou Ministério preenchida.</p>';
-                return;
-            }
-
-            for (const desig of designacoes) {
-                const imgDataUrl = await gerarImagemS89(desig.nome, desig.ajudante, dataFormatada, desig.parte, desig.local);
-                const nomeArquivoSeguro = `S89_${desig.nome.replace(/\s+/g, '_')}_${desig.parte.replace(/ /g, '')}.png`;
-                
-                designacoesGeradasMemoria.push({ nomeArquivo: nomeArquivoSeguro, imgBase64: imgDataUrl });
-
-                const textoMsg = `*DESIGNAÇÃO PARA A REUNIÃO*\n\n👤 *Nome:* ${desig.nome}\n👥 *Ajudante:* ${desig.ajudante || '---'}\n📅 *Data:* ${dataFormatada}\n📝 *Parte:* ${desig.parte}\n🏢 *Local:* ${desig.local}\n\n_Veja as instruções na Apostila._`;
-                const urlWhatsApp = `https://api.whatsapp.com/send?text=${encodeURIComponent(textoMsg)}`;
-
-                const card = document.createElement('div');
-                card.className = 'designacao-card';
-                card.innerHTML = `
-                    <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 15px;">
-                        <img src="${imgDataUrl}" style="height: 80px; border: 1px solid #ccc; border-radius: 4px;">
-                        <div>
-                            <strong style="display:block; font-size: 16px; color: #333;">${desig.parte} (${desig.local})</strong>
-                            <span style="display:block; font-size: 14px; margin-top: 5px;">Estudante: <b>${desig.nome}</b></span>
-                        </div>
-                    </div>
-                    <div style="display: flex; gap: 10px;">
-                        <a href="${urlWhatsApp}" target="_blank" style="flex: 1; text-decoration: none;">
-                            <button type="button" class="btn-whatsapp">💬 WhatsApp</button>
-                        </a>
-                        <button type="button" class="btn-download-img" style="flex: 1;" onclick="salvarImagemIndividual('${imgDataUrl}', '${nomeArquivoSeguro}')">🖼️ Baixar S-89</button>
-                    </div>
-                `;
-                container.appendChild(card);
-            }
-
-            document.getElementById('loadingImagens').style.display = 'none';
-            document.getElementById('conteudoDesignacoes').style.display = 'block';
-            document.getElementById('btnBaixarTodasImagens').style.display = 'block';
-        });
-
-        window.salvarImagemIndividual = function(dataUrl, nomeArquivo) { saveAs(dataUrl, nomeArquivo); };
-
-        document.getElementById('btnBaixarTodasImagens').addEventListener('click', () => {
-            const dataForm = document.getElementById('dataReuniao').value.split('-').reverse().join('-');
-            const zip = new JSZip();
-            designacoesGeradasMemoria.forEach(desig => { zip.file(desig.nomeArquivo, desig.imgBase64.split(',')[1], {base64: true}); });
-            zip.generateAsync({type:"blob"}).then(function(content) { saveAs(content, `Designacoes_${dataForm}.zip`); });
-        });
-
-        document.getElementById('fecharDesignacoes').addEventListener('click', () => { modalDesignacoes.style.display = 'none'; });
     </script>
 </body>
 </html>
