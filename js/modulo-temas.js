@@ -419,6 +419,13 @@ export function initMotorCalendario() {
             btnEstudantes.style.background = '#f1f1f1'; btnEstudantes.style.color = '#666'; btnEstudantes.style.borderBottom = '1px solid #ddd';
         });
     }
+    
+    // Conecta os botões de Salvamento Parcial (Merge)
+    const btnSalvarEst = document.getElementById('btnSalvarEstudantesMensal');
+    const btnSalvarGer = document.getElementById('btnSalvarGeralMensal');
+    
+    if(btnSalvarEst) btnSalvarEst.addEventListener('click', salvarEstudantesMensal);
+    if(btnSalvarGer) btnSalvarGer.addEventListener('click', salvarGeralMensal);
 }
 
 async function processarMesSelecionado() {
@@ -446,6 +453,9 @@ async function processarMesSelecionado() {
     }
 
     renderizarLinhasTabelas(datasReuniao);
+
+    // NOVA INJEÇÃO: Busca os dados já salvos no banco para preencher a tabela gerada
+    carregarDadosMensais(datasReuniao);
 }
 
 function renderizarLinhasTabelas(datas) {
@@ -547,4 +557,139 @@ function ativarInteligenciaUI() {
             }
         });
     });
+}
+
+// =========================================
+// MOTORES DE PERSISTÊNCIA ASSÍNCRONA (MERGE)
+// =========================================
+
+async function carregarDadosMensais(datas) {
+    for (const data of datas) {
+        try {
+            const docSnap = await getDoc(doc(db, "programacoes_semanais", data.iso));
+            if (docSnap.exists()) {
+                const d = docSnap.data();
+                
+                // 1. Preenche Aba de Estudantes
+                const trEst = document.querySelector(`#corpo-tabela-estudantes tr[data-date="${data.iso}"]`);
+                if (trEst) {
+                    if (d.tesouros) {
+                        trEst.querySelector('.leitura-biblia-tabela').value = d.tesouros.leitura || "";
+                        trEst.querySelector('.trecho-leitura-tabela').value = d.tesouros.trecho_leitura || "";
+                    }
+                    if (d.ministerio) {
+                        const blocos = trEst.querySelectorAll('.bloco-parte-min');
+                        d.ministerio.forEach((parte, index) => {
+                            if (blocos[index]) {
+                                // Usa 'tema' do banco para preencher o 'rotulo' visual
+                                blocos[index].querySelector('.min-rotulo').value = parte.tema || "";
+                                blocos[index].querySelector('.min-titular').value = parte.estudante || "";
+                                blocos[index].querySelector('.min-ajudante').value = parte.ajudante || "";
+                                // Dispara o evento para ocultar ajudante se for Discurso
+                                blocos[index].querySelector('.min-rotulo').dispatchEvent(new Event('change'));
+                            }
+                        });
+                    }
+                }
+
+                // 2. Preenche Aba Geral
+                const trGer = document.querySelector(`#corpo-tabela-geral tr[data-date="${data.iso}"]`);
+                if (trGer) {
+                    trGer.querySelector('.geral-presidente').value = d.presidente || "";
+                    if (d.abertura) trGer.querySelector('.geral-oracao-inicial').value = d.abertura.oracao || "";
+                    if (d.tesouros) {
+                        trGer.querySelector('.geral-discurso').value = d.tesouros.parte_1 || "";
+                        trGer.querySelector('.geral-joias').value = d.tesouros.parte_2 || "";
+                    }
+                    if (d.vida_crista) {
+                        trGer.querySelector('.geral-estudo-dir').value = d.vida_crista.estudo_dirigente || "";
+                        trGer.querySelector('.geral-estudo-lei').value = d.vida_crista.estudo_leitor || "";
+                        trGer.querySelector('.geral-oracao-final').value = d.vida_crista.oracao_final || "";
+                    }
+                }
+            }
+        } catch (e) {
+            console.error(`Erro ao carregar dados do dia ${data.iso}:`, e);
+        }
+    }
+}
+
+async function salvarEstudantesMensal() {
+    const btn = document.getElementById('btnSalvarEstudantesMensal');
+    const originalText = btn.innerText;
+    btn.innerText = "⏳ Salvando Estudantes..."; btn.disabled = true;
+
+    const linhas = document.querySelectorAll('#corpo-tabela-estudantes tr.linha-semana');
+    try {
+        for (const linha of linhas) {
+            const dataIso = linha.getAttribute('data-date');
+            const leitura = linha.querySelector('.leitura-biblia-tabela').value;
+            const trecho = linha.querySelector('.trecho-leitura-tabela').value;
+            
+            const ministerio = [];
+            linha.querySelectorAll('.bloco-parte-min').forEach(bloco => {
+                const rotulo = bloco.querySelector('.min-rotulo').value;
+                const titular = bloco.querySelector('.min-titular').value;
+                const ajudante = bloco.querySelector('.min-ajudante').value;
+                
+                // Só salva a parte se houver pelo menos um rótulo ou titular preenchido
+                if (rotulo || titular) {
+                    ministerio.push({ tema: rotulo, estudante: titular, ajudante: ajudante });
+                }
+            });
+
+            // O pulo do gato: Enviamos apenas as chaves desta aba. 
+            // O { merge: true } fará o Firebase preservar o "Presidente" e as "Orações" intactos.
+            const payload = {
+                data: dataIso, // Garante a trava de data
+                tesouros: { leitura: leitura, trecho_leitura: trecho },
+                ministerio: ministerio
+            };
+
+            await setDoc(doc(db, "programacoes_semanais", dataIso), payload, { merge: true });
+        }
+        
+        btn.innerText = "✓ Salvo com Sucesso"; btn.style.backgroundColor = "#25D366";
+        carregarHistoricoSidebar(); // Atualiza a barra lateral
+    } catch(e) {
+        btn.innerText = "❌ Erro ao Salvar"; btn.style.backgroundColor = "red";
+    }
+    setTimeout(() => { btn.innerText = originalText; btn.disabled = false; btn.style.backgroundColor = "#1a73e8"; }, 3000);
+}
+
+async function salvarGeralMensal() {
+    const btn = document.getElementById('btnSalvarGeralMensal');
+    const originalText = btn.innerText;
+    btn.innerText = "⏳ Salvando Reunião Geral..."; btn.disabled = true;
+
+    const linhas = document.querySelectorAll('#corpo-tabela-geral tr.linha-semana-geral');
+    try {
+        for (const linha of linhas) {
+            const dataIso = linha.getAttribute('data-date');
+            
+            const payload = {
+                data: dataIso,
+                presidente: linha.querySelector('.geral-presidente').value,
+                abertura: { oracao: linha.querySelector('.geral-oracao-inicial').value },
+                tesouros: { 
+                    parte_1: linha.querySelector('.geral-discurso').value, 
+                    parte_2: linha.querySelector('.geral-joias').value 
+                },
+                vida_crista: {
+                    estudo_dirigente: linha.querySelector('.geral-estudo-dir').value,
+                    estudo_leitor: linha.querySelector('.geral-estudo-lei').value,
+                    oracao_final: linha.querySelector('.geral-oracao-final').value
+                }
+            };
+
+            // Mescla sem apagar os Estudantes salvos pela outra aba
+            await setDoc(doc(db, "programacoes_semanais", dataIso), payload, { merge: true });
+        }
+        
+        btn.innerText = "✓ Salvo com Sucesso"; btn.style.backgroundColor = "#25D366";
+        carregarHistoricoSidebar(); 
+    } catch(e) {
+        btn.innerText = "❌ Erro ao Salvar"; btn.style.backgroundColor = "red";
+    }
+    setTimeout(() => { btn.innerText = originalText; btn.disabled = false; btn.style.backgroundColor = "#9c27b0"; }, 3000);
 }
