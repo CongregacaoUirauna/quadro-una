@@ -63,6 +63,9 @@ export function initModuloTemas() {
 
     // Eventos do Modal de Configuração
     iniciarEventosConfig();
+
+    // NOVA INJEÇÃO: Inicializa o Motor de Calendário e Abas
+    initMotorCalendario();
 }
 
 // --- FLUXO DE NOVO FORMULÁRIO E DATAS ---
@@ -379,5 +382,169 @@ function iniciarEventosConfig() {
             msg.style.color = "green"; msg.innerText = "Configurações salvas!";
             setTimeout(() => { modalConfig.style.display = 'none'; msg.innerText=""; }, 1500);
         } catch(e) { msg.style.color = "red"; msg.innerText = "Erro ao salvar."; }
+    });
+}
+
+// =========================================
+// MÓDULO DA TABELA MENSAL (FACADE PATTERN)
+// =========================================
+
+export function initMotorCalendario() {
+    const inputMes = document.getElementById('mesReferencia');
+    if(inputMes) {
+        // Define o mês atual como padrão e dispara a geração
+        const hoje = new Date();
+        inputMes.value = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}`;
+        inputMes.addEventListener('change', processarMesSelecionado);
+        
+        // Simula um clique para gerar o mês atual na inicialização
+        setTimeout(() => processarMesSelecionado(), 500);
+    }
+
+    // Controle de Navegação das Sub-Abas (Estudantes vs Geral)
+    const btnEstudantes = document.getElementById('sub-aba-estudantes');
+    const btnGeral = document.getElementById('sub-aba-geral');
+    const tabEstudantes = document.getElementById('container-tab-estudantes');
+    const tabGeral = document.getElementById('container-tab-geral');
+
+    if(btnEstudantes && btnGeral) {
+        btnEstudantes.addEventListener('click', () => {
+            tabEstudantes.classList.remove('hidden'); tabGeral.classList.add('hidden');
+            btnEstudantes.style.background = '#fff'; btnEstudantes.style.color = '#1a73e8'; btnEstudantes.style.borderBottom = 'none';
+            btnGeral.style.background = '#f1f1f1'; btnGeral.style.color = '#666'; btnGeral.style.borderBottom = '1px solid #ddd';
+        });
+        btnGeral.addEventListener('click', () => {
+            tabGeral.classList.remove('hidden'); tabEstudantes.classList.add('hidden');
+            btnGeral.style.background = '#fff'; btnGeral.style.color = '#9c27b0'; btnGeral.style.borderBottom = 'none';
+            btnEstudantes.style.background = '#f1f1f1'; btnEstudantes.style.color = '#666'; btnEstudantes.style.borderBottom = '1px solid #ddd';
+        });
+    }
+}
+
+async function processarMesSelecionado() {
+    const mesAno = document.getElementById('mesReferencia').value;
+    if (!mesAno) return;
+    
+    document.getElementById('status-salvamento-mensal').innerText = "⏳ Gerando semanas...";
+    document.getElementById('status-salvamento-mensal').style.color = "#666";
+
+    const [ano, mes] = mesAno.split('-').map(Number);
+    const diaReuniao = parseInt(configGlobal.dia_reuniao); 
+    const diasMes = new Date(ano, mes, 0).getDate();
+    const datasReuniao = [];
+    
+    // Algoritmo de Varredura do Mês
+    for (let dia = 1; dia <= diasMes; dia++) {
+        const data = new Date(ano, mes - 1, dia);
+        if (data.getDay() === diaReuniao) {
+            const dataFormatada = data.toISOString().split('T')[0];
+            datasReuniao.push({ 
+                iso: dataFormatada, 
+                display: `${dia} de ${data.toLocaleString('pt-BR', { month: 'long' })}` 
+            });
+        }
+    }
+
+    renderizarLinhasTabelas(datasReuniao);
+}
+
+function renderizarLinhasTabelas(datas) {
+    const corpoEstudantes = document.getElementById('corpo-tabela-estudantes');
+    const corpoGeral = document.getElementById('corpo-tabela-geral');
+    
+    corpoEstudantes.innerHTML = '';
+    corpoGeral.innerHTML = '';
+
+    // Cache das listas globais para performance
+    const todosIrmaos = [...configGlobal.irmaos, ...configGlobal.irmas].sort();
+    const optsIrmaos = `<option value="">Selecione...</option>` + todosIrmaos.map(n => `<option value="${n}">${n}</option>`).join('');
+    const optsEnsino = `<option value="">Selecione...</option>` + configGlobal.aprovados_ensino.map(n => `<option value="${n}">${n}</option>`).join('');
+    const optsOracao = `<option value="">Selecione...</option>` + configGlobal.aprovados_oracao.map(n => `<option value="${n}">${n}</option>`).join('');
+    
+    const optsRotulos = `
+        <option value="">Rótulo da Parte...</option>
+        <option value="Iniciando Conversas">Iniciando Conversas</option>
+        <option value="Cultivando o Interesse">Cultivando o Interesse</option>
+        <option value="Fazendo Discípulos">Fazendo Discípulos</option>
+        <option value="Explicando suas Crenças">Explicando suas Crenças</option>
+        <option value="Discurso">Discurso</option>
+    `;
+
+    datas.forEach(data => {
+        // --- ABA 1: CONSTRUÇÃO DA LINHA DE ESTUDANTES ---
+        const trEst = document.createElement('tr');
+        trEst.className = 'linha-semana hover-highlight';
+        trEst.setAttribute('data-date', data.iso);
+        
+        let ministerioHtml = '';
+        for(let i=1; i<=4; i++) { // 4 colunas dinâmicas preparadas
+            ministerioHtml += `
+                <div class="bloco-parte-min" style="display: flex; gap: 5px; margin-bottom: 8px; padding-bottom: 5px; border-bottom: 1px dashed #eee;">
+                    <select class="min-rotulo" style="flex: 1; font-size: 13px;">${optsRotulos}</select>
+                    <select class="min-titular" style="flex: 1; font-size: 13px;">${optsIrmaos}</select>
+                    <select class="min-ajudante" style="flex: 1; font-size: 13px;">${optsIrmaos}</select>
+                </div>
+            `;
+        }
+
+        trEst.innerHTML = `
+            <td style="padding: 15px; border: 1px solid #ddd; font-weight: bold; background: #fafafa; text-align: center;">
+                <div style="font-size: 16px;">${data.display}</div>
+            </td>
+            <td style="padding: 10px; border: 1px solid #ddd; vertical-align: top;">
+                <label style="font-size: 12px; font-weight: bold; color: #1a73e8;">Estudante da Leitura:</label>
+                <select class="leitura-biblia-tabela" style="width: 100%; margin-bottom: 10px;">${optsIrmaos}</select>
+                <input type="text" class="trecho-leitura-tabela" placeholder="Trecho (Ex: Isa. 40:1-5)" style="width: 100%;">
+            </td>
+            <td style="padding: 10px; border: 1px solid #ddd; vertical-align: top;">
+                ${ministerioHtml}
+            </td>
+        `;
+        corpoEstudantes.appendChild(trEst);
+
+        // --- ABA 2: CONSTRUÇÃO DA LINHA DA REUNIÃO GERAL ---
+        const trGer = document.createElement('tr');
+        trGer.className = 'linha-semana-geral hover-highlight';
+        trGer.setAttribute('data-date', data.iso);
+        
+        trGer.innerHTML = `
+            <td style="padding: 15px; border: 1px solid #ddd; font-weight: bold; background: #fafafa; text-align: center;">
+                <div style="font-size: 16px;">${data.display}</div>
+            </td>
+            <td style="padding: 10px; border: 1px solid #ddd; vertical-align: top;">
+                <select class="geral-presidente" style="width: 100%; margin-bottom: 8px;"><option value="">Presidente...</option>${configGlobal.presidentes.map(n => `<option value="${n}">${n}</option>`).join('')}</select>
+                <select class="geral-oracao-inicial" style="width: 100%; margin-bottom: 8px;"><option value="">Oração Inicial...</option>${optsOracao}</select>
+                <select class="geral-discurso" style="width: 100%; margin-bottom: 8px;"><option value="">Discurso (10 min)...</option>${optsEnsino}</select>
+                <select class="geral-joias" style="width: 100%;"><option value="">Joias Espirituais...</option>${optsEnsino}</select>
+            </td>
+            <td style="padding: 10px; border: 1px solid #ddd; vertical-align: top;">
+                <select class="geral-estudo-dir" style="width: 100%; margin-bottom: 8px;"><option value="">Dirigente do Estudo...</option>${optsEnsino}</select>
+                <select class="geral-estudo-lei" style="width: 100%; margin-bottom: 8px;"><option value="">Leitor do Estudo...</option>${`<option value="">Selecione...</option>` + configGlobal.leitores_estudo.map(n => `<option value="${n}">${n}</option>`).join('')}</select>
+                <select class="geral-oracao-final" style="width: 100%;"><option value="">Oração Final...</option>${optsOracao}</select>
+            </td>
+        `;
+        corpoGeral.appendChild(trGer);
+    });
+
+    document.getElementById('status-salvamento-mensal').innerText = "✅ Tabela pronta para edição";
+    document.getElementById('status-salvamento-mensal').style.color = "green";
+    
+    // Ativa a reatividade (Ex: Ocultar ajudante se for Discurso)
+    ativarInteligenciaUI();
+}
+
+function ativarInteligenciaUI() {
+    document.querySelectorAll('.min-rotulo').forEach(select => {
+        select.addEventListener('change', (e) => {
+            const trPai = e.target.closest('.bloco-parte-min');
+            const selectAjudante = trPai.querySelector('.min-ajudante');
+            
+            if (e.target.value === "Discurso" || e.target.value.includes("Crenças")) {
+                selectAjudante.classList.add('hidden');
+                selectAjudante.value = ""; // Limpa o valor para não ir lixo pro banco
+            } else {
+                selectAjudante.classList.remove('hidden');
+            }
+        });
     });
 }
