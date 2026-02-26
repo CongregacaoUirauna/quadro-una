@@ -4,7 +4,7 @@
 // anti-duplicidade, modal de configuração e salvamento seguro.
 // =========================================
 
-import { doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { doc, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { db } from './firebase-config.js';
 import { 
     configGlobal, dadosSemanaAnterior, setDadosSemanaAnterior, 
@@ -631,27 +631,27 @@ async function salvarEstudantesMensal() {
                 const rotulo = bloco.querySelector('.min-rotulo').value;
                 const titular = bloco.querySelector('.min-titular').value;
                 const ajudante = bloco.querySelector('.min-ajudante').value;
-                
-                // Só salva a parte se houver pelo menos um rótulo ou titular preenchido
                 if (rotulo || titular) {
                     ministerio.push({ tema: rotulo, estudante: titular, ajudante: ajudante });
                 }
             });
 
-            // O pulo do gato: Enviamos apenas as chaves desta aba. 
-            // O { merge: true } fará o Firebase preservar o "Presidente" e as "Orações" intactos.
-            const payload = {
-                data: dataIso, // Garante a trava de data
-                tesouros: { leitura: leitura, trecho_leitura: trecho },
-                ministerio: ministerio
-            };
-
-            await setDoc(doc(db, "programacoes_semanais", dataIso), payload, { merge: true });
+            const docRef = doc(db, "programacoes_semanais", dataIso);
+            // 1. setDoc com merge garante que o documento exista
+            await setDoc(docRef, { data: dataIso }, { merge: true });
+            
+            // 2. updateDoc com dot-notation garante que NÃO apague dados da Aba Geral (Deep Merge)
+            await updateDoc(docRef, {
+                "tesouros.leitura": leitura,
+                "tesouros.trecho_leitura": trecho,
+                "ministerio": ministerio
+            });
         }
         
         btn.innerText = "✓ Salvo com Sucesso"; btn.style.backgroundColor = "#25D366";
-        carregarHistoricoSidebar(); // Atualiza a barra lateral
+        carregarHistoricoSidebar(); 
     } catch(e) {
+        console.error(e);
         btn.innerText = "❌ Erro ao Salvar"; btn.style.backgroundColor = "red";
     }
     setTimeout(() => { btn.innerText = originalText; btn.disabled = false; btn.style.backgroundColor = "#1a73e8"; }, 3000);
@@ -666,29 +666,26 @@ async function salvarGeralMensal() {
     try {
         for (const linha of linhas) {
             const dataIso = linha.getAttribute('data-date');
-            
-            const payload = {
-                data: dataIso,
-                presidente: linha.querySelector('.geral-presidente').value,
-                abertura: { oracao: linha.querySelector('.geral-oracao-inicial').value },
-                tesouros: { 
-                    parte_1: linha.querySelector('.geral-discurso').value, 
-                    parte_2: linha.querySelector('.geral-joias').value 
-                },
-                vida_crista: {
-                    estudo_dirigente: linha.querySelector('.geral-estudo-dir').value,
-                    estudo_leitor: linha.querySelector('.geral-estudo-lei').value,
-                    oracao_final: linha.querySelector('.geral-oracao-final').value
-                }
-            };
+            const docRef = doc(db, "programacoes_semanais", dataIso);
 
-            // Mescla sem apagar os Estudantes salvos pela outra aba
-            await setDoc(doc(db, "programacoes_semanais", dataIso), payload, { merge: true });
+            await setDoc(docRef, { data: dataIso }, { merge: true });
+
+            // Usamos dot-notation para proteger os dados salvos pela Aba de Estudantes
+            await updateDoc(docRef, {
+                "presidente": linha.querySelector('.geral-presidente').value,
+                "abertura.oracao": linha.querySelector('.geral-oracao-inicial').value,
+                "tesouros.parte_1": linha.querySelector('.geral-discurso').value, 
+                "tesouros.parte_2": linha.querySelector('.geral-joias').value,
+                "vida_crista.estudo_dirigente": linha.querySelector('.geral-estudo-dir').value,
+                "vida_crista.estudo_leitor": linha.querySelector('.geral-estudo-lei').value,
+                "vida_crista.oracao_final": linha.querySelector('.geral-oracao-final').value
+            });
         }
         
         btn.innerText = "✓ Salvo com Sucesso"; btn.style.backgroundColor = "#25D366";
         carregarHistoricoSidebar(); 
     } catch(e) {
+        console.error(e);
         btn.innerText = "❌ Erro ao Salvar"; btn.style.backgroundColor = "red";
     }
     setTimeout(() => { btn.innerText = originalText; btn.disabled = false; btn.style.backgroundColor = "#9c27b0"; }, 3000);
