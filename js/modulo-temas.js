@@ -649,7 +649,7 @@ async function salvarEstudantesMensal() {
         }
         
         btn.innerText = "✓ Salvo com Sucesso"; btn.style.backgroundColor = "#25D366";
-        carregarHistoricoSidebar(); 
+        carregarHistoricoSidebar(carregarProgramacaoEdicao, prepararNovoFormulario);
     } catch(e) {
         console.error(e);
         btn.innerText = "❌ Erro ao Salvar"; btn.style.backgroundColor = "red";
@@ -683,7 +683,7 @@ async function salvarGeralMensal() {
         }
         
         btn.innerText = "✓ Salvo com Sucesso"; btn.style.backgroundColor = "#25D366";
-        carregarHistoricoSidebar(); 
+        carregarHistoricoSidebar(carregarProgramacaoEdicao, prepararNovoFormulario);
     } catch(e) {
         console.error(e);
         btn.innerText = "❌ Erro ao Salvar"; btn.style.backgroundColor = "red";
