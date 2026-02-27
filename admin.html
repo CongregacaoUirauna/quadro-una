@@ -371,13 +371,30 @@
             btnAbaEscalas.style.color = '#666';
         });
 
-        btnAbaEscalas.addEventListener('click', () => {
-            painelEscalas.classList.remove('hidden');
-            painelTemas.classList.add('hidden');
-            btnAbaEscalas.style.backgroundColor = '#1a73e8';
-            btnAbaEscalas.style.color = '#fff';
-            btnAbaTemas.style.backgroundColor = '#e0e0e0';
-            btnAbaTemas.style.color = '#666';
+        btnAbaTemas.addEventListener('click', () => {
+            painelTemas.classList.remove('hidden');
+            painelEscalas.classList.add('hidden');
+            btnAbaTemas.style.backgroundColor = '#1a73e8';
+            btnAbaTemas.style.color = '#fff';
+            btnAbaEscalas.style.backgroundColor = '#e0e0e0';
+            btnAbaEscalas.style.color = '#666';
+
+            // --- NOVA INJEÇÃO: Auto-Sincronização ---
+            // Força a aba a recarregar os dados mais recentes do Firebase
+            const dataAtual = document.getElementById('dataReuniao').value;
+            if (dataAtual) {
+                const itensHistorico = document.querySelectorAll('#listaHistorico .history-item');
+                itensHistorico.forEach(li => {
+                    const span = li.querySelector('span');
+                    if (span) {
+                        // Converte a data de DD/MM/YYYY do histórico para YYYY-MM-DD
+                        const dataConvertida = span.innerText.split('/').reverse().join('-');
+                        if (dataConvertida === dataAtual) {
+                            span.click(); // Dispara o carregamento no formulário principal
+                        }
+                    }
+                });
+            }
         });
 
     </script>
