@@ -156,3 +156,23 @@ input, select { width: 100%; padding: 10px; margin-top: 5px; box-sizing: border-
    UTILITÁRIOS
    ========================================= */
 .hidden { display: none !important; }
+
+/* =========================================
+   SOFT RULES - ALERTAS DA TABELA MENSAL
+========================================= */
+
+/* Alerta Amarelo: Mesmo irmão na mesma noite */
+select.alerta-choque {
+    background-color: #fff3cd !important;
+    border: 2px solid #ffc107 !important;
+    color: #856404 !important;
+    font-weight: bold;
+}
+
+/* Alerta Vermelho: Irmão designado em semanas consecutivas */
+select.alerta-fadiga {
+    background-color: #f8d7da !important;
+    border: 2px solid #dc3545 !important;
+    color: #721c24 !important;
+    font-weight: bold;
+}
