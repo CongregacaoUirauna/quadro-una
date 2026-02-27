@@ -628,6 +628,7 @@ function ativarInteligenciaUI() {
         // --- NOVA INJEÇÃO: Dispara a varredura visual sempre que um nome mudar ---
         if (e.target.tagName === 'SELECT') {
             window.validarChoquesEFadiga();
+            }
     });
 }
 
