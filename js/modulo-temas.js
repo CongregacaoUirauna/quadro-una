@@ -625,6 +625,9 @@ function ativarInteligenciaUI() {
                 selectTitular.value = valorSelecionadoAtual;
             }
         }
+        // --- NOVA INJEÇÃO: Dispara a varredura visual sempre que um nome mudar ---
+        if (e.target.tagName === 'SELECT') {
+            window.validarChoquesEFadiga();
     });
 }
 
@@ -752,6 +755,9 @@ async function carregarDadosMensais(datas) {
             console.error(`Erro ao carregar dados do dia ${data.iso}:`, e);
         }
     }
+    
+    // --- NOVA INJEÇÃO: Após carregar os dados antigos, pinta a tabela se houver erros ---
+    setTimeout(() => { if(window.validarChoquesEFadiga) window.validarChoquesEFadiga(); }, 500);
 }
 
 async function salvarEstudantesMensal() {
@@ -830,3 +836,46 @@ async function salvarGeralMensal() {
     }
     setTimeout(() => { btn.innerText = originalText; btn.disabled = false; btn.style.backgroundColor = "#9c27b0"; }, 3000);
 }    
+
+// =========================================
+// MOTOR DE VALIDAÇÃO VISUAL (SOFT RULES)
+// =========================================
+window.validarChoquesEFadiga = function() {
+    const linhas = document.querySelectorAll('#corpo-tabela-estudantes tr.linha-semana');
+    let pessoasSemanaAnterior = [];
+
+    linhas.forEach((linha, index) => {
+        // Seleciona APENAS os campos de pessoas (ignora os Rótulos das partes)
+        const selectsPessoas = Array.from(linha.querySelectorAll('.min-titular, .min-ajudante, .leitura-biblia-tabela'));
+        
+        // 1. Limpa os alertas antigos para recalcular
+        selectsPessoas.forEach(s => s.classList.remove('alerta-choque', 'alerta-fadiga'));
+
+        const nomesNestaLinha = [];
+        const contagem = {};
+
+        // 2. Mapeia quem está na linha atual
+        selectsPessoas.forEach(select => {
+            const nome = select.value;
+            if (nome) {
+                nomesNestaLinha.push({ elemento: select, nome: nome });
+                contagem[nome] = (contagem[nome] || 0) + 1;
+            }
+        });
+
+        // 3. Aplica as Regras
+        nomesNestaLinha.forEach(item => {
+            // REGRA DE FADIGA (Vermelho): Fez parte na semana de cima? (Prioridade máxima)
+            if (index > 0 && pessoasSemanaAnterior.includes(item.nome)) {
+                item.elemento.classList.add('alerta-fadiga');
+            } 
+            // REGRA DE CHOQUE (Amarelo): Aparece mais de 1 vez nesta mesma noite?
+            else if (contagem[item.nome] > 1) {
+                item.elemento.classList.add('alerta-choque');
+            }
+        });
+
+        // 4. Salva os nomes desta linha para comparar com a linha de baixo na próxima rodada
+        pessoasSemanaAnterior = nomesNestaLinha.map(item => item.nome);
+    });
+};
