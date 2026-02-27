@@ -4,7 +4,7 @@
 // anti-duplicidade, modal de configuração e salvamento seguro.
 // =========================================
 
-import { doc, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { doc, setDoc, getDoc, updateDoc, collection, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { db } from './firebase-config.js';
 import { 
     configGlobal, dadosSemanaAnterior, setDadosSemanaAnterior, 
@@ -452,6 +452,10 @@ async function processarMesSelecionado() {
     document.getElementById('status-salvamento-mensal').innerText = "⏳ Gerando semanas...";
     document.getElementById('status-salvamento-mensal').style.color = "#666";
 
+    / --- NOVA INJEÇÃO: Calcula quem está ocioso antes de desenhar a tabela ---
+    await calcularOciosidadeIrmaos();
+    // ------------------------------------------------------------------------
+    
     const [ano, mes] = mesAno.split('-').map(Number);
     const diaReuniao = parseInt(configGlobal.dia_reuniao); 
     const diasMes = new Date(ano, mes, 0).getDate();
@@ -487,9 +491,11 @@ function renderizarLinhasTabelas(datas) {
     const apenasIrmas = [...configGlobal.irmas].sort();
     const todosIrmaos = [...apenasIrmaos, ...apenasIrmas].sort();
 
-    const optsApenasIrmaos = `<option value="">Selecione...</option>` + apenasIrmaos.map(n => `<option value="${n}">${n}</option>`).join('');
-    const optsTodos = `<option value="">Selecione...</option>` + todosIrmaos.map(n => `<option value="${n}">${n}</option>`).join('');
-    
+    // --- O PULO DO GATO: O "value" continua limpo, mas a visualização do usuário ganha a regra! ---
+    const optsApenasIrmaos = `<option value="">Selecione...</option>` + apenasIrmaos.map(n => `<option value="${n}">${formatarNomeComOciosidade(n)}</option>`).join('');
+    const optsTodos = `<option value="">Selecione...</option>` + todosIrmaos.map(n => `<option value="${n}">${formatarNomeComOciosidade(n)}</option>`).join('');
+    // ----------------------------------------------------------------------------------------------
+
     const optsEnsino = `<option value="">Selecione...</option>` + configGlobal.aprovados_ensino.map(n => `<option value="${n}">${n}</option>`).join('');
     const optsOracao = `<option value="">Selecione...</option>` + configGlobal.aprovados_oracao.map(n => `<option value="${n}">${n}</option>`).join('');
     
@@ -621,6 +627,71 @@ function ativarInteligenciaUI() {
         }
     });
 }
+
+// =========================================
+// ASSISTENTE DE DESIGNAÇÃO (SOFT RULES)
+// =========================================
+
+let dicionarioOciosidade = {};
+
+async function calcularOciosidadeIrmaos() {
+    dicionarioOciosidade = {}; // Reseta o cache
+    try {
+        // Busca os últimos 8 documentos (8 semanas) ordenados da data mais recente para a mais antiga
+        const q = query(collection(db, "programacoes_semanais"), orderBy("data", "desc"), limit(8));
+        const querySnapshot = await getDocs(q);
+        
+        querySnapshot.forEach(documento => {
+            const d = documento.data();
+            const dataReuniao = d.data; // Ex: "2026-03-05"
+            
+            // 1. Mapeia o Estudante da Leitura
+            if (d.tesouros && d.tesouros.leitura) {
+                if (!dicionarioOciosidade[d.tesouros.leitura] || dicionarioOciosidade[d.tesouros.leitura] < dataReuniao) {
+                    dicionarioOciosidade[d.tesouros.leitura] = dataReuniao;
+                }
+            }
+            
+            // 2. Mapeia o Ministério (Titulares e Ajudantes)
+            if (d.ministerio) {
+                d.ministerio.forEach(parte => {
+                    if (parte.estudante) {
+                        if (!dicionarioOciosidade[parte.estudante] || dicionarioOciosidade[parte.estudante] < dataReuniao) {
+                            dicionarioOciosidade[parte.estudante] = dataReuniao;
+                        }
+                    }
+                    if (parte.ajudante) {
+                        if (!dicionarioOciosidade[parte.ajudante] || dicionarioOciosidade[parte.ajudante] < dataReuniao) {
+                            dicionarioOciosidade[parte.ajudante] = dataReuniao;
+                        }
+                    }
+                });
+            }
+        });
+    } catch (e) {
+        console.error("Erro ao calcular ociosidade das últimas 8 semanas:", e);
+    }
+}
+
+// Função utilitária para pintar o texto visualmente
+function formatarNomeComOciosidade(nome) {
+    const hoje = new Date();
+    let diasOcioso = 999; // Assume que está há muito tempo sem parte se não estiver no dicionário
+    
+    if (dicionarioOciosidade[nome]) {
+        // Converte a string do banco para Data real e calcula a diferença
+        const ultimaData = new Date(dicionarioOciosidade[nome] + "T12:00:00");
+        const diffTime = Math.abs(hoje - ultimaData);
+        diasOcioso = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    }
+    
+    // Se passou de 30 dias sem designação (ou nunca teve), injeta a sugestão visual
+    if (diasOcioso > 30) {
+        return `${nome} (⏳ +30 dias)`;
+    }
+    return nome;
+}
+
 // =========================================
 // MOTORES DE PERSISTÊNCIA ASSÍNCRONA (MERGE)
 // =========================================
@@ -758,4 +829,4 @@ async function salvarGeralMensal() {
         btn.innerText = "❌ Erro ao Salvar"; btn.style.backgroundColor = "red";
     }
     setTimeout(() => { btn.innerText = originalText; btn.disabled = false; btn.style.backgroundColor = "#9c27b0"; }, 3000);
-}
+}    
