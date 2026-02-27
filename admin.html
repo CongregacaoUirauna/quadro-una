@@ -63,7 +63,7 @@
 
             <div id="nav-abas-principais" style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #ddd; padding-bottom: 15px;">
                 <button id="aba-temas" class="btn-salvar" style="margin-top: 0; width: auto; background-color: #1a73e8;">📋 Temas e Cânticos</button>
-                <button id="aba-escalas" class="btn-config" style="margin-top: 0; width: auto; background-color: #e0e0e0; color: #666;">📅 Tabela Mensal (Em Breve)</button>
+                <button id="aba-escalas" class="btn-config" style="margin-top: 0; width: auto; background-color: #e0e0e0; color: #666;">📅 Tabela Mensal</button>
             </div>
             
             <div id="painel-estrutural-temas">
@@ -355,22 +355,13 @@
 
         document.getElementById('btnSair').addEventListener('click', () => signOut(auth));
 
-        // --- CONTROLE DE NAVEGAÇÃO ENTRE ABAS (TEMAS VS ESCALAS) ---
-        // Preparamos os botões para quando implementarmos a aba 2
+       // --- CONTROLE DE NAVEGAÇÃO ENTRE ABAS (TEMAS VS ESCALAS) ---
         const btnAbaTemas = document.getElementById('aba-temas');
         const btnAbaEscalas = document.getElementById('aba-escalas');
         const painelTemas = document.getElementById('painel-estrutural-temas');
         const painelEscalas = document.getElementById('painel-escala-abas');
 
-        btnAbaTemas.addEventListener('click', () => {
-            painelTemas.classList.remove('hidden');
-            painelEscalas.classList.add('hidden');
-            btnAbaTemas.style.backgroundColor = '#1a73e8';
-            btnAbaTemas.style.color = '#fff';
-            btnAbaEscalas.style.backgroundColor = '#e0e0e0';
-            btnAbaEscalas.style.color = '#666';
-        });
-
+        // ABA 1: Temas e Cânticos (Com Auto-Sincronização do Lápis)
         btnAbaTemas.addEventListener('click', () => {
             painelTemas.classList.remove('hidden');
             painelEscalas.classList.add('hidden');
@@ -379,22 +370,30 @@
             btnAbaEscalas.style.backgroundColor = '#e0e0e0';
             btnAbaEscalas.style.color = '#666';
 
-            // --- NOVA INJEÇÃO: Auto-Sincronização ---
-            // Força a aba a recarregar os dados mais recentes do Firebase
+            // Auto-Sincronização: Força a aba a recarregar os dados do Firebase
             const dataAtual = document.getElementById('dataReuniao').value;
             if (dataAtual) {
                 const itensHistorico = document.querySelectorAll('#listaHistorico .history-item');
                 itensHistorico.forEach(li => {
                     const span = li.querySelector('span');
                     if (span) {
-                        // Converte a data de DD/MM/YYYY do histórico para YYYY-MM-DD
                         const dataConvertida = span.innerText.split('/').reverse().join('-');
                         if (dataConvertida === dataAtual) {
-                            span.click(); // Dispara o carregamento no formulário principal
+                            span.click(); 
                         }
                     }
                 });
             }
+        });
+
+        // ABA 2: Tabela Mensal
+        btnAbaEscalas.addEventListener('click', () => {
+            painelEscalas.classList.remove('hidden');
+            painelTemas.classList.add('hidden');
+            btnAbaEscalas.style.backgroundColor = '#1a73e8';
+            btnAbaEscalas.style.color = '#fff';
+            btnAbaTemas.style.backgroundColor = '#e0e0e0';
+            btnAbaTemas.style.color = '#666';
         });
 
     </script>
