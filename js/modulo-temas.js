@@ -70,6 +70,14 @@ export function initModuloTemas() {
 
 // --- FLUXO DE NOVO FORMULÁRIO E DATAS ---
 export function prepararNovoFormulario() {
+    // --- NOVA INJEÇÃO: Força a mudança visual para a Aba de Temas instantaneamente ---
+    document.getElementById('painel-estrutural-temas').classList.remove('hidden');
+    document.getElementById('painel-escala-abas').classList.add('hidden');
+    document.getElementById('aba-temas').style.backgroundColor = '#1a73e8';
+    document.getElementById('aba-temas').style.color = '#fff';
+    document.getElementById('aba-escalas').style.backgroundColor = '#e0e0e0';
+    document.getElementById('aba-escalas').style.color = '#666';
+    // --------------------------------------------------------------------------------
     document.getElementById('formReuniao').reset();
     document.getElementById('usarSalaB').dispatchEvent(new Event('change')); // Reseta visual da sala B
     document.getElementById('tituloAcao').innerText = "Nova Programação";
@@ -213,6 +221,15 @@ export async function carregarProgramacaoEdicao(dataId, liElement) {
     document.querySelectorAll('.history-item').forEach(i => i.classList.remove('active'));
     if(liElement) liElement.classList.add('active');
     document.getElementById('mensagem').innerText = "Carregando dados...";
+
+    // --- NOVA INJEÇÃO: Força a mudança visual para a Aba de Temas instantaneamente ---
+    document.getElementById('painel-estrutural-temas').classList.remove('hidden');
+    document.getElementById('painel-escala-abas').classList.add('hidden');
+    document.getElementById('aba-temas').style.backgroundColor = '#1a73e8';
+    document.getElementById('aba-temas').style.color = '#fff';
+    document.getElementById('aba-escalas').style.backgroundColor = '#e0e0e0';
+    document.getElementById('aba-escalas').style.color = '#666';
+    // --------------------------------------------------------------------------------
     
     try {
         const docSnap = await getDoc(doc(db, "programacoes_semanais", dataId));
