@@ -465,19 +465,35 @@ function renderizarLinhasTabelas(datas) {
     corpoEstudantes.innerHTML = '';
     corpoGeral.innerHTML = '';
 
-    // Cache das listas globais para performance
-    const todosIrmaos = [...configGlobal.irmaos, ...configGlobal.irmas].sort();
-    const optsIrmaos = `<option value="">Selecione...</option>` + todosIrmaos.map(n => `<option value="${n}">${n}</option>`).join('');
+    // Cache e Separação Estrita das listas (REGRA 3: Segurança de UX)
+    const apenasIrmaos = [...configGlobal.irmaos].sort();
+    const apenasIrmas = [...configGlobal.irmas].sort();
+    const todosIrmaos = [...apenasIrmaos, ...apenasIrmas].sort();
+
+    const optsApenasIrmaos = `<option value="">Selecione...</option>` + apenasIrmaos.map(n => `<option value="${n}">${n}</option>`).join('');
+    const optsTodos = `<option value="">Selecione...</option>` + todosIrmaos.map(n => `<option value="${n}">${n}</option>`).join('');
+    
     const optsEnsino = `<option value="">Selecione...</option>` + configGlobal.aprovados_ensino.map(n => `<option value="${n}">${n}</option>`).join('');
     const optsOracao = `<option value="">Selecione...</option>` + configGlobal.aprovados_oracao.map(n => `<option value="${n}">${n}</option>`).join('');
     
+    // REGRA 1: Alteração do texto para "Tipo da parte..."
     const optsRotulos = `
-        <option value="">Rótulo da Parte...</option>
+        <option value="">Tipo da parte...</option>
         <option value="Iniciando Conversas">Iniciando Conversas</option>
         <option value="Cultivando o Interesse">Cultivando o Interesse</option>
         <option value="Fazendo Discípulos">Fazendo Discípulos</option>
         <option value="Explicando suas Crenças">Explicando suas Crenças</option>
         <option value="Discurso">Discurso</option>
+    `;
+
+    // Função interna para gerar um bloco dinâmico do Ministério
+    window.criarBlocoMinTabela = () => `
+        <div class="bloco-parte-min" style="display: flex; gap: 5px; margin-bottom: 8px; padding-bottom: 5px; border-bottom: 1px dashed #eee;">
+            <select class="min-rotulo" style="flex: 1; font-size: 13px;">${optsRotulos}</select>
+            <select class="min-titular" style="flex: 1; font-size: 13px;">${optsTodos}</select>
+            <select class="min-ajudante" style="flex: 1; font-size: 13px;">${optsTodos}</select>
+            <button type="button" class="btn-remove-parte" style="width: 25px; padding: 0; background: #ff4d4d; color: white; border: none; border-radius: 3px; cursor: pointer;" title="Remover Parte">X</button>
+        </div>
     `;
 
     datas.forEach(data => {
@@ -486,16 +502,8 @@ function renderizarLinhasTabelas(datas) {
         trEst.className = 'linha-semana hover-highlight';
         trEst.setAttribute('data-date', data.iso);
         
-        let ministerioHtml = '';
-        for(let i=1; i<=4; i++) { // 4 colunas dinâmicas preparadas
-            ministerioHtml += `
-                <div class="bloco-parte-min" style="display: flex; gap: 5px; margin-bottom: 8px; padding-bottom: 5px; border-bottom: 1px dashed #eee;">
-                    <select class="min-rotulo" style="flex: 1; font-size: 13px;">${optsRotulos}</select>
-                    <select class="min-titular" style="flex: 1; font-size: 13px;">${optsIrmaos}</select>
-                    <select class="min-ajudante" style="flex: 1; font-size: 13px;">${optsIrmaos}</select>
-                </div>
-            `;
-        }
+        // Inicia com 3 partes como padrão (mas é totalmente dinâmico)
+        const partesIniciais = window.criarBlocoMinTabela() + window.criarBlocoMinTabela() + window.criarBlocoMinTabela();
 
         trEst.innerHTML = `
             <td style="padding: 15px; border: 1px solid #ddd; font-weight: bold; background: #fafafa; text-align: center;">
@@ -503,16 +511,19 @@ function renderizarLinhasTabelas(datas) {
             </td>
             <td style="padding: 10px; border: 1px solid #ddd; vertical-align: top;">
                 <label style="font-size: 12px; font-weight: bold; color: #1a73e8;">Estudante da Leitura:</label>
-                <select class="leitura-biblia-tabela" style="width: 100%; margin-bottom: 10px;">${optsIrmaos}</select>
+                <select class="leitura-biblia-tabela" style="width: 100%; margin-bottom: 10px;">${optsApenasIrmaos}</select>
                 <input type="text" class="trecho-leitura-tabela" placeholder="Trecho (Ex: Isa. 40:1-5)" style="width: 100%;">
             </td>
             <td style="padding: 10px; border: 1px solid #ddd; vertical-align: top;">
-                ${ministerioHtml}
+                <div class="container-partes-dinamicas">
+                    ${partesIniciais}
+                </div>
+                <button type="button" class="btn-add btn-add-parte-tabela" style="width: 100%; padding: 5px; font-size: 12px; margin-top: 5px;">+ Adicionar Parte</button>
             </td>
         `;
         corpoEstudantes.appendChild(trEst);
 
-        // --- ABA 2: CONSTRUÇÃO DA LINHA DA REUNIÃO GERAL ---
+        // --- ABA 2: CONSTRUÇÃO DA LINHA DA REUNIÃO GERAL (Mantida Intacta) ---
         const trGer = document.createElement('tr');
         trGer.className = 'linha-semana-geral hover-highlight';
         trGer.setAttribute('data-date', data.iso);
@@ -539,26 +550,60 @@ function renderizarLinhasTabelas(datas) {
     document.getElementById('status-salvamento-mensal').innerText = "✅ Tabela pronta para edição";
     document.getElementById('status-salvamento-mensal').style.color = "green";
     
-    // Ativa a reatividade (Ex: Ocultar ajudante se for Discurso)
+    // Ativa a reatividade com Delegação de Eventos
     ativarInteligenciaUI();
 }
 
 function ativarInteligenciaUI() {
-    document.querySelectorAll('.min-rotulo').forEach(select => {
-        select.addEventListener('change', (e) => {
+    const tabelaEst = document.getElementById('tabela-estudantes');
+    
+    // Previne que os eventos sejam adicionados múltiplas vezes ao recarregar
+    if (tabelaEst.dataset.eventosAtivos) return;
+    tabelaEst.dataset.eventosAtivos = "true";
+
+    const apenasIrmaos = [...configGlobal.irmaos].sort();
+    const todosIrmaos = [...apenasIrmaos, ...configGlobal.irmas].sort();
+    const optsApenasIrmaos = `<option value="">Selecione...</option>` + apenasIrmaos.map(n => `<option value="${n}">${n}</option>`).join('');
+    const optsTodos = `<option value="">Selecione...</option>` + todosIrmaos.map(n => `<option value="${n}">${n}</option>`).join('');
+
+    // Eventos de Clique (Adicionar/Remover Partes)
+    tabelaEst.addEventListener('click', (e) => {
+        if (e.target.classList.contains('btn-add-parte-tabela')) {
+            const container = e.target.previousElementSibling;
+            container.insertAdjacentHTML('beforeend', window.criarBlocoMinTabela());
+        }
+        if (e.target.classList.contains('btn-remove-parte')) {
+            e.target.closest('.bloco-parte-min').remove();
+        }
+    });
+
+    // Eventos de Mudança (Filtro Inteligente de Discurso)
+    tabelaEst.addEventListener('change', (e) => {
+        if (e.target.classList.contains('min-rotulo')) {
             const trPai = e.target.closest('.bloco-parte-min');
+            const selectTitular = trPai.querySelector('.min-titular');
             const selectAjudante = trPai.querySelector('.min-ajudante');
             
+            const valorSelecionadoAtual = selectTitular.value; // Salva quem estava preenchido
+
             if (e.target.value === "Discurso" || e.target.value.includes("Crenças")) {
                 selectAjudante.classList.add('hidden');
-                selectAjudante.value = ""; // Limpa o valor para não ir lixo pro banco
+                selectAjudante.value = ""; 
+                // REGRA ESTREITA: Muda a lista do Titular para mostrar APENAS IRMÃOS
+                selectTitular.innerHTML = optsApenasIrmaos;
             } else {
                 selectAjudante.classList.remove('hidden');
+                // Restaura a lista mista para partes comuns
+                selectTitular.innerHTML = optsTodos;
             }
-        });
+
+            // Tenta manter o nome se ele existir na nova lista filtrada
+            if(Array.from(selectTitular.options).some(opt => opt.value === valorSelecionadoAtual)) {
+                selectTitular.value = valorSelecionadoAtual;
+            }
+        }
     });
 }
-
 // =========================================
 // MOTORES DE PERSISTÊNCIA ASSÍNCRONA (MERGE)
 // =========================================
@@ -578,15 +623,22 @@ async function carregarDadosMensais(datas) {
                         trEst.querySelector('.trecho-leitura-tabela').value = d.tesouros.trecho_leitura || "";
                     }
                     if (d.ministerio) {
-                        const blocos = trEst.querySelectorAll('.bloco-parte-min');
+                        const container = trEst.querySelector('.container-partes-dinamicas');
+                        const btnAdd = trEst.querySelector('.btn-add-parte-tabela');
+                        
+                        // O Cérebro: Se o banco tem 4 partes e a tabela só 3, ele "clica" no botão sozinho
+                        while (container.children.length < d.ministerio.length) {
+                            btnAdd.click();
+                        }
+                        
+                        const blocos = container.querySelectorAll('.bloco-parte-min');
                         d.ministerio.forEach((parte, index) => {
                             if (blocos[index]) {
-                                // Usa 'tema' do banco para preencher o 'rotulo' visual
                                 blocos[index].querySelector('.min-rotulo').value = parte.tema || "";
+                                // Dispara o evento para ocultar ajudante e filtrar gênero ANTES de injetar o titular
+                                blocos[index].querySelector('.min-rotulo').dispatchEvent(new Event('change'));
                                 blocos[index].querySelector('.min-titular').value = parte.estudante || "";
                                 blocos[index].querySelector('.min-ajudante').value = parte.ajudante || "";
-                                // Dispara o evento para ocultar ajudante se for Discurso
-                                blocos[index].querySelector('.min-rotulo').dispatchEvent(new Event('change'));
                             }
                         });
                     }
