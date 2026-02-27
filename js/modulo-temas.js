@@ -452,7 +452,7 @@ async function processarMesSelecionado() {
     document.getElementById('status-salvamento-mensal').innerText = "⏳ Gerando semanas...";
     document.getElementById('status-salvamento-mensal').style.color = "#666";
 
-    / --- NOVA INJEÇÃO: Calcula quem está ocioso antes de desenhar a tabela ---
+    // --- NOVA INJEÇÃO: Calcula quem está ocioso antes de desenhar a tabela ---
     await calcularOciosidadeIrmaos();
     // ------------------------------------------------------------------------
     
