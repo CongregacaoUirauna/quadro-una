@@ -4,7 +4,7 @@
 // memória da sessão e histórico de reuniões
 // =========================================
 
-import { doc, setDoc, getDoc, getDocs, collection, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { collection, getDocs, query, orderBy, where, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { db } from './firebase-config.js';
 
 // --- ESTADO GLOBAL ---
@@ -75,7 +75,22 @@ export async function carregarHistoricoSidebar(onEditCallback, onResetFormCallba
 
     lista.innerHTML = '<li class="history-item">Carregando...</li>';
     try {
-        const querySnapshot = await getDocs(collection(db, "programacoes_semanais"));
+        
+       // --- NOVA INJEÇÃO: Janela de Tempo Dinâmica ---
+        // Calcula a data de 45 dias atrás (um mês e meio)
+        const dataLimite = new Date();
+        dataLimite.setDate(dataLimite.getDate() - 45);
+        const dataCorte = dataLimite.toISOString().split('T')[0]; // Fica no formato "YYYY-MM-DD"
+
+        // Busca do banco tudo que for MAIOR ou IGUAL a 45 dias atrás (inclui todo o futuro infinito)
+        const q = query(
+            collection(db, "programacoes_semanais"),
+            where("data", ">=", dataCorte),
+            orderBy("data", "desc")
+        );
+        const querySnapshot = await getDocs(q);
+        // ----------------------------------------------
+        
         let datas = [];
         querySnapshot.forEach(doc => datas.push(doc.id));
         datas.sort((a,b) => b.localeCompare(a)); 
