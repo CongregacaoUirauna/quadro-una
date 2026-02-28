@@ -377,7 +377,12 @@ function iniciarEventosConfig() {
         const nomeStr = input.value.trim();
         if(!nomeStr) return;
         const nomes = nomeStr.split(',').map(n => n.trim()).filter(n => n);
-        nomes.forEach(n => { if(!configGlobal[tipo].includes(n)) configGlobal[tipo].push(n); });
+        nomes.forEach(n => { 
+            // TRAVA DE SEGURANÇA: Se a lista não existir no banco, cria ela vazia primeiro
+            if (!configGlobal[tipo]) configGlobal[tipo] = [];
+            
+            if(!configGlobal[tipo].includes(n)) configGlobal[tipo].push(n); 
+        });
         configGlobal[tipo].sort(); input.value = ''; renderizarListaConfig();
     });
 
