@@ -59,6 +59,14 @@
         
         /* Blocos de Cânticos (Destaque sutil) */
         .bloco-cantico { background-color: #f8f9fa; padding: 12px; border-radius: 6px; margin: 10px 0; font-size: 14px; display: flex; justify-content: space-between; align-items: center;}
+
+        /* Designações Mecânicas - Rodapé */
+        .bloco-mecanicas { background-color: #f1f8ff; border-top: 1px solid #d2e3fc; padding: 15px 20px; margin-top: 15px; }
+        .mecanicas-titulo { font-size: 13px; font-weight: bold; color: #1a73e8; margin-bottom: 12px; text-transform: uppercase; text-align: center; letter-spacing: 0.5px;}
+        .mecanicas-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 20px; font-size: 13px; }
+        .mec-item { display: flex; justify-content: space-between; border-bottom: 1px dotted #ccc; padding-bottom: 4px; }
+        .mec-label { color: var(--cor-texto-secundario); }
+        .mec-nome { font-weight: 600; color: var(--cor-texto); text-align: right;}
         
         /* Eventos Especiais */
         .evento-especial { text-align: center; padding: 40px 20px; }
@@ -264,6 +272,19 @@
                 checar(p.vida_crista?.comentarios_finais, "Comentários Finais");
                 checar(p.vida_crista?.oracao_final, "Oração Final");
 
+                // --- NOVA INJEÇÃO: Busca nas Designações Mecânicas ---
+                if (p.mecanicas) {
+                    checar(p.mecanicas.qui_ind, "Indicador (Quinta)");
+                    checar(p.mecanicas.qui_vol, "Volante (Quinta)");
+                    checar(p.mecanicas.qui_som, "Som e Vídeo (Quinta)");
+                    checar(p.mecanicas.dom_ind, "Indicador (Domingo)");
+                    checar(p.mecanicas.dom_vol, "Volante (Domingo)");
+                    checar(p.mecanicas.dom_som, "Som e Vídeo (Domingo)");
+                    checar(p.mecanicas.dom_pre, "Presidente da Reunião (Domingo)");
+                    checar(p.mecanicas.dom_lei, "Leitor de A Sentinela (Domingo)");
+                }
+                // ---------------------------------------------------
+                
                 // Se achou o irmão nesta data, monta o bloco dele
                 if (partesEncontradas.length > 0) {
                     encontrouAlgo = true;
@@ -383,6 +404,29 @@
                 `;
             }
 
+            // Monta o Bloco de Mecânicas (se houver dados)
+            let htmlMecanicas = '';
+            if (dados.mecanicas) {
+                htmlMecanicas = `
+                    <div class="bloco-mecanicas">
+                        <div class="mecanicas-titulo">⚙️ Designações Mecânicas da Semana</div>
+                        <div class="mecanicas-grid">
+                            <div class="mec-item"><span class="mec-label">Som (Qui):</span> <span class="mec-nome">${nomeFormatado(dados.mecanicas.qui_som)}</span></div>
+                            <div class="mec-item"><span class="mec-label">Som (Dom):</span> <span class="mec-nome">${nomeFormatado(dados.mecanicas.dom_som)}</span></div>
+                            
+                            <div class="mec-item"><span class="mec-label">Volante (Qui):</span> <span class="mec-nome">${nomeFormatado(dados.mecanicas.qui_vol)}</span></div>
+                            <div class="mec-item"><span class="mec-label">Volante (Dom):</span> <span class="mec-nome">${nomeFormatado(dados.mecanicas.dom_vol)}</span></div>
+                            
+                            <div class="mec-item"><span class="mec-label">Indicador (Qui):</span> <span class="mec-nome">${nomeFormatado(dados.mecanicas.qui_ind)}</span></div>
+                            <div class="mec-item"><span class="mec-label">Indicador (Dom):</span> <span class="mec-nome">${nomeFormatado(dados.mecanicas.dom_ind)}</span></div>
+                            
+                            <div class="mec-item"><span class="mec-label">Leitor (Dom):</span> <span class="mec-nome">${nomeFormatado(dados.mecanicas.dom_lei)}</span></div>
+                            <div class="mec-item"><span class="mec-label">Presidente (Dom):</span> <span class="mec-nome">${nomeFormatado(dados.mecanicas.dom_pre)}</span></div>
+                        </div>
+                    </div>
+                `;
+            }
+            
             board.innerHTML = `
                 <div class="card">
                     <div class="card-header">
@@ -444,6 +488,7 @@
                             <strong>${nomeFormatado(dados.vida_crista?.oracao_final)}</strong>
                         </div>
                     </div>
+                    ${htmlMecanicas}
                 </div>
             `;
         }
