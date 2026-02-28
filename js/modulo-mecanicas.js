@@ -144,7 +144,85 @@ async function salvarMecanicas() {
     setTimeout(() => { btn.innerText = originalText; btn.disabled = false; btn.style.backgroundColor = "#2a6b77"; }, 3000);
 }
 
-// 5. Motor de Sugestão (IA) - Esqueleto inicial
-function sugerirEscalaIA() {
-    alert("🚀 Integração concluída! A tabela foi ativada.\nNo próximo passo, implementaremos a lógica de rodízio que obedece à Lei do Conflito Zero e à exclusividade dos voluntários.");
-} 
+// 5. Motor de Sugestão (IA) - Algoritmo de Rodízio
+async function sugerirEscalaIA() {
+    const btn = document.getElementById('btnSugerirEscalaMecanica');
+    const originalText = btn.innerText;
+    btn.innerText = "🤖 Calculando..."; 
+    btn.disabled = true;
+
+    // 1. Resgata as listas de quem tem privilégio para cada função
+    // (Aquelas que configuramos no Modal de Configurações)
+    const listas = {
+        som: configGlobal.mec_som || [],
+        volante: configGlobal.mec_volante || [],
+        indicador: configGlobal.mec_indicador || [],
+        leitor: configGlobal.mec_leitor || [],
+        presidente: configGlobal.mec_presidente || []
+    };
+
+    // 2. Controladores da "Lei da Continuidade" (Catracas)
+    // Mantém a sequência rodando de uma semana para a outra dentro do mês
+    const indices = { som: 0, volante: 0, indicador: 0, leitor: 0, presidente: 0 };
+
+    const linhas = document.querySelectorAll('#corpo-tabela-mecanicas tr');
+
+    linhas.forEach(linha => {
+        // Vetores para garantir a "Lei do Conflito Zero" (Ninguém faz duas coisas no mesmo dia)
+        let designadosQuinta = [];
+        let designadosDomingo = [];
+
+        // Função interna inteligente para escolher o próximo nome válido
+        function escalarIrmao(papel, listaNomes, arrayDoDia) {
+            if (!listaNomes || listaNomes.length === 0) return "";
+            
+            let tentativas = 0;
+            let escolhido = "";
+            
+            // Tenta achar alguém que AINDA NÃO FOI designado neste dia
+            while (tentativas < listaNomes.length) {
+                // Pega o próximo da fila
+                let candidato = listaNomes[indices[papel] % listaNomes.length];
+                indices[papel]++; // Gira a catraca para o próximo da lista
+                
+                // Se o candidato NÃO está no array de designados de hoje, ele é o escolhido!
+                if (!arrayDoDia.includes(candidato)) {
+                    escolhido = candidato;
+                    arrayDoDia.push(escolhido); // Bloqueia ele para outras funções neste mesmo dia
+                    break;
+                }
+                tentativas++; // Se ele já estava escalado, tenta o próximo da lista
+            }
+            return escolhido;
+        }
+
+        // --- ESCALA DE QUINTA-FEIRA ---
+        const quiSom = escalarIrmao('som', listas.som, designadosQuinta);
+        const quiVol = escalarIrmao('volante', listas.volante, designadosQuinta);
+        const quiInd = escalarIrmao('indicador', listas.indicador, designadosQuinta);
+
+        linha.querySelector('.mec-qui-som').value = quiSom;
+        linha.querySelector('.mec-qui-vol').value = quiVol;
+        linha.querySelector('.mec-qui-ind').value = quiInd;
+
+        // --- ESCALA DE DOMINGO ---
+        // Sorteamos Presidente e Leitor primeiro, pois costumam ter listas mais restritas
+        const domPre = escalarIrmao('presidente', listas.presidente, designadosDomingo);
+        const domLei = escalarIrmao('leitor', listas.leitor, designadosDomingo);
+        const domSom = escalarIrmao('som', listas.som, designadosDomingo);
+        const domVol = escalarIrmao('volante', listas.volante, designadosDomingo);
+        const domInd = escalarIrmao('indicador', listas.indicador, designadosDomingo);
+
+        linha.querySelector('.mec-dom-pre').value = domPre;
+        linha.querySelector('.mec-dom-lei').value = domLei;
+        linha.querySelector('.mec-dom-som').value = domSom;
+        linha.querySelector('.mec-dom-vol').value = domVol;
+        linha.querySelector('.mec-dom-ind').value = domInd;
+    });
+
+    // Efeito de UX: Volta o botão ao normal rapidamente
+    setTimeout(() => {
+        btn.innerText = originalText;
+        btn.disabled = false;
+    }, 600);
+}
