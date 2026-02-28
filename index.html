@@ -107,7 +107,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { collection, getDocs, query, orderBy, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyC3U8tyPk5IB_y51-3d7_6V-16qtoqzeI8",
@@ -126,7 +126,20 @@
 
         async function carregarDados() {
             try {
-                const querySnapshot = await getDocs(collection(db, "programacoes_semanais"));
+                
+                // --- NOVA INJEÇÃO: Janela de Tempo Dinâmica (Quadro de Anúncios) ---
+        const dataLimite = new Date();
+        dataLimite.setDate(dataLimite.getDate() - 45);
+        const dataCorte = dataLimite.toISOString().split('T')[0]; 
+
+        // Busca apenas as reuniões recentes e futuras
+        const q = query(
+            collection(db, "programacoes_semanais"),
+            where("data", ">=", dataCorte),
+            orderBy("data", "desc")
+        );
+        const querySnapshot = await getDocs(q);
+        // -------------------------------------------------------------------
                 
                 querySnapshot.forEach((doc) => {
                     todasAsProgramacoes[doc.id] = doc.data();
