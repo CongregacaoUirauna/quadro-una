@@ -499,13 +499,14 @@ function renderizarLinhasTabelas(datas) {
     const optsEnsino = `<option value="">Selecione...</option>` + configGlobal.aprovados_ensino.map(n => `<option value="${n}">${n}</option>`).join('');
     const optsOracao = `<option value="">Selecione...</option>` + configGlobal.aprovados_oracao.map(n => `<option value="${n}">${n}</option>`).join('');
     
-    // REGRA 1: Alteração do texto para "Tipo da parte..."
+    // REGRA 1: Alteração do texto para "Tipo da parte..." (Agora com as variações de Crenças)
     const optsRotulos = `
         <option value="">Tipo da parte...</option>
         <option value="Iniciando Conversas">Iniciando Conversas</option>
         <option value="Cultivando o Interesse">Cultivando o Interesse</option>
         <option value="Fazendo Discípulos">Fazendo Discípulos</option>
-        <option value="Explicando suas Crenças">Explicando suas Crenças</option>
+        <option value="Explicando suas Crenças (Demonstração)">Explicando suas Crenças (Demonstração)</option>
+        <option value="Explicando suas Crenças (Discurso)">Explicando suas Crenças (Discurso)</option>
         <option value="Discurso">Discurso</option>
     `;
 
@@ -609,14 +610,15 @@ function ativarInteligenciaUI() {
             
             const valorSelecionadoAtual = selectTitular.value; // Salva quem estava preenchido
 
-            if (e.target.value === "Discurso" || e.target.value.includes("Crenças")) {
+            // Só esconde o ajudante e filtra para irmãos se for explicitamente um formato de Discurso
+            if (e.target.value === "Discurso" || e.target.value === "Explicando suas Crenças (Discurso)") {
                 selectAjudante.classList.add('hidden');
                 selectAjudante.value = ""; 
                 // REGRA ESTREITA: Muda a lista do Titular para mostrar APENAS IRMÃOS
                 selectTitular.innerHTML = optsApenasIrmaos;
             } else {
                 selectAjudante.classList.remove('hidden');
-                // Restaura a lista mista para partes comuns
+                // Restaura a lista mista para partes comuns (incluindo a Demonstração)
                 selectTitular.innerHTML = optsTodos;
             }
 
