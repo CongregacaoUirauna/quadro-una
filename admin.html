@@ -62,9 +62,11 @@
             </div>
 
             <div id="nav-abas-principais" style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #ddd; padding-bottom: 15px;">
-                <button id="aba-temas" class="btn-salvar" style="margin-top: 0; width: auto; background-color: #1a73e8;">📋 Temas e Cânticos</button>
-                <button id="aba-escalas" class="btn-config" style="margin-top: 0; width: auto; background-color: #e0e0e0; color: #666;">📅 Tabela Mensal</button>
-            </div>
+    <button id="aba-temas" class="btn-salvar" style="margin-top: 0; width: auto; background-color: #1a73e8;">📋 Temas e Cânticos</button>
+    <button id="aba-escalas" class="btn-config" style="margin-top: 0; width: auto; background-color: #e0e0e0; color: #666;">📅 Tabela Mensal</button>
+    
+    <button id="aba-mecanicas" class="btn-config" style="margin-top: 0; width: auto; background-color: #e0e0e0; color: #666;">⚙️ Designações Mecânicas</button>
+</div>
             
             <div id="painel-estrutural-temas">
                 <h1 id="tituloAcao">Nova Programação</h1>
@@ -235,6 +237,41 @@
         </div>
     </div>
 </div>
+            <div id="painel-mecanicas" class="hidden">
+    <div class="container-escala">
+        <div class="escala-header" style="display: flex; justify-content: space-between; align-items: center; background: #e0f2f1; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #b2dfdb;">
+            <div>
+                <label for="mesMecanica" style="margin: 0; font-weight: bold; color: #00695c;">Mês de Referência:</label>
+                <input type="month" id="mesMecanica" class="btn-config" style="background: white; border: 1px solid #ccc; width: auto; margin-left: 10px;">
+            </div>
+            <div>
+                <button type="button" id="btnSugerirEscalaMecanica" class="btn-salvar" style="background-color: #fbbc05; color: #333; margin-top: 0; margin-right: 10px;">🤖 Sugerir Escala do Mês</button>
+                <span id="status-mecanica" style="font-weight: bold; font-size: 14px; color: #00695c;"></span>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="tabela-mensal" id="tabela-mecanicas" style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="background: #2a6b77; color: white;">
+                        <th style="padding: 10px; border: 1px solid #ddd; width: 10%;">Data</th>
+                        <th style="padding: 10px; border: 1px solid #ddd; background-color: #1e4d56;">Qui (Ind)</th>
+                        <th style="padding: 10px; border: 1px solid #ddd; background-color: #1e4d56;">Qui (Vol)</th>
+                        <th style="padding: 10px; border: 1px solid #ddd; background-color: #1e4d56;">Qui (Som)</th>
+                        <th style="padding: 10px; border: 1px solid #ddd; background-color: #a36d00;">Dom (Ind)</th>
+                        <th style="padding: 10px; border: 1px solid #ddd; background-color: #a36d00;">Dom (Vol)</th>
+                        <th style="padding: 10px; border: 1px solid #ddd; background-color: #a36d00;">Dom (Som)</th>
+                        <th style="padding: 10px; border: 1px solid #ddd; background-color: #a36d00;">Dom (Pres)</th>
+                        <th style="padding: 10px; border: 1px solid #ddd; background-color: #a36d00;">Dom (Leit)</th>
+                    </tr>
+                </thead>
+                <tbody id="corpo-tabela-mecanicas">
+                    </tbody>
+            </table>
+        </div>
+        <button type="button" id="btnSalvarMecanicas" class="btn-salvar" style="margin-top: 20px; background-color: #2a6b77;">💾 Salvar Designações Mecânicas</button>
+    </div>
+</div>
         </div>
     </div>
 
@@ -262,14 +299,20 @@
             <div class="config-grid">
                 <div class="lista-manager">
                     <label style="margin-top:0;">Selecione a Lista para Gerenciar:</label>
-                    <select id="tipoListaEdicao">
-                        <option value="irmaos">Irmãos (Leitura e Geral)</option>
-                        <option value="irmas">Irmãs (Geral)</option>
-                        <option value="presidentes">Aprovados para Presidente</option>
-                        <option value="aprovados_ensino">Aprovados para Discursos/Ensino</option>
-                        <option value="leitores_estudo">Aprovados para Leitor do Estudo</option>
-                        <option value="aprovados_oracao">Aprovados para Oração</option>
-                    </select>
+                        <select id="tipoListaEdicao">
+                            <option value="irmaos">Irmãos (Leitura e Geral)</option>
+                            <option value="irmas">Irmãs (Geral)</option>
+                            <option value="presidentes">Aprovados para Presidente</option>
+                            <option value="aprovados_ensino">Aprovados para Discursos/Ensino</option>
+                            <option value="leitores_estudo">Aprovados para Leitor do Estudo</option>
+                            <option value="aprovados_oracao">Aprovados para Oração</option>
+                            
+                            <option value="mec_som">Mecânica: Aprovados para o Som</option>
+                            <option value="mec_volante">Mecânica: Aprovados para Volante</option>
+                            <option value="mec_indicador">Mecânica: Aprovados para Indicador</option>
+                            <option value="mec_leitor">Mecânica: Leitor de A Sentinela (Domingo)</option>
+                            <option value="mec_presidente">Mecânica: Presidente da Reunião (Domingo)</option>
+                        </select>
                     
                     <select id="listaItensAtuais" multiple></select>
                     <button type="button" class="btn-remove" id="btnRemoverNome" style="width: 100%; margin-bottom: 10px;">Remover Selecionado</button>
@@ -312,7 +355,8 @@
         import { carregarConfiguracoes, carregarHistoricoSidebar } from './js/estado-global.js';
         import { initMotorPDF } from './js/motor-pdf.js';
         import { initModuloTemas, prepararNovoFormulario, carregarProgramacaoEdicao } from './js/modulo-temas.js';
-
+        import { initModuloMecanicas } from './js/modulo-mecanicas.js';
+        
         // --- GERENCIAMENTO DE ESTADO DE AUTENTICAÇÃO ---
         onAuthStateChanged(auth, async (user) => {
             if (user) {
@@ -330,6 +374,7 @@
                 prepararNovoFormulario();
                 initMotorPDF();
                 initModuloTemas();
+                initModuloMecanicas();
                 
             } else {
                 document.getElementById('telaLogin').style.display = 'block';
