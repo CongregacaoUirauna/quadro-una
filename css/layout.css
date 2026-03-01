@@ -176,3 +176,19 @@ select.alerta-fadiga {
     color: #721c24 !important;
     font-weight: bold;
 }
+
+/* =========================================
+   IMPRESSÃO DA ESCALA MECÂNICA
+   ========================================= */
+@media print {
+    body { background: white !important; }
+    #painelSidebar, .topo-acoes, #nav-abas-principais, .escala-header, #btnSalvarMecanicas { display: none !important; }
+    #painelSistema { padding: 0 !important; overflow: visible !important; height: auto !important; }
+    
+    /* Remove a aparência de "caixa suspensa" na hora de imprimir */
+    #tabela-mecanicas select { 
+        appearance: none; -webkit-appearance: none; 
+        border: none !important; background: transparent !important; 
+        color: black !important; font-weight: bold; width: auto; 
+    }
+}
