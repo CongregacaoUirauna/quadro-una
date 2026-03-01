@@ -410,12 +410,15 @@
         btnAbaTemas.addEventListener('click', () => {
             painelTemas.classList.remove('hidden');
             painelEscalas.classList.add('hidden');
+            document.getElementById('painel-mecanicas').classList.add('hidden'); // 🟢 TRAVA ADICIONADA
+            
             btnAbaTemas.style.backgroundColor = '#1a73e8';
             btnAbaTemas.style.color = '#fff';
             btnAbaEscalas.style.backgroundColor = '#e0e0e0';
             btnAbaEscalas.style.color = '#666';
+            document.getElementById('aba-mecanicas').style.backgroundColor = '#e0e0e0';
+            document.getElementById('aba-mecanicas').style.color = '#666';
 
-            // Auto-Sincronização: Força a aba a recarregar os dados do Firebase
             const dataAtual = document.getElementById('dataReuniao').value;
             if (dataAtual) {
                 const itensHistorico = document.querySelectorAll('#listaHistorico .history-item');
@@ -423,9 +426,7 @@
                     const span = li.querySelector('span');
                     if (span) {
                         const dataConvertida = span.innerText.split('/').reverse().join('-');
-                        if (dataConvertida === dataAtual) {
-                            span.click(); 
-                        }
+                        if (dataConvertida === dataAtual) span.click(); 
                     }
                 });
             }
@@ -435,12 +436,16 @@
         btnAbaEscalas.addEventListener('click', () => {
             painelEscalas.classList.remove('hidden');
             painelTemas.classList.add('hidden');
+            document.getElementById('painel-mecanicas').classList.add('hidden'); // 🟢 TRAVA ADICIONADA
+            
             btnAbaEscalas.style.backgroundColor = '#1a73e8';
             btnAbaEscalas.style.color = '#fff';
             btnAbaTemas.style.backgroundColor = '#e0e0e0';
             btnAbaTemas.style.color = '#666';
+            document.getElementById('aba-mecanicas').style.backgroundColor = '#e0e0e0';
+            document.getElementById('aba-mecanicas').style.color = '#666';
         });
-
+        
     </script>
 </body>
 </html>
