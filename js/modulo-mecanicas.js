@@ -58,7 +58,8 @@ async function gerarTabelaMecanicas() {
     // --- INTELIGÊNCIA DE DIAS DINÂMICOS ---
     const diasSemanaNomes = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
     const nomeDiaMid = diasSemanaNomes[diaReuniaoNum] || "Meio Sem."; // Ex: "Qui"
-    const nomeDiaFim = "Dom"; // Domingo como padrão de Fim de Semana
+    const diaReuniaoFimNum = configGlobal.dia_reuniao_fim !== undefined ? parseInt(configGlobal.dia_reuniao_fim) : 0;
+    const nomeDiaFim = diasSemanaNomes[diaReuniaoFimNum] || "Dom";
     
     // Reescreve o cabeçalho da tabela com os dias corretos da sua congregação
     document.querySelector('#tabela-mecanicas thead').innerHTML = `
