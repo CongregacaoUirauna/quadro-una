@@ -42,24 +42,44 @@ export function initModuloMecanicas() {
     document.getElementById('btnSugerirEscalaMecanica').addEventListener('click', sugerirEscalaIA);
 }
 
-// 3. Gerador da Tabela Dinâmica
+// 3. Gerador da Tabela Dinâmica (Atualizado: Dados Seguros + Dias Dinâmicos)
 async function gerarTabelaMecanicas() {
     const mesAno = document.getElementById('mesMecanica').value;
     if (!mesAno) return;
     
     const statusDiv = document.getElementById('status-mecanica');
-    statusDiv.innerText = "⏳ Carregando semanas...";
+    statusDiv.innerText = "⏳ Carregando dados do banco...";
     statusDiv.style.color = "#00695c";
     
     const [ano, mes] = mesAno.split('-').map(Number);
-    const diaReuniao = parseInt(configGlobal.dia_reuniao);
+    const diaReuniaoNum = parseInt(configGlobal.dia_reuniao);
+    
+    // --- INTELIGÊNCIA DE DIAS DINÂMICOS ---
+    const diasSemanaNomes = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+    const nomeDiaMid = diasSemanaNomes[diaReuniaoNum] || "Meio Sem."; // Ex: "Qui"
+    const nomeDiaFim = "Dom"; // Domingo como padrão de Fim de Semana
+    
+    // Reescreve o cabeçalho da tabela com os dias corretos da sua congregação
+    document.querySelector('#tabela-mecanicas thead').innerHTML = `
+        <tr style="background: #2a6b77; color: white;">
+            <th style="padding: 10px; border: 1px solid #ddd; width: 10%;">Data</th>
+            <th style="padding: 10px; border: 1px solid #ddd; background-color: #1e4d56;">${nomeDiaMid} (Ind)</th>
+            <th style="padding: 10px; border: 1px solid #ddd; background-color: #1e4d56;">${nomeDiaMid} (Vol)</th>
+            <th style="padding: 10px; border: 1px solid #ddd; background-color: #1e4d56;">${nomeDiaMid} (Som)</th>
+            <th style="padding: 10px; border: 1px solid #ddd; background-color: #a36d00;">${nomeDiaFim} (Ind)</th>
+            <th style="padding: 10px; border: 1px solid #ddd; background-color: #a36d00;">${nomeDiaFim} (Vol)</th>
+            <th style="padding: 10px; border: 1px solid #ddd; background-color: #a36d00;">${nomeDiaFim} (Som)</th>
+            <th style="padding: 10px; border: 1px solid #ddd; background-color: #a36d00;">${nomeDiaFim} (Pres)</th>
+            <th style="padding: 10px; border: 1px solid #ddd; background-color: #a36d00;">${nomeDiaFim} (Leit)</th>
+        </tr>
+    `;
+
     const diasMes = new Date(ano, mes, 0).getDate();
     const datasReuniao = [];
     
-    // Varre o mês buscando os dias de reunião
     for (let dia = 1; dia <= diasMes; dia++) {
         const data = new Date(ano, mes - 1, dia);
-        if (data.getDay() === diaReuniao) {
+        if (data.getDay() === diaReuniaoNum) {
             datasReuniao.push(data.toISOString().split('T')[0]);
         }
     }
@@ -67,44 +87,44 @@ async function gerarTabelaMecanicas() {
     const tbody = document.getElementById('corpo-tabela-mecanicas');
     tbody.innerHTML = '';
 
-    // Helper para gerar os options dinamicamente baseados no painel de configuração
-    const gerarOpts = (lista) => `<option value="">---</option>` + (lista || []).map(n => `<option value="${n}">${n}</option>`).join('');
+    // --- O PULO DO GATO: Força o nome do banco na lista, mesmo se houver erro de digitação ---
+    const gerarOpts = (lista, salvo) => {
+        let options = `<option value="">---</option>`;
+        let listaReal = [...(lista || [])];
+        if (salvo && !listaReal.includes(salvo)) {
+            listaReal.push(salvo); 
+        }
+        return options + listaReal.map(n => `<option value="${n}" ${n === salvo ? 'selected' : ''}>${n}</option>`).join('');
+    };
 
+    // Busca os dados ANTES de desenhar as linhas
     for (const iso of datasReuniao) {
+        let m = {};
+        try {
+            const docSnap = await getDoc(doc(db, "programacoes_semanais", iso));
+            if (docSnap.exists() && docSnap.data().mecanicas) {
+                m = docSnap.data().mecanicas;
+            }
+        } catch (e) { console.error("Erro ao carregar", e); }
+
         const tr = document.createElement('tr');
         tr.setAttribute('data-date', iso);
         
         tr.innerHTML = `
             <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold; text-align: center;">${iso.split('-').reverse().join('/')}</td>
-            <td style="padding: 5px; border: 1px solid #ddd;"><select class="mec-qui-ind" style="width:100%; border:none;">${gerarOpts(configGlobal.mec_indicador)}</select></td>
-            <td style="padding: 5px; border: 1px solid #ddd;"><select class="mec-qui-vol" style="width:100%; border:none;">${gerarOpts(configGlobal.mec_volante)}</select></td>
-            <td style="padding: 5px; border: 1px solid #ddd;"><select class="mec-qui-som" style="width:100%; border:none;">${gerarOpts(configGlobal.mec_som)}</select></td>
+            <td style="padding: 5px; border: 1px solid #ddd;"><select class="mec-qui-ind" style="width:100%; border:none;">${gerarOpts(configGlobal.mec_indicador, m.qui_ind)}</select></td>
+            <td style="padding: 5px; border: 1px solid #ddd;"><select class="mec-qui-vol" style="width:100%; border:none;">${gerarOpts(configGlobal.mec_volante, m.qui_vol)}</select></td>
+            <td style="padding: 5px; border: 1px solid #ddd;"><select class="mec-qui-som" style="width:100%; border:none;">${gerarOpts(configGlobal.mec_som, m.qui_som)}</select></td>
             
-            <td style="padding: 5px; border: 1px solid #ddd;"><select class="mec-dom-ind" style="width:100%; border:none;">${gerarOpts(configGlobal.mec_indicador)}</select></td>
-            <td style="padding: 5px; border: 1px solid #ddd;"><select class="mec-dom-vol" style="width:100%; border:none;">${gerarOpts(configGlobal.mec_volante)}</select></td>
-            <td style="padding: 5px; border: 1px solid #ddd;"><select class="mec-dom-som" style="width:100%; border:none;">${gerarOpts(configGlobal.mec_som)}</select></td>
-            <td style="padding: 5px; border: 1px solid #ddd;"><select class="mec-dom-pre" style="width:100%; border:none;">${gerarOpts(configGlobal.mec_presidente)}</select></td>
-            <td style="padding: 5px; border: 1px solid #ddd;"><select class="mec-dom-lei" style="width:100%; border:none;">${gerarOpts(configGlobal.mec_leitor)}</select></td>
+            <td style="padding: 5px; border: 1px solid #ddd;"><select class="mec-dom-ind" style="width:100%; border:none;">${gerarOpts(configGlobal.mec_indicador, m.dom_ind)}</select></td>
+            <td style="padding: 5px; border: 1px solid #ddd;"><select class="mec-dom-vol" style="width:100%; border:none;">${gerarOpts(configGlobal.mec_volante, m.dom_vol)}</select></td>
+            <td style="padding: 5px; border: 1px solid #ddd;"><select class="mec-dom-som" style="width:100%; border:none;">${gerarOpts(configGlobal.mec_som, m.dom_som)}</select></td>
+            <td style="padding: 5px; border: 1px solid #ddd;"><select class="mec-dom-pre" style="width:100%; border:none;">${gerarOpts(configGlobal.mec_presidente, m.dom_pre)}</select></td>
+            <td style="padding: 5px; border: 1px solid #ddd;"><select class="mec-dom-lei" style="width:100%; border:none;">${gerarOpts(configGlobal.mec_leitor, m.dom_lei)}</select></td>
         `;
         tbody.appendChild(tr);
-
-        // Busca dados já salvos no Firebase para esta semana
-        try {
-            const docSnap = await getDoc(doc(db, "programacoes_semanais", iso));
-            if (docSnap.exists() && docSnap.data().mecanicas) {
-                const m = docSnap.data().mecanicas;
-                tr.querySelector('.mec-qui-ind').value = m.qui_ind || "";
-                tr.querySelector('.mec-qui-vol').value = m.qui_vol || "";
-                tr.querySelector('.mec-qui-som').value = m.qui_som || "";
-                tr.querySelector('.mec-dom-ind').value = m.dom_ind || "";
-                tr.querySelector('.mec-dom-vol').value = m.dom_vol || "";
-                tr.querySelector('.mec-dom-som').value = m.dom_som || "";
-                tr.querySelector('.mec-dom-pre').value = m.dom_pre || "";
-                tr.querySelector('.mec-dom-lei').value = m.dom_lei || "";
-            }
-        } catch (e) { console.error("Erro ao carregar dados mecânicos", e); }
     }
-    statusDiv.innerText = "✅ Tabela de Mecânicas Pronta";
+    statusDiv.innerText = "✅ Tabela Pronta";
 }
 
 // 4. Salvamento Assíncrono Seguro (Deep Merge)
