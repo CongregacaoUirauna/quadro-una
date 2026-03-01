@@ -40,6 +40,7 @@ export function initModuloMecanicas() {
     document.getElementById('mesMecanica').addEventListener('change', gerarTabelaMecanicas);
     document.getElementById('btnSalvarMecanicas').addEventListener('click', salvarMecanicas);
     document.getElementById('btnSugerirEscalaMecanica').addEventListener('click', sugerirEscalaIA);
+    document.getElementById('btnImprimirMecanicas').addEventListener('click', () => window.print());
 }
 
 // 3. Gerador da Tabela Dinâmica (Atualizado: Dados Seguros + Dias Dinâmicos)
