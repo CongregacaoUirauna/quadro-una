@@ -4,7 +4,7 @@
 // memória da sessão e histórico de reuniões
 // =========================================
 
-import { collection, getDocs, query, orderBy, where, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { collection, getDocs, query, orderBy, where, deleteDoc, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { db } from './firebase-config.js';
 
 // --- ESTADO GLOBAL ---
