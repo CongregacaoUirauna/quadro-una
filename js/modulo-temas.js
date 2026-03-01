@@ -97,21 +97,27 @@ export function prepararNovoFormulario() {
 }
 
 function sugerirProximaData() {
+    let dataBase = new Date(); // Começa com a data de hoje
     const ultimaDataSalva = document.querySelector('#listaHistorico .history-item span');
+
+    // Se houver histórico, a data base passa a ser a última reunião registrada
     if (ultimaDataSalva && ultimaDataSalva.innerText.includes('/')) {
         const partes = ultimaDataSalva.innerText.split('/');
-        let d = new Date(`${partes[2]}-${partes[1]}-${partes[0]}T12:00:00`);
-        d.setDate(d.getDate() + 7);
-        document.getElementById('dataReuniao').value = d.toISOString().split('T')[0];
-    } else {
-        let hoje = new Date();
-        let diaAlvo = parseInt(configGlobal.dia_reuniao);
-        let offset = (diaAlvo - hoje.getDay() + 7) % 7;
-        if (offset === 0) offset = 7; 
-        let prox = new Date(hoje);
-        prox.setDate(hoje.getDate() + offset);
-        document.getElementById('dataReuniao').value = prox.toISOString().split('T')[0];
+        dataBase = new Date(`${partes[2]}-${partes[1]}-${partes[0]}T12:00:00`);
     }
+
+    // Lê qual é o dia da semana configurado no sistema (ex: 2 para Terça)
+    const diaAlvo = parseInt(configGlobal.dia_reuniao);
+    
+    // Calcula quantos dias faltam para o PRÓXIMO dia alvo
+    let offset = (diaAlvo - dataBase.getDay() + 7) % 7;
+    
+    // Se caiu no mesmo dia da semana, pula para a semana seguinte
+    if (offset === 0) offset = 7; 
+
+    dataBase.setDate(dataBase.getDate() + offset);
+
+    document.getElementById('dataReuniao').value = dataBase.toISOString().split('T')[0];
     buscarDadosSemanaAnterior(document.getElementById('dataReuniao').value);
 }
 
@@ -351,6 +357,7 @@ function iniciarEventosConfig() {
 
     document.getElementById('btnConfig').addEventListener('click', () => {
         document.getElementById('configDiaReuniao').value = configGlobal.dia_reuniao;
+        document.getElementById('configDiaReuniaoFim').value = configGlobal.dia_reuniao_fim !== undefined ? configGlobal.dia_reuniao_fim : 0;
         document.getElementById('configNomeCongregacao').value = configGlobal.nome_congregacao || "";
         renderizarListaConfig();
         modalConfig.style.display = 'flex';
@@ -397,6 +404,7 @@ function iniciarEventosConfig() {
         const msg = document.getElementById('msgConfig');
         msg.style.color = "blue"; msg.innerText = "Salvando configurações...";
         configGlobal.dia_reuniao = parseInt(document.getElementById('configDiaReuniao').value);
+        configGlobal.dia_reuniao_fim = parseInt(document.getElementById('configDiaReuniaoFim').value);
         configGlobal.nome_congregacao = document.getElementById('configNomeCongregacao').value.toUpperCase();
         try {
             await setDoc(doc(db, "configuracoes", "geral"), configGlobal, { merge: true });
