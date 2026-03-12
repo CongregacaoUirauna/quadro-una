@@ -23,6 +23,17 @@
         }
 
         body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; background-color: var(--cor-fundo); color: var(--cor-texto); }
+
+        /* Anúncios Dinâmicos do Mural */
+        .banner-anuncio { background: linear-gradient(135deg, #fff8e1, #ffecb3); border-left: 5px solid #ffb300; padding: 15px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); transition: opacity 0.3s ease; }
+        .banner-titulo { font-weight: bold; color: #f57c00; display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 15px; }
+        .banner-texto { font-size: 14.5px; color: #424242; line-height: 1.5; margin-bottom: 12px; }
+        .banner-acoes { display: flex; gap: 10px; flex-wrap: wrap; }
+        .btn-anuncio { padding: 8px 15px; border-radius: 6px; font-size: 13px; font-weight: bold; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; cursor: pointer; border: none; }
+        .btn-link { background-color: #1a73e8; color: white; transition: 0.2s; }
+        .btn-link:hover { background-color: #1557b0; }
+        .btn-ok { background-color: #e0e0e0; color: #333; transition: 0.2s; }
+        .btn-ok:hover { background-color: #bdbdbd; }
         
         /* Cabeçalho e Controles */
         .header { background-color: #fff; padding: 15px 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); text-align: center; position: sticky; top: 0; z-index: 100;}
@@ -109,6 +120,7 @@
     </header>
 
     <div class="container">
+        <div id="areaAnuncios"></div>
         <div id="loading">Buscando programação...</div>
         
         <div id="board" class="hidden">
@@ -575,7 +587,96 @@
             `;
         }
 
-        window.onload = carregarDados;
+        // --- MOTOR DE ANÚNCIOS DINÂMICOS ---
+        async function carregarAnunciosPublicos() {
+            const area = document.getElementById('areaAnuncios');
+            try {
+                // Busca todos os anúncios do banco
+                const querySnapshot = await getDocs(collection(db, "anuncios_mural"));
+                if (querySnapshot.empty) return;
+
+                const hojeDate = new Date();
+                const diaAtual = hojeDate.getDate();
+                const mesAtualNome = hojeDate.toLocaleString('pt-BR', { month: 'long' });
+                const anoAtual = hojeDate.getFullYear();
+                const hojeISO = hojeDate.toISOString().split('T')[0];
+
+                let htmlFinal = '';
+
+                querySnapshot.forEach(docSnap => {
+                    const data = docSnap.data();
+                    let exibir = false;
+                    let idCiclo = '';
+
+                    // LÓGICA 1: ANÚNCIO RECORRENTE (Ex: Dia 20 ao dia 05)
+                    if (data.recorrente) {
+                        const inicio = parseInt(data.dia_inicio);
+                        const fim = parseInt(data.dia_fim);
+                        
+                        if (inicio > fim) { // O aviso atravessa o mês (Ex: 25 a 05)
+                            exibir = (diaAtual >= inicio || diaAtual <= fim);
+                            // Cria um ID único para este ciclo mensal para o localStorage
+                            let mesCiclo = diaAtual >= inicio ? (hojeDate.getMonth() + 2) : (hojeDate.getMonth() + 1); 
+                            if(mesCiclo > 12) mesCiclo = 1;
+                            idCiclo = `rec_${docSnap.id}_${mesCiclo}_${anoAtual}`;
+                        } else { // O aviso começa e termina no mesmo mês (Ex: 01 a 10)
+                            exibir = (diaAtual >= inicio && diaAtual <= fim);
+                            idCiclo = `rec_${docSnap.id}_${hojeDate.getMonth() + 1}_${anoAtual}`;
+                        }
+                    } 
+                    // LÓGICA 2: ANÚNCIO ÚNICO (Com data exata de morte)
+                    else {
+                        exibir = (hojeISO >= data.data_inicio && hojeISO <= data.data_fim);
+                        idCiclo = `unico_${docSnap.id}`;
+                    }
+
+                    // Se a data bateu, vamos montar o HTML
+                    if (exibir) {
+                        // A grande sacada: Verifica se o irmão já clicou em "Já enviei" neste ciclo
+                        if (localStorage.getItem(idCiclo) === 'concluido') return;
+
+                        // Troca a tag {mes} pelo nome do mês atual
+                        const textoFormatado = data.texto.replace(/\{mes\}/g, mesAtualNome);
+
+                        let botoesHTML = '';
+                        if (data.link) {
+                            botoesHTML += `<a href="${data.link}" target="_blank" class="btn-anuncio btn-link">🔗 Acessar Link</a>`;
+                        }
+                        botoesHTML += `<button class="btn-anuncio btn-ok" onclick="ocultarAnuncioMural('${idCiclo}', this)">✅ Já li / Resolvido</button>`;
+
+                        htmlFinal += `
+                            <div class="banner-anuncio">
+                                <div class="banner-titulo">📢 Aviso Importante</div>
+                                <div class="banner-texto">${textoFormatado}</div>
+                                <div class="banner-acoes">${botoesHTML}</div>
+                            </div>
+                        `;
+                    }
+                });
+
+                area.innerHTML = htmlFinal;
+
+            } catch (error) {
+                console.error("Erro ao carregar os anúncios do mural:", error);
+            }
+        }
+
+        // Função ativada quando o irmão clica no botão ✅
+        window.ocultarAnuncioMural = (idCiclo, btnElement) => {
+            // Salva na memória do celular que este ciclo já foi resolvido
+            localStorage.setItem(idCiclo, 'concluido');
+            
+            // Faz o banner sumir suavemente
+            const banner = btnElement.closest('.banner-anuncio');
+            banner.style.opacity = '0';
+            setTimeout(() => banner.remove(), 300); // Remove do HTML após a transição
+        };
+        
+        window.onload = () => {
+            carregarDados();
+            carregarAnunciosPublicos(); // Dispara o motor de anúncios junto com as reuniões
+        };
+        
     </script>
 </body>
 </html>
