@@ -269,7 +269,7 @@
                         if (normalizar(m.estudante).includes(termo)) {
                             const infoParceiro = m.ajudante ? `— Com: <strong>${m.ajudante}</strong> (Ajudante)` : '';
                             partesEncontradas.push(`
-                                <span style="font-size: 16px; color: var(--cor-destaque);"><strong>${m.estudante}</strong> (Estudante - Principal)</span><br>
+                                <span style="font-size: 16px; color: var(--cor-destaque);"><strong>${m.estudante}</strong> (Estudante) — Salão Principal</span><br>
                                 <span style="font-size: 14px; color: var(--cor-texto-secundario);">📖 <em>${temaParte}</em> ${infoParceiro}</span>
                             `);
                         }
@@ -277,7 +277,7 @@
                         if (normalizar(m.ajudante).includes(termo)) {
                             const infoParceiro = m.estudante ? `— Titular: <strong>${m.estudante}</strong> (Estudante)` : '';
                             partesEncontradas.push(`
-                                <span style="font-size: 16px; color: var(--cor-destaque);"><strong>${m.ajudante}</strong> (Ajudante - Principal)</span><br>
+                                <span style="font-size: 16px; color: var(--cor-destaque);"><strong>${m.ajudante}</strong> (Ajudante) — Salão Principal</span><br>
                                 <span style="font-size: 14px; color: var(--cor-texto-secundario);">📖 <em>${temaParte}</em> ${infoParceiro}</span>
                             `);
                         }
@@ -287,7 +287,7 @@
                             if (normalizar(m.estudante_b).includes(termo)) {
                                 const infoParceiro = m.ajudante_b ? `— Com: <strong>${m.ajudante_b}</strong> (Ajudante)` : '';
                                 partesEncontradas.push(`
-                                    <span style="font-size: 16px; color: var(--cor-destaque);"><strong>${m.estudante_b}</strong> (Estudante - Sala B)</span><br>
+                                    <span style="font-size: 16px; color: var(--cor-destaque);"><strong>${m.estudante_b}</strong> (Estudante) — Sala B</span><br>
                                     <span style="font-size: 14px; color: var(--cor-texto-secundario);">📖 <em>${temaParte}</em> ${infoParceiro}</span>
                                 `);
                             }
@@ -295,7 +295,7 @@
                             if (normalizar(m.ajudante_b).includes(termo)) {
                                 const infoParceiro = m.estudante_b ? `— Titular: <strong>${m.estudante_b}</strong> (Estudante)` : '';
                                 partesEncontradas.push(`
-                                    <span style="font-size: 16px; color: var(--cor-destaque);"><strong>${m.ajudante_b}</strong> (Ajudante - Sala B)</span><br>
+                                    <span style="font-size: 16px; color: var(--cor-destaque);"><strong>${m.ajudante_b}</strong> (Ajudante) — Sala B</span><br>
                                     <span style="font-size: 14px; color: var(--cor-texto-secundario);">📖 <em>${temaParte}</em> ${infoParceiro}</span>
                                 `);
                             }
