@@ -413,6 +413,8 @@
             let htmlMinisterio = '';
             if (dados.ministerio && dados.ministerio.length > 0) {
                 dados.ministerio.forEach((parte) => {
+                    console.log("DADOS DA PARTE:", parte);
+                    
                     const numParte = proxParteNum++; // Grava o número atual e já soma +1 pra próxima
                     
                     // Nova lógica inteligente: Se existir o rótulo, cria a tag formatada.
