@@ -332,11 +332,14 @@
                 if (partesEncontradas.length > 0) {
                     encontrouAlgo = true;
                     htmlResultados += `
-                        <div class="resultado-item">
+                        <div class="resultado-item" data-semana="${data}" style="cursor: pointer; transition: background-color 0.2s; border-radius: 8px; padding: 15px; margin-bottom: 15px; background-color: #fcfcfc; border: 1px solid #e0e0e0; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
                             <div class="data-badge">${formatarDataBR(data)}</div>
                             <ul class="resultado-lista">
                                 ${partesEncontradas.map(parte => `<li style="margin-bottom: 10px;">${parte}</li>`).join('')}
                             </ul>
+                            <div style="text-align: right; font-size: 13px; color: var(--cor-destaque); margin-top: 8px; font-weight: 600;">
+                                Clique para ver a semana inteira ➔
+                            </div>
                         </div>
                     `;
                 }
@@ -347,6 +350,30 @@
                 conteudoBusca.innerHTML = htmlResultados;
             } else {
                 conteudoBusca.innerHTML = `<p style="color: var(--cor-texto-secundario); text-align: center; padding: 20px 0;">Nenhuma designação encontrada para este nome nas programações atuais.</p>`;
+            }
+        });
+        // DELEGAÇÃO DE EVENTOS: Transforma os resultados da busca em botões clicáveis
+        document.getElementById('conteudoBusca').addEventListener('click', (e) => {
+            // O '.closest' garante que mesmo se o irmão clicar na fonte ou no fundo, pegaremos o card inteiro
+            const cardClicado = e.target.closest('.resultado-item');
+            
+            if (!cardClicado) return; // Se clicou fora do card, não faz nada
+
+            const dataSelecionada = cardClicado.getAttribute('data-semana');
+            
+            if (dataSelecionada && todasAsProgramacoes[dataSelecionada]) {
+                // 1. Atualiza o seletor principal do topo para a data correta
+                document.getElementById('selectDatas').value = dataSelecionada;
+                
+                // 2. Renderiza a programação inteira no Quadro Normal
+                renderizarProgramacao(todasAsProgramacoes[dataSelecionada]);
+                
+                // 3. Limpa a busca e restaura a visualização principal
+                document.getElementById('inputBuscaNome').value = '';
+                restaurarQuadroNormal();
+                
+                // 4. Rola a tela de volta pro topo suavemente
+                window.scrollTo({ top: 0, behavior: 'smooth' });
             }
         });
 
