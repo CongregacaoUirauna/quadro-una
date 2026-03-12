@@ -142,10 +142,16 @@
         async function carregarDados() {
             try {
                 
-                // --- NOVA INJEÇÃO: Janela de Tempo Dinâmica (Quadro de Anúncios) ---
-        const dataLimite = new Date();
-        dataLimite.setDate(dataLimite.getDate() - 45);
-        const dataCorte = dataLimite.toISOString().split('T')[0]; 
+                // --- NOVA INJEÇÃO: Janela Dinâmica (Segunda a Segunda) ---
+            const hoje = new Date();
+            const diaDaSemana = hoje.getDay(); // 0 é Domingo, 1 é Segunda...
+            
+            // Se for domingo (0), voltamos 6 dias. Qualquer outro dia, voltamos até a segunda (diaDaSemana - 1)
+            const diasParaSubtrair = diaDaSemana === 0 ? 6 : diaDaSemana - 1;
+            
+            const dataLimite = new Date(hoje);
+            dataLimite.setDate(hoje.getDate() - diasParaSubtrair);
+            const dataCorte = dataLimite.toISOString().split('T')[0]; // Trava o piso na Segunda-feira
 
         // Busca apenas as reuniões recentes e futuras
         const q = query(
