@@ -25,8 +25,8 @@
         body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; background-color: var(--cor-fundo); color: var(--cor-texto); }
 
         /* Anúncios Dinâmicos do Mural */
-        .banner-anuncio { background: linear-gradient(135deg, #fff8e1, #ffecb3); border-left: 5px solid #ffb300; padding: 15px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); transition: opacity 0.3s ease; }
-        .banner-titulo { font-weight: bold; color: #f57c00; display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 15px; }
+        .banner-anuncio { position: relative; background: linear-gradient(135deg, #fff8e1, #ffecb3); border-left: 5px solid #ffb300; padding: 15px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); transition: opacity 0.3s ease; }
+        .banner-titulo { font-weight: bold; color: #f57c00; display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 15px; padding-right: 20px; }
         .banner-texto { font-size: 14.5px; color: #424242; line-height: 1.5; margin-bottom: 12px; }
         .banner-acoes { display: flex; gap: 10px; flex-wrap: wrap; }
         .btn-anuncio { padding: 8px 15px; border-radius: 6px; font-size: 13px; font-weight: bold; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; cursor: pointer; border: none; }
@@ -34,6 +34,10 @@
         .btn-link:hover { background-color: #1557b0; }
         .btn-ok { background-color: #e0e0e0; color: #333; transition: 0.2s; }
         .btn-ok:hover { background-color: #bdbdbd; }
+        
+        /* O "X" para fechar temporariamente */
+        .btn-fechar-temp { position: absolute; top: 12px; right: 12px; background: transparent; border: none; font-size: 16px; color: #bcaaa4; cursor: pointer; transition: 0.2s; padding: 0; line-height: 1; }
+        .btn-fechar-temp:hover { color: #d84315; transform: scale(1.1); }
         
         /* Cabeçalho e Controles */
         .header { background-color: #fff; padding: 15px 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); text-align: center; position: sticky; top: 0; z-index: 100;}
@@ -632,23 +636,33 @@
 
                     // Se a data bateu, vamos montar o HTML
                     if (exibir) {
-                        // A grande sacada: Verifica se o irmão já clicou em "Já enviei" neste ciclo
-                        if (localStorage.getItem(idCiclo) === 'concluido') return;
+                        // Se for recorrente, verifica o localStorage. Se já enviou, ignora e não renderiza.
+                        if (data.recorrente && localStorage.getItem(idCiclo) === 'concluido') return;
 
-                        // Troca a tag {mes} pelo nome do mês atual
                         const textoFormatado = data.texto.replace(/\{mes\}/g, mesAtualNome);
 
                         let botoesHTML = '';
+                        let btnFecharHTML = '';
+
+                        // Verifica se tem Link
                         if (data.link) {
                             botoesHTML += `<a href="${data.link}" target="_blank" class="btn-anuncio btn-link">🔗 Acessar Link</a>`;
                         }
-                        botoesHTML += `<button class="btn-anuncio btn-ok" onclick="ocultarAnuncioMural('${idCiclo}', this)">✅ Já li / Resolvido</button>`;
 
+                        // Bifurcação de Inteligência: Recorrente (Tarefa) vs Único (Aviso)
+                        if (data.recorrente) {
+                            botoesHTML += `<button class="btn-anuncio btn-ok" onclick="ocultarAnuncioMural('${idCiclo}', this)">✅ Já enviei / Resolvido</button>`;
+                        } else {
+                            btnFecharHTML = `<button class="btn-fechar-temp" onclick="fecharAnuncioTemporario(this)" title="Fechar por enquanto">✖</button>`;
+                        }
+
+                        // Monta o Card Final (Se não tiver botões de ação, a div banner-acoes nem aparece)
                         htmlFinal += `
                             <div class="banner-anuncio">
+                                ${btnFecharHTML}
                                 <div class="banner-titulo">📢 Aviso Importante</div>
                                 <div class="banner-texto">${textoFormatado}</div>
-                                <div class="banner-acoes">${botoesHTML}</div>
+                                ${botoesHTML ? `<div class="banner-acoes">${botoesHTML}</div>` : ''}
                             </div>
                         `;
                     }
@@ -670,6 +684,13 @@
             const banner = btnElement.closest('.banner-anuncio');
             banner.style.opacity = '0';
             setTimeout(() => banner.remove(), 300); // Remove do HTML após a transição
+        };
+
+        // Função ativada no "X" (Apenas limpa a tela, mas volta ao recarregar)
+        window.fecharAnuncioTemporario = (btnElement) => {
+            const banner = btnElement.closest('.banner-anuncio');
+            banner.style.opacity = '0';
+            setTimeout(() => banner.remove(), 300);
         };
         
         window.onload = () => {
