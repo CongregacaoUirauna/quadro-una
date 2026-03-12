@@ -263,7 +263,7 @@
 
                if (p.ministerio) {
                     p.ministerio.forEach((m, i) => {
-                        const temaParte = m.rotulo ? m.rotulo : `Parte ${i + 4}`;
+                        const temaParte = m.tema ? m.tema : `Parte ${i + 4}`;
 
                         // --- SALÃO PRINCIPAL ---
                         if (normalizar(m.estudante).includes(termo)) {
