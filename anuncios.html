@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão de Anúncios - Restrito</title>
+    <link rel="icon" type="image/png" href="https://i.ibb.co/wrgk8F6b/Design-sem-nome.png">
+    <style>
+        :root {
+            --cor-fundo: #f0f2f5;
+            --cor-texto: #333;
+            --cor-destaque: #1a73e8;
+            --cor-alerta: #d93025;
+            --cor-sucesso: #1e8e3e;
+        }
+        body { font-family: 'Segoe UI', Roboto, sans-serif; background-color: var(--cor-fundo); margin: 0; padding: 20px; color: var(--cor-texto); }
+        .container { max-width: 600px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); }
+        h2 { text-align: center; color: var(--cor-destaque); margin-top: 0; }
+        
+        /* Formulários e Inputs */
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: 600; margin-bottom: 5px; font-size: 14px; }
+        input[type="text"], input[type="password"], input[type="url"], input[type="date"], input[type="number"], textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-family: inherit; }
+        textarea { resize: vertical; min-height: 80px; }
+        
+        button { background-color: var(--cor-destaque); color: white; border: none; padding: 12px 20px; width: 100%; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        button:hover { background-color: #1557b0; }
+        button.btn-sair { background-color: transparent; color: var(--cor-alerta); border: 1px solid var(--cor-alerta); margin-bottom: 20px; }
+        button.btn-excluir { background-color: var(--cor-alerta); width: auto; padding: 6px 12px; font-size: 13px; margin-top: 10px; }
+        
+        /* Utilitários */
+        .hidden { display: none !important; }
+        .aviso { text-align: center; margin-top: 10px; font-size: 14px; font-weight: bold; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        
+        /* Lista de Anúncios */
+        .card-anuncio { border: 1px solid #eee; padding: 15px; border-radius: 8px; margin-bottom: 15px; background-color: #f9f9f9; }
+        .badge { display: inline-block; padding: 3px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; margin-bottom: 8px; }
+        .badge-recorrente { background-color: #e8f0fe; color: var(--cor-destaque); }
+        .badge-unico { background-color: #fce8e6; color: var(--cor-alerta); }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        
+        <div id="telaLogin">
+            <h2>🔒 Mural Restrito</h2>
+            <p style="text-align: center; color: #666; font-size: 14px; margin-bottom: 20px;">Insira a senha mestra para gerenciar os anúncios.</p>
+            <div class="form-group">
+                <input type="password" id="txtSenha" placeholder="Senha Mestra" autocomplete="off">
+            </div>
+            <button id="btnLogin">Acessar Mural</button>
+            <div id="msgLogin" class="aviso" style="color: var(--cor-alerta);"></div>
+        </div>
+
+        <div id="telaGestao" class="hidden">
+            <button id="btnSair" class="btn-sair">Sair do Modo Gestão</button>
+            
+            <h3 style="border-bottom: 2px solid #eee; padding-bottom: 10px;">Novo Anúncio</h3>
+            <div id="formAnuncio">
+                <div class="form-group">
+                    <label>Mensagem do Anúncio (Use {mes} para injetar o mês atual automaticamente):</label>
+                    <textarea id="txtTexto" placeholder="Ex: Entreguem o relatório de {mes}." required></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>Link do Botão (Opcional - Comece com https://):</label>
+                    <input type="url" id="txtLink" placeholder="https://site.com/formulario">
+                </div>
+
+                <div class="form-group" style="background: #e8f0fe; padding: 10px; border-radius: 6px;">
+                    <label style="margin: 0; display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                        <input type="checkbox" id="chkRecorrente" style="width: 20px; height: 20px;" checked>
+                        Este é um aviso recorrente (MENSAL)?
+                    </label>
+                </div>
+
+                <div id="blocoRecorrente" class="grid-2">
+                    <div class="form-group">
+                        <label>Aparece a partir do dia:</label>
+                        <input type="number" id="numDiaInicio" min="1" max="31" value="20">
+                    </div>
+                    <div class="form-group">
+                        <label>Some após o dia:</label>
+                        <input type="number" id="numDiaFim" min="1" max="31" value="5">
+                    </div>
+                </div>
+
+                <div id="blocoUnico" class="grid-2 hidden">
+                    <div class="form-group">
+                        <label>Data de Início:</label>
+                        <input type="date" id="dataInicio">
+                    </div>
+                    <div class="form-group">
+                        <label>Data de Fim (Último dia visível):</label>
+                        <input type="date" id="dataFim">
+                    </div>
+                </div>
+
+                <button id="btnSalvar">Publicar Anúncio</button>
+                <div id="msgSalvar" class="aviso" style="color: var(--cor-sucesso);"></div>
+            </div>
+
+            <h3 style="border-bottom: 2px solid #eee; padding-bottom: 10px; margin-top: 40px;">Anúncios Ativos</h3>
+            <div id="listaAnuncios">Carregando...</div>
+        </div>
+
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC3U8tyPk5IB_y51-3d7_6V-16qtoqzeI8",
+            authDomain: "quadro-congregacao.firebaseapp.com",
+            projectId: "quadro-congregacao",
+            storageBucket: "quadro-congregacao.firebasestorage.app",
+            messagingSenderId: "1085145636546",
+            appId: "1:1085145636546:web:69d340e69f28814a1de55b"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // --- LÓGICA DE INTERFACE DO FORMULÁRIO ---
+        const chkRecorrente = document.getElementById('chkRecorrente');
+        const blocoRecorrente = document.getElementById('blocoRecorrente');
+        const blocoUnico = document.getElementById('blocoUnico');
+
+        chkRecorrente.addEventListener('change', (e) => {
+            if(e.target.checked) {
+                blocoRecorrente.classList.remove('hidden');
+                blocoUnico.classList.add('hidden');
+            } else {
+                blocoRecorrente.classList.add('hidden');
+                blocoUnico.classList.remove('hidden');
+            }
+        });
+
+        // --- LÓGICA DE AUTENTICAÇÃO "FANTASMA" ---
+        onAuthStateChanged(auth, (user) => {
+            if (user && user.email === 'mural@congregacao.com') {
+                document.getElementById('telaLogin').classList.add('hidden');
+                document.getElementById('telaGestao').classList.remove('hidden');
+                carregarAnuncios();
+            } else {
+                document.getElementById('telaLogin').classList.remove('hidden');
+                document.getElementById('telaGestao').classList.add('hidden');
+            }
+        });
+
+        document.getElementById('btnLogin').addEventListener('click', async () => {
+            const senha = document.getElementById('txtSenha').value.trim();
+            const msg = document.getElementById('msgLogin');
+            if(!senha) { msg.innerText = "Digite a senha."; return; }
+            
+            msg.innerText = "Autenticando...";
+            try {
+                // Injeta o e-mail oficial nos bastidores
+                await signInWithEmailAndPassword(auth, 'mural@congregacao.com', senha);
+                msg.innerText = "";
+            } catch (error) {
+                console.error(error);
+                msg.innerText = "Senha incorreta ou sem permissão.";
+            }
+        });
+
+        document.getElementById('btnSair').addEventListener('click', () => {
+            signOut(auth);
+            document.getElementById('txtSenha').value = '';
+        });
+
+        // --- LÓGICA DE BANCO DE DADOS (CRUD) ---
+        async function carregarAnuncios() {
+            const divLista = document.getElementById('listaAnuncios');
+            divLista.innerHTML = "Buscando...";
+            try {
+                const q = query(collection(db, "anuncios_mural"), orderBy("criado_em", "desc"));
+                const snapshot = await getDocs(q);
+                divLista.innerHTML = "";
+                
+                if (snapshot.empty) { divLista.innerHTML = "<p style='color:#666;'>Nenhum anúncio criado.</p>"; return; }
+
+                snapshot.forEach(docSnap => {
+                    const data = docSnap.data();
+                    const badge = data.recorrente ? `<span class="badge badge-recorrente">Mensal (Dias ${data.dia_inicio} a ${data.dia_fim})</span>` 
+                                                  : `<span class="badge badge-unico">Único (Até ${data.data_fim.split('-').reverse().join('/')})</span>`;
+                    
+                    divLista.innerHTML += `
+                        <div class="card-anuncio">
+                            ${badge}
+                            <div style="font-weight: 500; margin-bottom: 10px;">${data.texto}</div>
+                            ${data.link ? `<small style="color:var(--cor-destaque);">🔗 ${data.link}</small><br>` : ''}
+                            <button class="btn-excluir" onclick="window.deletarAnuncio('${docSnap.id}')">Excluir Anúncio</button>
+                        </div>
+                    `;
+                });
+            } catch (error) {
+                divLista.innerHTML = "Erro ao carregar anúncios.";
+                console.error(error);
+            }
+        }
+
+        document.getElementById('btnSalvar').addEventListener('click', async () => {
+            const texto = document.getElementById('txtTexto').value.trim();
+            const link = document.getElementById('txtLink').value.trim();
+            const isRecorrente = chkRecorrente.checked;
+            const msg = document.getElementById('msgSalvar');
+
+            if(!texto) { alert("O texto do anúncio é obrigatório!"); return; }
+
+            // Montagem do Pacote de Dados
+            const novoAnuncio = {
+                texto: texto,
+                link: link,
+                recorrente: isRecorrente,
+                criado_em: new Date().toISOString()
+            };
+
+            if (isRecorrente) {
+                novoAnuncio.dia_inicio = parseInt(document.getElementById('numDiaInicio').value);
+                novoAnuncio.dia_fim = parseInt(document.getElementById('numDiaFim').value);
+            } else {
+                const dtIni = document.getElementById('dataInicio').value;
+                const dtFim = document.getElementById('dataFim').value;
+                if(!dtIni || !dtFim) { alert("Preencha as datas de início e fim!"); return; }
+                novoAnuncio.data_inicio = dtIni;
+                novoAnuncio.data_fim = dtFim;
+            }
+
+            msg.innerText = "Salvando...";
+            try {
+                await addDoc(collection(db, "anuncios_mural"), novoAnuncio);
+                msg.innerText = "Anúncio publicado com sucesso!";
+                document.getElementById('txtTexto').value = '';
+                document.getElementById('txtLink').value = '';
+                setTimeout(() => { msg.innerText = ""; }, 3000);
+                carregarAnuncios();
+            } catch (error) {
+                console.error("Erro ao salvar:", error);
+                msg.style.color = "var(--cor-alerta)";
+                msg.innerText = "Erro ao salvar. Verifique suas permissões.";
+            }
+        });
+
+        // Função global para o botão de excluir gerado dinamicamente
+        window.deletarAnuncio = async (idDocumento) => {
+            if(confirm("Tem certeza que deseja apagar este anúncio definitivamente?")) {
+                try {
+                    await deleteDoc(doc(db, "anuncios_mural", idDocumento));
+                    carregarAnuncios();
+                } catch(error) {
+                    alert("Erro ao apagar. Você tem permissão?");
+                    console.error(error);
+                }
+            }
+        };
+    </script>
+</body>
+</html>
