@@ -415,10 +415,17 @@
                 dados.ministerio.forEach((parte) => {
                     const numParte = proxParteNum++; // Grava o número atual e já soma +1 pra próxima
                     
+                    // Nova lógica inteligente: Se existir o rótulo, cria a tag formatada.
+                    const rotuloHtml = parte.rotulo ? `<br><span style="color: var(--cor-ministerio); font-weight: 600; font-size: 13.5px; line-height: 1.4; display: inline-block; margin-top: 2px;">${parte.rotulo}</span>` : '';
+                    
                     // Bloco do Salão Principal
                     htmlMinisterio += `
                         <div class="item-linha">
-                            <div class="item-titulo">Parte ${numParte} ${parte.tempo ? `(${parte.tempo} min)` : ''} ${dados.usar_sala_b ? '<br><small style="color:var(--cor-destaque);">Principal</small>' : ''}</div>
+                            <div class="item-titulo">
+                                Parte ${numParte} ${parte.tempo ? `(${parte.tempo} min)` : ''} 
+                                ${dados.usar_sala_b ? '<br><small style="color:var(--cor-destaque);">Principal</small>' : ''}
+                                ${rotuloHtml}
+                            </div>
                             <div class="item-duplo">
                                 <div class="item-nome">${nomeFormatado(parte.estudante)}</div>
                                 ${parte.ajudante ? `<span>Aj: ${parte.ajudante}</span>` : ''}
@@ -430,7 +437,11 @@
                     if (dados.usar_sala_b && (parte.estudante_b || parte.ajudante_b)) {
                         htmlMinisterio += `
                             <div class="item-linha" style="background-color: #f8f9fa;">
-                                <div class="item-titulo">Parte ${numParte} ${parte.tempo ? `(${parte.tempo} min)` : ''} <br><small style="color:var(--cor-ministerio);">Sala B</small></div>
+                                <div class="item-titulo">
+                                    Parte ${numParte} ${parte.tempo ? `(${parte.tempo} min)` : ''} 
+                                    <br><small style="color:var(--cor-ministerio);">Sala B</small>
+                                    ${rotuloHtml}
+                                </div>
                                 <div class="item-duplo">
                                     <div class="item-nome">${nomeFormatado(parte.estudante_b)}</div>
                                     ${parte.ajudante_b ? `<span>Aj: ${parte.ajudante_b}</span>` : ''}
