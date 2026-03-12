@@ -417,8 +417,8 @@
                     
                     const numParte = proxParteNum++; // Grava o número atual e já soma +1 pra próxima
                     
-                    // Nova lógica inteligente: Se existir o rótulo, cria a tag formatada.
-                    const rotuloHtml = parte.rotulo ? `<br><span style="color: var(--cor-ministerio); font-weight: 600; font-size: 13.5px; line-height: 1.4; display: inline-block; margin-top: 2px;">${parte.rotulo}</span>` : '';
+                    // Nova lógica inteligente: Se existir tema, cria a tag formatada.
+                    const rotuloHtml = parte.tema ? `<br><span style="color: var(--cor-ministerio); font-weight: 600; font-size: 13.5px; line-height: 1.4; display: inline-block; margin-top: 2px;">${parte.tema}</span>` : '';
                     
                     // Bloco do Salão Principal
                     htmlMinisterio += `
