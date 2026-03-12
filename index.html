@@ -263,12 +263,31 @@
 
                if (p.ministerio) {
                     p.ministerio.forEach((m, i) => {
-                        checar(m.estudante, `Ministério - Parte ${i + 4} (Salão Principal)`);
-                        checar(m.ajudante, `Ministério - Parte ${i + 4} (Ajudante - Principal)`);
-                        // Nova verificação para a Sala B
+                        // Se existir o rótulo no banco, usa ele. Se não, usa "Parte X"
+                        const temaParte = m.rotulo ? m.rotulo : `Parte ${i + 4}`;
+
+                        // --- SALÃO PRINCIPAL ---
+                        if (normalizar(m.estudante).includes(termo)) {
+                            const infoParceiro = m.ajudante ? ` — Com: ${m.ajudante} (Ajudante)` : '';
+                            partesEncontradas.push(`${temaParte} (Estudante - Principal)${infoParceiro}`);
+                        }
+                        
+                        if (normalizar(m.ajudante).includes(termo)) {
+                            const infoParceiro = m.estudante ? ` — Titular: ${m.estudante} (Estudante)` : '';
+                            partesEncontradas.push(`${temaParte} (Ajudante - Principal)${infoParceiro}`);
+                        }
+
+                        // --- SALA B ---
                         if (p.usar_sala_b) {
-                            checar(m.estudante_b, `Ministério - Parte ${i + 4} (Sala B)`);
-                            checar(m.ajudante_b, `Ministério - Parte ${i + 4} (Ajudante - Sala B)`);
+                            if (normalizar(m.estudante_b).includes(termo)) {
+                                const infoParceiro = m.ajudante_b ? ` — Com: ${m.ajudante_b} (Ajudante)` : '';
+                                partesEncontradas.push(`${temaParte} (Estudante - Sala B)${infoParceiro}`);
+                            }
+                            
+                            if (normalizar(m.ajudante_b).includes(termo)) {
+                                const infoParceiro = m.estudante_b ? ` — Titular: ${m.estudante_b} (Estudante)` : '';
+                                partesEncontradas.push(`${temaParte} (Ajudante - Sala B)${infoParceiro}`);
+                            }
                         }
                     });
                 }
