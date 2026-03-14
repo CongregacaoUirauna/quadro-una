@@ -193,20 +193,13 @@
                 const select = document.getElementById('selectDatas');
                 select.innerHTML = '';
                 
-                let dataParaSelecionar = datasOrdenadas[0];
-                const hojeStr = new Date().toISOString().split('T')[0];
-
-                for (let i = 0; i < datasOrdenadas.length; i++) {
-                    const dataObj = new Date(datasOrdenadas[i] + "T23:59:59");
-                    if (dataObj >= new Date() || datasOrdenadas[i] === hojeStr) {
-                        dataParaSelecionar = datasOrdenadas[i];
-                        break;
-                    }
-                    dataParaSelecionar = datasOrdenadas[i]; 
-                }
+                // A MÁGICA: Como o Firebase já cortou o passado usando a Segunda-feira (dataCorte),
+                // a primeira data do array será SEMPRE a da semana atual. Zero necessidade de loops.
+                const dataParaSelecionar = datasOrdenadas[0];
 
                 // Inverte para exibir mais novas no topo do select
                 [...datasOrdenadas].reverse().forEach(dataId => { 
+                    
                     const opt = document.createElement('option');
                     opt.value = dataId;
                     opt.innerText = formatarDataBR(dataId);
