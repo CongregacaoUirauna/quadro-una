@@ -166,15 +166,17 @@ async function salvarMecanicas() {
     setTimeout(() => { btn.innerText = originalText; btn.disabled = false; btn.style.backgroundColor = "#2a6b77"; }, 3000);
 }
 
-// 5. Motor de Sugestão (IA) - Algoritmo de Rodízio
+// 5. Motor de Sugestão (IA) - Com Histórico, Sequência e Toggle
 async function sugerirEscalaIA() {
     const btn = document.getElementById('btnSugerirEscalaMecanica');
+    const toggleIA = document.getElementById('toggle-ia-avancada');
+    const usarRegrasAvancadas = toggleIA ? toggleIA.checked : true; // Lê a chave liga/desliga
+
     const originalText = btn.innerText;
     btn.innerText = "🤖 Calculando..."; 
     btn.disabled = true;
 
-    // 1. Resgata as listas de quem tem privilégio para cada função
-    // (Aquelas que configuramos no Modal de Configurações)
+    // 1. Resgata as listas
     const listas = {
         som: configGlobal.mec_som || [],
         volante: configGlobal.mec_volante || [],
@@ -183,66 +185,122 @@ async function sugerirEscalaIA() {
         presidente: configGlobal.mec_presidente || []
     };
 
-    // 2. Controladores da "Lei da Continuidade" (Catracas)
-    // Mantém a sequência rodando de uma semana para a outra dentro do mês
+    // 2. Controladores de Índice (Catraca)
     const indices = { som: 0, volante: 0, indicador: 0, leitor: 0, presidente: 0 };
+    const contagemSobrecarga = {}; 
+
+    // --- LEITURA DO HISTÓRICO (O Passado) ---
+    if (usarRegrasAvancadas) {
+        const mesAno = document.getElementById('mesMecanica').value;
+        const [ano, mes] = mesAno.split('-').map(Number);
+        
+        // Descobre o último dia do mês anterior
+        const diaReuniaoFimNum = configGlobal.dia_reuniao_fim !== undefined ? parseInt(configGlobal.dia_reuniao_fim) : 0;
+        let dataUltimaReuniao = new Date(ano, mes - 1, 0); 
+        while (dataUltimaReuniao.getDay() !== diaReuniaoFimNum) {
+            dataUltimaReuniao.setDate(dataUltimaReuniao.getDate() - 1);
+        }
+        const dataIsoPassado = dataUltimaReuniao.toISOString().split('T')[0];
+
+        // Vai no banco de dados e lê quem fez as últimas partes do mês anterior
+        try {
+            const docSnap = await getDoc(doc(db, "programacoes_semanais", dataIsoPassado));
+            if (docSnap.exists() && docSnap.data().mecanicas) {
+                const mPassado = docSnap.data().mecanicas;
+                
+                // Ajusta a catraca para começar do (último que fez + 1)
+                const ajustarCatraca = (funcao, ultimoNome) => {
+                    if (!ultimoNome) return 0;
+                    const indexPassado = listas[funcao].indexOf(ultimoNome);
+                    return indexPassado !== -1 ? (indexPassado + 1) : 0;
+                };
+
+                indices.som = ajustarCatraca('som', mPassado.dom_som);
+                indices.volante = ajustarCatraca('volante', mPassado.dom_vol);
+                indices.indicador = ajustarCatraca('indicador', mPassado.dom_ind);
+                indices.leitor = ajustarCatraca('leitor', mPassado.dom_lei);
+                indices.presidente = ajustarCatraca('presidente', mPassado.dom_pre);
+            }
+        } catch (e) {
+            console.warn("Sem histórico do mês anterior para basear a sequência.");
+        }
+    }
 
     const linhas = document.querySelectorAll('#corpo-tabela-mecanicas tr');
 
     linhas.forEach(linha => {
-        // Vetores para garantir a "Lei do Conflito Zero" (Ninguém faz duas coisas no mesmo dia)
-        let designadosQuinta = [];
-        let designadosDomingo = [];
+        let designadosDia = [];
 
-        // Função interna inteligente para escolher o próximo nome válido
-        function escalarIrmao(papel, listaNomes, arrayDoDia) {
+        function escalarIrmao(papel, listaNomes) {
             if (!listaNomes || listaNomes.length === 0) return "";
             
-            let tentativas = 0;
             let escolhido = "";
+            let tentativas = 0;
             
-            // Tenta achar alguém que AINDA NÃO FOI designado neste dia
             while (tentativas < listaNomes.length) {
-                // Pega o próximo da fila
-                let candidato = listaNomes[indices[papel] % listaNomes.length];
-                indices[papel]++; // Gira a catraca para o próximo da lista
+                // Se a chave estiver DESLIGADA, o índice avança de forma burra/simples
+                // Se estiver LIGADA, ele usa a catraca com o histórico contínuo
+                let idxAtual = (indices[papel] + tentativas) % listaNomes.length;
+                let candidato = listaNomes[idxAtual];
                 
-                // Se o candidato NÃO está no array de designados de hoje, ele é o escolhido!
-                if (!arrayDoDia.includes(candidato)) {
+                // Conflito Zero: Só escolhe se o irmão não estiver fazendo outra coisa no mesmo dia
+                if (!designadosDia.includes(candidato) || !usarRegrasAvancadas) {
                     escolhido = candidato;
-                    arrayDoDia.push(escolhido); // Bloqueia ele para outras funções neste mesmo dia
+                    // Avança a catraca oficialmente
+                    indices[papel] = (idxAtual + 1) % listaNomes.length;
                     break;
                 }
-                tentativas++; // Se ele já estava escalado, tenta o próximo da lista
+                tentativas++;
             }
+
+            if (escolhido) {
+                designadosDia.push(escolhido);
+                contagemSobrecarga[escolhido] = (contagemSobrecarga[escolhido] || 0) + 1;
+            }
+
             return escolhido;
         }
 
-        // --- ESCALA DE QUINTA-FEIRA ---
-        const quiSom = escalarIrmao('som', listas.som, designadosQuinta);
-        const quiVol = escalarIrmao('volante', listas.volante, designadosQuinta);
-        const quiInd = escalarIrmao('indicador', listas.indicador, designadosQuinta);
+        // --- PREENCHIMENTO DO MEIO DE SEMANA ---
+        designadosDia = []; // Reseta o conflito para o dia
+        linha.querySelector('.mec-qui-som').value = escalarIrmao('som', listas.som);
+        linha.querySelector('.mec-qui-vol').value = escalarIrmao('volante', listas.volante);
+        linha.querySelector('.mec-qui-ind').value = escalarIrmao('indicador', listas.indicador);
 
-        linha.querySelector('.mec-qui-som').value = quiSom;
-        linha.querySelector('.mec-qui-vol').value = quiVol;
-        linha.querySelector('.mec-qui-ind').value = quiInd;
-
-        // --- ESCALA DE DOMINGO ---
-        // Sorteamos Presidente e Leitor primeiro, pois costumam ter listas mais restritas
-        const domPre = escalarIrmao('presidente', listas.presidente, designadosDomingo);
-        const domLei = escalarIrmao('leitor', listas.leitor, designadosDomingo);
-        const domSom = escalarIrmao('som', listas.som, designadosDomingo);
-        const domVol = escalarIrmao('volante', listas.volante, designadosDomingo);
-        const domInd = escalarIrmao('indicador', listas.indicador, designadosDomingo);
-
-        linha.querySelector('.mec-dom-pre').value = domPre;
-        linha.querySelector('.mec-dom-lei').value = domLei;
-        linha.querySelector('.mec-dom-som').value = domSom;
-        linha.querySelector('.mec-dom-vol').value = domVol;
-        linha.querySelector('.mec-dom-ind').value = domInd;
+        // --- PREENCHIMENTO DO FIM DE SEMANA ---
+        designadosDia = []; // Reseta o conflito para o dia
+        linha.querySelector('.mec-dom-pre').value = escalarIrmao('presidente', listas.presidente);
+        linha.querySelector('.mec-dom-lei').value = escalarIrmao('leitor', listas.leitor);
+        linha.querySelector('.mec-dom-som').value = escalarIrmao('som', listas.som);
+        linha.querySelector('.mec-dom-vol').value = escalarIrmao('volante', listas.volante);
+        linha.querySelector('.mec-dom-ind').value = escalarIrmao('indicador', listas.indicador);
     });
 
-    // Efeito de UX: Volta o botão ao normal rapidamente
+    // --- ALERTA VISUAL DE SOBRECARGA (SÓ FUNCIONA SE A CHAVE ESTIVER LIGADA) ---
+    linhas.forEach(linha => {
+        const selects = linha.querySelectorAll('select');
+        selects.forEach(select => {
+            const nome = select.value;
+            
+            // Avisa se alguém pegou mais de 4 partes no mês e a IA está ligada
+            if (nome && contagemSobrecarga[nome] > 4 && usarRegrasAvancadas) {
+                select.style.backgroundColor = '#ffe0b2'; 
+                select.style.borderBottom = '2px solid #e65100';
+                select.title = `⚠️ ${nome} está escalado ${contagemSobrecarga[nome]} vezes. Considere dar uma folga.`;
+            } else {
+                select.style.backgroundColor = '';
+                select.style.borderBottom = 'none';
+                select.title = '';
+            }
+
+            select.addEventListener('change', (e) => {
+                e.target.style.backgroundColor = '';
+                e.target.style.borderBottom = 'none';
+                e.target.title = '';
+            }, { once: true });
+        });
+    });
+
     setTimeout(() => {
         btn.innerText = originalText;
         btn.disabled = false;
