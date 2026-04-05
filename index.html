@@ -205,10 +205,33 @@
 
                 // Inverte para exibir mais novas no topo do select
                 [...datasOrdenadas].reverse().forEach(dataId => { 
+                    const p = todasAsProgramacoes[dataId];
                     
+                    // Ajuste da Data Visual e Sufixo do Menu
+                    let dataVisual = dataId;
+                    let sufixoMenu = "";
+                    
+                    if (p) {
+                        if (p.tipo_evento === "Visita") {
+                            // Transforma a data do menu para Terça-feira
+                            let d = new Date(dataId + "T12:00:00");
+                            let diffParaTerca = 2 - d.getDay(); 
+                            d.setDate(d.getDate() + diffParaTerca);
+                            dataVisual = d.toISOString().split('T')[0];
+                            sufixoMenu = " 💼 (Visita)";
+                        } else if (p.tipo_evento === "Assembleia") {
+                            sufixoMenu = " 🏢 (Assembleia)";
+                        } else if (p.tipo_evento === "Congresso") {
+                            sufixoMenu = " 🏟️ (Congresso)";
+                        } else if (p.tipo_evento === "Celebracao") {
+                            sufixoMenu = " 🍷 (Celebração)";
+                        }
+                    }
+
                     const opt = document.createElement('option');
-                    opt.value = dataId;
-                    opt.innerText = formatarDataBR(dataId);
+                    opt.value = dataId; // O valor oculto (value) continua sendo o original do banco
+                    opt.innerText = formatarDataBR(dataVisual) + sufixoMenu;
+                    
                     if (dataId === dataParaSelecionar) opt.selected = true;
                     select.appendChild(opt);
                 });
