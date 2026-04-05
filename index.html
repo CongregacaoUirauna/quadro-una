@@ -405,22 +405,45 @@
 
         function renderizarProgramacao(dados) {
             const board = document.getElementById('board');
-            
+            const isVisita = dados.tipo_evento === "Visita";
+
+            // --- 1. MÁGICA DA DATA VISUAL (Mantém o Banco Intacto) ---
+            let dataVisual = dados.data; 
+            if (isVisita) {
+                // Pega a data salva (Quinta) e subtrai para virar Terça-feira apenas na tela
+                let d = new Date(dados.data + "T12:00:00");
+                let diffParaTerca = 2 - d.getDay(); 
+                d.setDate(d.getDate() + diffParaTerca);
+                dataVisual = d.toISOString().split('T')[0];
+            }
+
+            // --- 2. SISTEMA DE ETIQUETAS ESPECIAIS ---
+            let htmlEtiqueta = '';
+            if (isVisita) {
+                htmlEtiqueta = `<div class="etiqueta-visita">💼 Visita do Sup.</div>`;
+            } else if (dados.tipo_evento === "Assembleia") {
+                htmlEtiqueta = `<div class="etiqueta-assembleia">🏢 Assembleia</div>`;
+            } else if (dados.tipo_evento === "Congresso") {
+                htmlEtiqueta = `<div class="etiqueta-assembleia">🏟️ Congresso</div>`;
+            } else if (dados.tipo_evento === "Celebracao") {
+                htmlEtiqueta = `<div class="etiqueta-celebra">🍷 Celebração</div>`;
+            }
+
+            // --- 3. DESENHO DE EVENTOS ESPECIAIS (Agora com a etiqueta) ---
             if (["Assembleia", "Congresso", "Celebracao"].includes(dados.tipo_evento)) {
                 let tituloEvento = dados.tipo_evento === "Celebracao" ? "Celebração da Morte de Cristo" : dados.tipo_evento;
                 board.innerHTML = `
                     <div class="card">
                         <div class="evento-especial">
-                            <div class="data-badge">${formatarDataBR(dados.data)}</div>
-                            <h2>${tituloEvento}</h2>
+                            <div class="data-badge">${formatarDataBR(dataVisual)}</div>
+                            ${htmlEtiqueta}
+                            <h2 style="margin-top: 15px;">${tituloEvento}</h2>
                             <p>Nesta semana não teremos a nossa Reunião Vida e Ministério devido a este evento especial.</p>
                         </div>
                     </div>
                 `;
                 return;
             }
-
-            const isVisita = dados.tipo_evento === "Visita";
             
             // O MOTOR DE NUMERAÇÃO INTELIGENTE
             let proxParteNum = 4; // O Ministério sempre começa na parte 4
