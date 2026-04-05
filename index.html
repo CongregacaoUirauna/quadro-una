@@ -546,18 +546,6 @@
                     </div>
                 `;
             }
-            
-            // Define qual etiqueta será impressa ao lado da data
-            let htmlEtiqueta = '';
-            if (isVisita) {
-                htmlEtiqueta = `<div class="etiqueta-visita">💼 Visita do Sup.</div>`;
-            } else if (dados.tipo_evento === "Assembleia") {
-                htmlEtiqueta = `<div class="etiqueta-assembleia">🏢 Assembleia</div>`;
-            } else if (dados.tipo_evento === "Congresso") {
-                htmlEtiqueta = `<div class="etiqueta-assembleia">🏟️ Congresso</div>`;
-            } else if (dados.tipo_evento === "Celebracao") {
-                htmlEtiqueta = `<div class="etiqueta-celebra">🍷 Celebração</div>`;
-            }
 
             board.innerHTML = `
                 <div class="card">
