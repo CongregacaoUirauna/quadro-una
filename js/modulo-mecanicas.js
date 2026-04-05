@@ -81,8 +81,27 @@ async function gerarTabelaMecanicas() {
     
     for (let dia = 1; dia <= diasMes; dia++) {
         const data = new Date(ano, mes - 1, dia);
+        // Quando encontrar a nossa Quinta-feira normal...
         if (data.getDay() === diaReuniaoNum) {
-            datasReuniao.push(data.toISOString().split('T')[0]);
+            const dataNormalIso = data.toISOString().split('T')[0];
+            
+            // Descobre qual é a Terça-feira (dia 2) desta mesma semana
+            const diffParaTerca = 2 - diaReuniaoNum;
+            const dataTerca = new Date(data);
+            dataTerca.setDate(dataTerca.getDate() + diffParaTerca);
+            const dataTercaIso = dataTerca.toISOString().split('T')[0];
+
+            // Vai no banco rapidinho ver se tem uma "Visita" salva nesta Terça
+            try {
+                const docSnap = await getDoc(doc(db, "programacoes_semanais", dataTercaIso));
+                if (docSnap.exists() && docSnap.data().tipo_evento === "Visita") {
+                    datasReuniao.push(dataTercaIso); // Adiciona a Terça na tabela
+                    continue; // Pula a Quinta e vai pra próxima semana
+                }
+            } catch (e) { console.error(e); }
+
+            // Se não achar a visita na Terça, segue a vida imprimindo a Quinta normal
+            datasReuniao.push(dataNormalIso);
         }
     }
 
