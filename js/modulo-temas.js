@@ -411,7 +411,11 @@ function iniciarEventosConfig() {
             atualizarDOMComListas();
             msg.style.color = "green"; msg.innerText = "Configurações salvas!";
             setTimeout(() => { modalConfig.style.display = 'none'; msg.innerText=""; }, 1500);
-        } catch(e) { msg.style.color = "red"; msg.innerText = "Erro ao salvar."; }
+        } catch(e) { 
+            msg.style.color = "red"; 
+            msg.innerText = "Erro ao salvar. Verifique o console (F12)."; 
+            console.error("Falha detalhada ao gravar configGlobal no Firestore:", e); 
+        }
     });
 }
 
