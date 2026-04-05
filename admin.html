@@ -61,12 +61,12 @@
                 <button type="button" id="btnSair" class="btn-sair">Sair do Sistema</button>
             </div>
 
-            <div id="nav-abas-principais" style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #ddd; padding-bottom: 15px;">
-    <button id="aba-temas" class="btn-salvar" style="margin-top: 0; width: auto; background-color: #1a73e8;">📋 Temas e Cânticos</button>
-    <button id="aba-escalas" class="btn-config" style="margin-top: 0; width: auto; background-color: #e0e0e0; color: #666;">📅 Tabela Mensal</button>
-    
-    <button id="aba-mecanicas" class="btn-config" style="margin-top: 0; width: auto; background-color: #e0e0e0; color: #666;">⚙️ Designações Mecânicas</button>
-</div>
+            <div id="nav-abas-principais" style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #ddd; padding-bottom: 15px; flex-wrap: wrap;">
+                <button id="aba-temas" class="btn-salvar" style="margin-top: 0; width: auto; background-color: #1a73e8;">📋 Temas e Cânticos</button>
+                <button id="aba-escalas" class="btn-config" style="margin-top: 0; width: auto; background-color: #e0e0e0; color: #666;">📅 Tabela Mensal</button>
+                <button id="aba-mecanicas" class="btn-config" style="margin-top: 0; width: auto; background-color: #e0e0e0; color: #666;">⚙️ Designações Mecânicas</button>
+                <button id="aba-discursos" class="btn-config" style="margin-top: 0; width: auto; background-color: #e0e0e0; color: #666;">🎤 Discursos Públicos</button>
+            </div>
             
             <div id="painel-estrutural-temas">
                 <h1 id="tituloAcao">Nova Programação</h1>
@@ -284,6 +284,54 @@
         </div>
     </div>
 
+    <!-- ================= NOVO PAINEL: DISCURSOS PÚBLICOS ================= -->
+            <div id="painel-discursos" class="hidden">
+                <div class="container-escala">
+                    <div class="escala-header" style="background: #e3f2fd; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #bbdefb;">
+                        <h2 style="margin: 0 0 15px 0; color: #1565c0; font-size: 18px;">Agendar Novo Discurso</h2>
+                        
+                        <form id="formDiscurso">
+                            <div style="display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap;">
+                                <input type="date" id="discData" required style="flex: 1; min-width: 150px;" class="btn-config" style="background: white;">
+                                <!-- O datalist será preenchido pelo JS para não poluir o HTML com 194 linhas -->
+                                <input type="text" id="discTema" list="listaTemasDiscurso" placeholder="Tema (Digite o Nº ou Título)" required style="flex: 3; min-width: 250px; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+                            </div>
+                            <div style="display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap;">
+                                <input type="text" id="discOrador" placeholder="Nome do Orador" required style="flex: 2; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+                                <input type="text" id="discCongregacao" placeholder="Congregação de Origem" required style="flex: 2; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+                                <input type="text" id="discLanche" placeholder="Grupo do Lanche (Opcional)" style="flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+                            </div>
+                            
+                            <!-- Alerta de 1 Ano -->
+                            <div id="alertaTemaDiscurso" style="color: #d84315; font-weight: bold; margin-bottom: 10px; font-size: 14px; display: none; padding: 10px; background: #ffccbc; border-radius: 5px;"></div>
+                            
+                            <button type="submit" class="btn-salvar" id="btnSalvarDiscurso" style="margin: 0; background-color: #1565c0; width: 100%;">💾 Salvar Discurso na Agenda</button>
+                        </form>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="tabela-mensal" id="tabela-discursos" style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background: #1565c0; color: white;">
+                                    <th style="padding: 10px; border: 1px solid #ddd; width: 12%;">Data</th>
+                                    <th style="padding: 10px; border: 1px solid #ddd; width: 38%;">Tema</th>
+                                    <th style="padding: 10px; border: 1px solid #ddd; width: 20%;">Orador</th>
+                                    <th style="padding: 10px; border: 1px solid #ddd; width: 20%;">Congregação</th>
+                                    <th style="padding: 10px; border: 1px solid #ddd; width: 10%;">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="corpo-tabela-discursos">
+                                <!-- Preenchido dinamicamente pelo JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <datalist id="listaTemasDiscurso"></datalist>
+                </div>
+            </div>
+            <!-- ================= FIM DO PAINEL DISCURSOS ================= -->
+
+    
     <div id="modalConfig" class="modal-bg">
         <div class="modal-content">
             <span class="modal-close" id="fecharConfig">&times;</span>
@@ -371,6 +419,9 @@
         import { initModuloTemas, prepararNovoFormulario, carregarProgramacaoEdicao } from './js/modulo-temas.js';
         import { initModuloMecanicas } from './js/modulo-mecanicas.js';
         
+        // NOVO MÓDULO IMPORTADO AQUI:
+        import { initModuloDiscursos } from './js/modulo-discursos.js';
+        
         // --- GERENCIAMENTO DE ESTADO DE AUTENTICAÇÃO ---
         onAuthStateChanged(auth, async (user) => {
             if (user) {
@@ -389,6 +440,7 @@
                 initMotorPDF();
                 initModuloTemas();
                 initModuloMecanicas();
+                initModuloDiscursos(); // INICIALIZA O MOTOR DE DISCURSOS
                 
             } else {
                 document.getElementById('telaLogin').style.display = 'block';
