@@ -61,6 +61,12 @@
         /* Cabeçalho do Cartão */
         .card-header { padding: 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: flex-start; }
         .data-badge { background-color: var(--cor-vidacrista); color: white; padding: 5px 15px; border-radius: 15px; font-weight: bold; font-size: 14px; display: inline-block; margin-bottom: 10px;}
+        
+        /* Etiquetas Especiais (Novo) */
+        .etiqueta-visita { background-color: #f57c00; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: bold; margin-left: 8px; display: inline-block; vertical-align: top; box-shadow: 0 2px 4px rgba(245, 124, 0, 0.2); }
+        .etiqueta-celebra { background-color: #6a1b9a; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: bold; margin-left: 8px; display: inline-block; vertical-align: top; box-shadow: 0 2px 4px rgba(106, 27, 154, 0.2); }
+        .etiqueta-assembleia { background-color: #0277bd; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: bold; margin-left: 8px; display: inline-block; vertical-align: top; box-shadow: 0 2px 4px rgba(2, 119, 189, 0.2); }
+
         .presidente-info { text-align: right; font-size: 14px; color: var(--cor-texto-secundario); }
         .presidente-info strong { color: var(--cor-texto); display: block; font-size: 15px;}
 
@@ -518,15 +524,27 @@
                 `;
             }
             
+            // Define qual etiqueta será impressa ao lado da data
+            let htmlEtiqueta = '';
+            if (isVisita) {
+                htmlEtiqueta = `<div class="etiqueta-visita">💼 Visita do Sup.</div>`;
+            } else if (dados.tipo_evento === "Assembleia") {
+                htmlEtiqueta = `<div class="etiqueta-assembleia">🏢 Assembleia</div>`;
+            } else if (dados.tipo_evento === "Congresso") {
+                htmlEtiqueta = `<div class="etiqueta-assembleia">🏟️ Congresso</div>`;
+            } else if (dados.tipo_evento === "Celebracao") {
+                htmlEtiqueta = `<div class="etiqueta-celebra">🍷 Celebração</div>`;
+            }
+
             board.innerHTML = `
                 <div class="card">
                     <div class="card-header">
                         <div>
                             <div class="data-badge">${formatarDataBR(dados.data)}</div>
+                            ${htmlEtiqueta}
                             <div style="font-size: 13px; color: var(--cor-texto-secundario); margin-top: 5px; font-weight: bold;">
                                 📖 ${dados.tesouros?.leitura_semanal || '---'}
                             </div>
-                            ${isVisita ? `<div style="color: #d89b00; font-size: 13px; font-weight: bold; margin-top: 5px;">Visita do Superintendente</div>` : ''}
                         </div>
                         <div class="presidente-info">
                             Presidente:
