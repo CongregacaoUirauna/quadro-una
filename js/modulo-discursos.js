@@ -1,5 +1,5 @@
-import { db } from './estado-global.js'; // Puxa a conexão com o Firebase que já existe no seu sistema
-import { collection, addDoc, getDocs, deleteDoc, doc, updateDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+const db = getFirestore(); // Pega automaticamente a conexão ativa do Firebase no sistema
 
 // === 1. LISTA DE TEMAS OFICIAIS ===
 // (Substitua este array pela sua lista completa de 194 temas que estava no Google Sheets)
