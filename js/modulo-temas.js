@@ -478,14 +478,33 @@ async function processarMesSelecionado() {
     const diasMes = new Date(ano, mes, 0).getDate();
     const datasReuniao = [];
     
-    // Algoritmo de Varredura do Mês
+    // Algoritmo de Varredura do Mês (Com sensor de Visita na Terça)
     for (let dia = 1; dia <= diasMes; dia++) {
         const data = new Date(ano, mes - 1, dia);
         if (data.getDay() === diaReuniao) {
             const dataFormatada = data.toISOString().split('T')[0];
+            
+            // Descobre a Terça-feira (dia 2) desta mesma semana
+            const diffParaTerca = 2 - diaReuniao;
+            const dataTerca = new Date(data);
+            dataTerca.setDate(dataTerca.getDate() + diffParaTerca);
+            const dataTercaIso = dataTerca.toISOString().split('T')[0];
+
+            let dataFinalIso = dataFormatada;
+            let dataFinalObj = data;
+
+            // Checa no banco se a Terça desta semana tem uma Visita salva
+            try {
+                const docSnap = await getDoc(doc(db, "programacoes_semanais", dataTercaIso));
+                if (docSnap.exists() && docSnap.data().tipo_evento === "Visita") {
+                    dataFinalIso = dataTercaIso; // Se tiver, substitui a data final
+                    dataFinalObj = dataTerca;
+                }
+            } catch(e) {}
+
             datasReuniao.push({ 
-                iso: dataFormatada, 
-                display: `${dia} de ${data.toLocaleString('pt-BR', { month: 'long' })}` 
+                iso: dataFinalIso, 
+                display: `${dataFinalObj.getDate()} de ${dataFinalObj.toLocaleString('pt-BR', { month: 'long' })}` 
             });
         }
     }
