@@ -1,25 +1,20 @@
-import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-const db = getFirestore(); // Pega automaticamente a conexão ativa do Firebase no sistema
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc, query, orderBy, getDoc, setDoc, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-// === 1. LISTA DE TEMAS OFICIAIS ===
-// (Substitua este array pela sua lista completa de 194 temas que estava no Google Sheets)
-const temasDiscursos = [
-    "1 - Você conhece bem a Deus?",
-    "2 - Será que você vai sobreviver aos últimos dias?",
-    "3 - Sirva com a organização unida de Jeová",
-    "14 - Um povo limpo honra a Jeová",
-    "194 - Como a sabedoria divina nos ajuda?"
-];
+const db = getFirestore(); 
+
+// === 1. VARIÁVEIS GERAIS ===
+let temasDiscursos = []; // Agora começa vazio e busca do banco
 
 let discursosNoBanco = []; // Memória local para a Regra de 1 Ano não sobrecarregar o banco
 let editandoId = null; // Variável para controlar se estamos salvando um novo ou editando
 
 export function initModuloDiscursos() {
     configurarNavegacaoAbas();
-    preencherDatalistTemas();
+    carregarTemasDoBanco(); // Puxa do Firebase na hora que abre
     carregarDiscursosDaTabela();
     configurarMotorRegraUmAno();
     configurarSalvamento();
+    configurarGerenciadorDeTemas(); // Prepara os cliques do modal
 }
 
 // === 2. NAVEGAÇÃO ENTRE AS ABAS ===
@@ -48,14 +43,99 @@ function configurarNavegacaoAbas() {
     document.getElementById('aba-mecanicas')?.addEventListener('click', () => painelDiscursos.classList.add('hidden'));
 }
 
-// === 3. PREENCHER O MENU SUSPENSO (DATALIST) ===
-function preencherDatalistTemas() {
+// === 3. BANCO DE TEMAS (FIREBASE) ===
+async function carregarTemasDoBanco() {
+    try {
+        const docRef = doc(db, "configuracoes", "lista_temas_discursos");
+        const docSnap = await getDoc(docRef);
+        
+        if (docSnap.exists()) {
+            temasDiscursos = docSnap.data().temas || [];
+            // Tenta ordenar pelo número do tema
+            temasDiscursos.sort((a, b) => parseInt(a) - parseInt(b));
+        } else {
+            // Se o documento não existir no Firebase, cria ele vazio
+            await setDoc(docRef, { temas: [] });
+            temasDiscursos = [];
+        }
+        atualizarDatalistEModal();
+    } catch (error) {
+        console.error("Erro ao carregar temas:", error);
+    }
+}
+
+function atualizarDatalistEModal() {
+    // 1. Preenche o menu de autocompletar do formulário
     const datalist = document.getElementById('listaTemasDiscurso');
     datalist.innerHTML = '';
+    
+    // 2. Preenche a lista da telinha de gerenciamento
+    const ulUI = document.getElementById('listaDeTemasUI');
+    ulUI.innerHTML = '';
+
+    if (temasDiscursos.length === 0) {
+        ulUI.innerHTML = '<li style="text-align: center; color: #666; padding: 10px;">Nenhum tema cadastrado. Adicione o primeiro!</li>';
+        return;
+    }
+
     temasDiscursos.forEach(tema => {
+        // Option pro Datalist
         const option = document.createElement('option');
         option.value = tema;
         datalist.appendChild(option);
+
+        // Linha pra Telinha
+        const li = document.createElement('li');
+        li.style.cssText = "display: flex; justify-content: space-between; align-items: center; padding: 8px; border-bottom: 1px solid #ddd;";
+        li.innerHTML = `
+            <span>${tema}</span>
+            <button type="button" class="btn-apagar-tema" data-tema="${tema}" style="background: none; border: none; color: #d32f2f; cursor: pointer; font-size: 14px;" title="Remover">✖️</button>
+        `;
+        ulUI.appendChild(li);
+    });
+
+    // Ativa o botão de apagar de cada linha
+    document.querySelectorAll('.btn-apagar-tema').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            const temaParaApagar = e.target.getAttribute('data-tema');
+            if(confirm(`Excluir o tema "${temaParaApagar}" da base de dados?`)) {
+                await updateDoc(doc(db, "configuracoes", "lista_temas_discursos"), {
+                    temas: arrayRemove(temaParaApagar)
+                });
+                carregarTemasDoBanco(); // Recarrega tudo
+            }
+        });
+    });
+}
+
+function configurarGerenciadorDeTemas() {
+    const modal = document.getElementById('modalTemasDiscurso');
+    const btnAbrir = document.getElementById('btnAbrirModalTemas');
+    const btnFechar = document.getElementById('btnFecharModalTemas');
+    const btnAdd = document.getElementById('btnAdicionarTema');
+    const inputNovo = document.getElementById('novoTemaInput');
+
+    btnAbrir.addEventListener('click', () => { modal.style.display = 'flex'; });
+    btnFechar.addEventListener('click', () => { modal.style.display = 'none'; });
+
+    // Adiciona o novo tema no Firebase
+    btnAdd.addEventListener('click', async () => {
+        const novoTema = inputNovo.value.trim();
+        if (!novoTema) return;
+
+        btnAdd.innerText = "⏳";
+        try {
+            await updateDoc(doc(db, "configuracoes", "lista_temas_discursos"), {
+                temas: arrayUnion(novoTema)
+            });
+            inputNovo.value = '';
+            carregarTemasDoBanco(); // Recarrega atualizado
+        } catch (error) {
+            console.error("Erro ao adicionar:", error);
+            alert("Erro ao adicionar tema.");
+        } finally {
+            btnAdd.innerText = "Adicionar";
+        }
     });
 }
 
