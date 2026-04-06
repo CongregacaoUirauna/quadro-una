@@ -580,7 +580,7 @@
 
         document.getElementById('btnSair').addEventListener('click', () => signOut(auth));
 
-       // --- CONTROLE DE NAVEGAÇÃO ENTRE ABAS (TEMAS VS ESCALAS) ---
+       // --- CONTROLE DE NAVEGAÇÃO ENTRE ABAS ---
         const btnAbaTemas = document.getElementById('aba-temas');
         const btnAbaEscalas = document.getElementById('aba-escalas');
         const painelTemas = document.getElementById('painel-estrutural-temas');
@@ -590,14 +590,21 @@
         btnAbaTemas.addEventListener('click', () => {
             painelTemas.classList.remove('hidden');
             painelEscalas.classList.add('hidden');
-            document.getElementById('painel-mecanicas').classList.add('hidden'); // 🟢 TRAVA ADICIONADA
+            document.getElementById('painel-mecanicas').classList.add('hidden'); 
+            document.getElementById('painel-discursos').style.display = 'none'; // 🟢 TRAVA DISCURSOS
+            document.getElementById('painel-limpeza').style.display = 'none'; // 🟢 TRAVA LIMPEZA
             
             btnAbaTemas.style.backgroundColor = '#1a73e8';
             btnAbaTemas.style.color = '#fff';
-            btnAbaEscalas.style.backgroundColor = '#e0e0e0';
-            btnAbaEscalas.style.color = '#666';
-            document.getElementById('aba-mecanicas').style.backgroundColor = '#e0e0e0';
-            document.getElementById('aba-mecanicas').style.color = '#666';
+            
+            // Reseta cor dos outros botões
+            ['aba-escalas', 'aba-mecanicas', 'aba-discursos', 'aba-limpeza'].forEach(id => {
+                const btn = document.getElementById(id);
+                if(btn) {
+                    btn.style.backgroundColor = '#e0e0e0';
+                    btn.style.color = '#666';
+                }
+            });
 
             const dataAtual = document.getElementById('dataReuniao').value;
             if (dataAtual) {
@@ -616,14 +623,21 @@
         btnAbaEscalas.addEventListener('click', () => {
             painelEscalas.classList.remove('hidden');
             painelTemas.classList.add('hidden');
-            document.getElementById('painel-mecanicas').classList.add('hidden'); // 🟢 TRAVA ADICIONADA
+            document.getElementById('painel-mecanicas').classList.add('hidden'); 
+            document.getElementById('painel-discursos').style.display = 'none'; // 🟢 TRAVA DISCURSOS
+            document.getElementById('painel-limpeza').style.display = 'none'; // 🟢 TRAVA LIMPEZA
             
             btnAbaEscalas.style.backgroundColor = '#1a73e8';
             btnAbaEscalas.style.color = '#fff';
-            btnAbaTemas.style.backgroundColor = '#e0e0e0';
-            btnAbaTemas.style.color = '#666';
-            document.getElementById('aba-mecanicas').style.backgroundColor = '#e0e0e0';
-            document.getElementById('aba-mecanicas').style.color = '#666';
+            
+            // Reseta cor dos outros botões
+            ['aba-temas', 'aba-mecanicas', 'aba-discursos', 'aba-limpeza'].forEach(id => {
+                const btn = document.getElementById(id);
+                if(btn) {
+                    btn.style.backgroundColor = '#e0e0e0';
+                    btn.style.color = '#666';
+                }
+            });
         });
         
     </script>
