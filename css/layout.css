@@ -265,3 +265,14 @@ select.alerta-fadiga {
         align-items: stretch !important;
     }
 }
+
+/* Se a tela de login estiver visível, nada mais pode aparecer */
+#telaLogin[style*="display: block"] ~ #painelSidebar,
+#telaLogin[style*="display: block"] ~ #painelSistema {
+    display: none !important;
+}
+
+/* Garante que no carregamento inicial fiquem ocultos */
+#painelSidebar, #painelSistema {
+    display: none;
+}
