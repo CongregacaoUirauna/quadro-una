@@ -110,6 +110,21 @@
         /* Utilitários */
         #loading { text-align: center; padding: 50px; color: var(--cor-texto-secundario); font-weight: bold; }
         .hidden { display: none !important; }
+
+        /* --- ESTILOS DO DISCURSO E SANFONA --- */
+        .card-discurso { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: white; border-radius: 12px; padding: 15px 20px; margin-top: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border: 1px solid #162c55; }
+        .discurso-badge { background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: bold; display: inline-block; margin-bottom: 10px; letter-spacing: 0.5px; text-transform: uppercase;}
+        .discurso-tema { font-size: 16px; font-weight: bold; margin-bottom: 5px; line-height: 1.4; text-shadow: 1px 1px 2px rgba(0,0,0,0.2); }
+        .discurso-orador { font-size: 14.5px; color: #e3f2fd; }
+        .discurso-lanche { margin-top: 10px; font-size: 12.5px; background: rgba(0,0,0,0.25); padding: 5px 10px; border-radius: 6px; display: inline-block; font-weight: 500;}
+        
+        .btn-expandir-agenda { background: transparent; border: 1px dashed #b0bec5; color: var(--cor-texto-secundario); width: 100%; padding: 12px; border-radius: 8px; margin-top: 15px; cursor: pointer; font-weight: bold; transition: background-color 0.2s; font-size: 14px;}
+        .btn-expandir-agenda:hover { background: #f5f5f5; color: var(--cor-destaque); border-color: var(--cor-destaque); }
+        
+        .agenda-futura { margin-top: 10px; background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .agenda-item { border-bottom: 1px solid #eee; padding: 10px 0; }
+        .agenda-item:last-child { border-bottom: none; padding-bottom: 0; }
+        
     </style>
 </head>
 <body>
@@ -160,9 +175,28 @@
 
         let todasAsProgramacoes = {};
         let datasOrdenadas = [];
+        let agendaDiscursos = []; // NOVO: Memória dos discursos
 
         async function carregarDados() {
             try {
+                // ... (mantenha a lógica da dataCorte que já existe aqui intacta) ...
+                // Apenas adicione a busca de discursos logo abaixo da busca das programações:
+                
+        const q = query(
+            collection(db, "programacoes_semanais"),
+            where("data", ">=", dataCorte),
+            orderBy("data", "desc")
+        );
+        const querySnapshot = await getDocs(q);
+
+        // --- NOVA INJEÇÃO: Busca os Discursos Futuros ---
+        const qDisc = query(collection(db, "agendamento_discursos"), where("data", ">=", dataCorte), orderBy("data", "asc"));
+        const discSnapshot = await getDocs(qDisc);
+        agendaDiscursos = []; // Limpa por segurança
+        discSnapshot.forEach(doc => agendaDiscursos.push(doc.data()));
+        // ------------------------------------------------
+                
+                querySnapshot.forEach((doc) => {
                 
                 // --- NOVA INJEÇÃO: Janela Dinâmica (Segunda a Segunda) ---
             const hoje = new Date();
@@ -634,6 +668,76 @@
                     ${htmlMecanicas}
                 </div>
             `;
+            
+            // =========================================================================
+            // --- 4. MOTOR DE DISCURSOS (A MÁGICA DA JANELA DA SEMANA) ---
+            // =========================================================================
+            if (["Assembleia", "Congresso", "Celebracao"].includes(dados.tipo_evento)) return; // Ignora se for evento especial inteiro
+
+            // 1. Acha o Domingo e a Segunda da semana atual sendo desenhada
+            const dReuniao = new Date(dados.data + "T12:00:00");
+            const diffSegunda = dReuniao.getDay() === 0 ? -6 : 1 - dReuniao.getDay(); // Distância para segunda
+            
+            const inicioSemana = new Date(dReuniao);
+            inicioSemana.setDate(dReuniao.getDate() + diffSegunda);
+            inicioSemana.setHours(0,0,0,0); // Crava 00:00 de Segunda
+            
+            const fimSemana = new Date(inicioSemana);
+            fimSemana.setDate(inicioSemana.getDate() + 6);
+            fimSemana.setHours(23,59,59,999); // Crava 23:59 de Domingo
+
+            let discursoDestaSemana = null;
+            let discursosFuturosHTML = '';
+            let contFuturos = 0; // Para limitar o tamanho da sanfona
+            
+            // 2. Varre a memória procurando discursos
+            agendaDiscursos.forEach(disc => {
+                const dDisc = new Date(disc.data + "T12:00:00");
+                
+                // Bateu dentro da semana (Segunda a Domingo)?
+                if (dDisc >= inicioSemana && dDisc <= fimSemana) {
+                    discursoDestaSemana = disc;
+                } 
+                // Se for das próximas semanas, joga pra Sanfona (limite de 5 semanas pra não ficar gigante)
+                else if (dDisc > fimSemana && contFuturos < 5) {
+                    contFuturos++;
+                    discursosFuturosHTML += `
+                        <div class="agenda-item">
+                            <div style="font-size: 12px; color: var(--cor-destaque); font-weight: bold;">📅 ${formatarDataBR(disc.data)}</div>
+                            <div style="font-size: 14px; font-weight: 600; color: var(--cor-texto); margin: 2px 0;">${disc.tema}</div>
+                            <div style="font-size: 13px; color: var(--cor-texto-secundario);">👤 ${disc.orador} (${disc.congregacao})</div>
+                        </div>
+                    `;
+                }
+            });
+
+            // 3. Renderiza o Card Bonito se tiver discurso na semana
+            if (discursoDestaSemana) {
+                const htmlDiscursoPrincipal = `
+                    <div class="card-discurso">
+                        <div class="discurso-badge">🎤 Discurso Público da Semana</div>
+                        <div class="discurso-tema">${discursoDestaSemana.tema}</div>
+                        <div class="discurso-orador">👤 ${discursoDestaSemana.orador} — <strong>${discursoDestaSemana.congregacao}</strong></div>
+                        ${discursoDestaSemana.grupo_lanche ? `<div class="discurso-lanche">☕ Equipe do Lanche: ${discursoDestaSemana.grupo_lanche}</div>` : ''}
+                    </div>
+                `;
+                // Anexa o card logo abaixo do board da reunião atual
+                board.innerHTML += htmlDiscursoPrincipal;
+            }
+
+            // 4. Renderiza a Sanfona se houver previsão futura
+            if (discursosFuturosHTML !== '') {
+                const htmlSanfona = `
+                    <button class="btn-expandir-agenda" onclick="document.getElementById('agenda-sanfona').classList.toggle('hidden')">
+                        [ + ] Ver agenda dos próximos discursos e lanches
+                    </button>
+                    <div id="agenda-sanfona" class="agenda-futura hidden">
+                        <div style="font-size: 13px; font-weight: bold; color: #999; border-bottom: 1px solid #eee; padding-bottom: 8px; margin-bottom: 5px; text-transform: uppercase;">Próximas Semanas</div>
+                        ${discursosFuturosHTML}
+                    </div>
+                `;
+                board.innerHTML += htmlSanfona;
+            }
         }
 
         // --- MOTOR DE ANÚNCIOS DINÂMICOS ---
