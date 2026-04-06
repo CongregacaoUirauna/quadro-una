@@ -211,10 +211,16 @@ let reunioesDoMesEmMemoria = []; // Guarda as semanas geradas para a imagem
 const btnAbaLimpeza = document.getElementById('aba-limpeza');
 const painelLimpeza = document.getElementById('painel-limpeza');
 
+// Função central para esconder a limpeza e mostrar o painel principal
+function sairDaAbaLimpeza() {
+    if (painelLimpeza) painelLimpeza.style.display = 'none';
+    const areaPrincipal = document.getElementById('formSections') || document.querySelector('.container-escala');
+    if (areaPrincipal) areaPrincipal.style.display = 'block'; // Devolve a tela principal
+}
+
 if (btnAbaLimpeza) {
     btnAbaLimpeza.addEventListener('click', () => {
         painelLimpeza.style.display = 'block'; 
-        
         const areaPrincipal = document.getElementById('formSections') || document.querySelector('.container-escala');
         if (areaPrincipal) areaPrincipal.style.display = 'none';
         
@@ -224,10 +230,21 @@ if (btnAbaLimpeza) {
     });
 }
 
-document.getElementById('aba-temas')?.addEventListener('click', () => { if(painelLimpeza) painelLimpeza.style.display = 'none'; });
-document.getElementById('aba-escalas')?.addEventListener('click', () => { if(painelLimpeza) painelLimpeza.style.display = 'none'; });
-document.getElementById('aba-mecanicas')?.addEventListener('click', () => { if(painelLimpeza) painelLimpeza.style.display = 'none'; });
-document.getElementById('aba-discursos')?.addEventListener('click', () => { if(painelLimpeza) painelLimpeza.style.display = 'none'; });
+// 1. Sair clicando em outras abas
+document.getElementById('aba-temas')?.addEventListener('click', sairDaAbaLimpeza);
+document.getElementById('aba-escalas')?.addEventListener('click', sairDaAbaLimpeza);
+document.getElementById('aba-mecanicas')?.addEventListener('click', sairDaAbaLimpeza);
+document.getElementById('aba-discursos')?.addEventListener('click', sairDaAbaLimpeza);
+
+// 2. Sair clicando no botão "+ Nova Programação"
+document.getElementById('btnNovaProgramacao')?.addEventListener('click', sairDaAbaLimpeza);
+
+// 3. Sair clicando em qualquer data do Gestor Semanal (Menu Lateral)
+document.addEventListener('click', (e) => {
+    if (e.target.closest('.history-item')) {
+        sairDaAbaLimpeza();
+    }
+});
 
 // --- FUNÇÕES AUXILIARES DO ALGORITMO GULOSO ---
 function selecionarParticipantes(historicoUso) {
@@ -315,7 +332,7 @@ if (btnGerar) {
                 let escolhidosMeio = selecionarParticipantes(historicoUso);
                 let textoMeio = montarTexto(cabecaMeio, escolhidosMeio, configLimpeza.tarefasMeioSemana);
 
-                let cabecaFim = configLimpeza.cabecas[cabecaIndex % configLimazas.length] || "N/A";
+                let cabecaFim = configLimpeza.cabecas[cabecaIndex % configLimpeza.cabecas.length] || "N/A";
                 if(configLimpeza.cabecas.length > 0) cabecaIndex++;
                 let escolhidosFim = selecionarParticipantes(historicoUso);
                 let textoFim = montarTexto(cabecaFim, escolhidosFim, configLimpeza.tarefasFimSemana);
