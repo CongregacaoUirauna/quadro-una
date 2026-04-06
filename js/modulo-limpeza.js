@@ -1,4 +1,4 @@
-import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc, collection, query, where, getDocs, updateDoc, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 const db = getFirestore();
 
@@ -197,5 +197,170 @@ function configurarSalvamento() {
             btnSalvar.innerText = "💾 Salvar Configurações no Banco";
             btnSalvar.disabled = false;
         }
+    });
+}
+
+// ============================================================================
+// ================== FASE 2: MOTOR DE GERAÇÃO DE ESCALA ======================
+// ============================================================================
+
+// --- NAVEGAÇÃO DA ABA ---
+const btnAbaLimpeza = document.getElementById('aba-limpeza');
+const painelLimpeza = document.getElementById('painel-limpeza');
+
+if (btnAbaLimpeza) {
+    btnAbaLimpeza.addEventListener('click', () => {
+        painelLimpeza.classList.remove('hidden');
+        document.getElementById('painel-discursos')?.classList.add('hidden');
+        document.getElementById('formSections')?.classList.add('hidden');
+        document.getElementById('painel-escalas')?.classList.add('hidden');
+        document.getElementById('painel-mecanicas')?.classList.add('hidden');
+    });
+}
+// Garante que a aba de limpeza feche ao clicar nas outras (adicione isso à mão livre se necessário no seu código principal)
+
+// --- O ALGORITMO GULOSO (GERADOR) ---
+const btnGerar = document.getElementById('btnGerarEscalaLimpeza');
+if (btnGerar) {
+    btnGerar.addEventListener('click', async () => {
+        const mesInput = document.getElementById('mesGeradorLimpeza').value;
+        if (!mesInput) return alert("Selecione um mês primeiro!");
+        
+        if(configLimpeza.cabecas.length === 0 || configLimpeza.participantes.length === 0) {
+            return alert("Configure os cabeças e participantes primeiro no botão 'Configurar Limpeza'.");
+        }
+
+        btnGerar.innerText = "⏳ Calculando...";
+        btnGerar.disabled = true;
+
+        try {
+            // 1. Busca todas as reuniões do mês selecionado
+            const dataInicio = `${mesInput}-01`;
+            const dataFim = `${mesInput}-31`;
+            const q = query(collection(db, "programacoes_semanais"), where("data", ">=", dataInicio), where("data", "<=", dataFim), orderBy("data", "asc"));
+            const querySnapshot = await getDocs(q);
+
+            if (querySnapshot.empty) {
+                alert("Nenhuma reunião encontrada para este mês. Crie as reuniões primeiro.");
+                return;
+            }
+
+            // 2. Variáveis de Controle Matemático
+            let cabecaIndex = 0;
+            let historicoUso = {}; // Ex: { "id_do_joao": 2 }
+            configLimpeza.participantes.forEach(p => historicoUso[p.id] = 0);
+
+            let reunioesAtualizadas = [];
+
+            // 3. O Loop Reunião por Reunião
+            for (const docSnap of querySnapshot.docs) {
+                const prog = docSnap.data();
+                const dReuniao = new Date(prog.data + "T12:00:00");
+                const isFimSemana = (dReuniao.getDay() === 0 || dReuniao.getDay() === 6);
+                
+                // Define as tarefas (Meio de Semana ou Fim de Semana)
+                let tarefasBase = isFimSemana ? configLimpeza.tarefasFimSemana : configLimpeza.tarefasMeioSemana;
+                
+                // Gira a Roleta do Cabeça
+                let cabecaDaVez = configLimpeza.cabecas[cabecaIndex % configLimpeza.cabecas.length];
+                cabecaIndex++;
+
+                // Agrupa candidatos por Família
+                let familias = {};
+                configLimpeza.participantes.forEach(p => {
+                    if (!familias[p.familia]) familias[p.familia] = [];
+                    familias[p.familia].push(p);
+                });
+
+                // Calcula a média de participações da família no mês
+                let familiasArray = Object.keys(familias).map(nomeFam => {
+                    let membros = familias[nomeFam];
+                    let totalUso = membros.reduce((soma, m) => soma + historicoUso[m.id], 0);
+                    return { nome: nomeFam, membros: membros, mediaUso: totalUso / membros.length };
+                });
+
+                // Ordena: Quem limpou menos vai pro topo. Se der empate, embaralha aleatório.
+                familiasArray.sort((a, b) => {
+                    if (a.mediaUso === b.mediaUso) return Math.random() - 0.5;
+                    return a.mediaUso - b.mediaUso;
+                });
+
+                // Seleciona as 9 pessoas exatas
+                let escolhidos = [];
+                for (let fam of familiasArray) {
+                    for (let membro of fam.membros) {
+                        if (escolhidos.length < 9) {
+                            escolhidos.push(membro);
+                            historicoUso[membro.id]++; // Registra que ele limpou
+                        }
+                    }
+                    if (escolhidos.length >= 9) break; // Corta a família se bater a meta de 9
+                }
+
+                // Cria o array literal de tarefas baseado na Quantidade que você definiu (ex: 2x Pátio)
+                let listaDeTarefas = [];
+                tarefasBase.forEach(t => {
+                    for (let i = 0; i < t.qtd; i++) listaDeTarefas.push(t.nome);
+                });
+                while (listaDeTarefas.length < 9) listaDeTarefas.push("Apoio Geral"); // Preenche se faltar
+
+                // GERA O TEXTO EDITÁVEL LIVRE (A Sacada de Mestre)
+                let textoFinal = `👑 Cabeça de Grupo: ${cabecaDaVez}\n`;
+                textoFinal += `-------------------------\n`;
+                escolhidos.forEach((pessoa, i) => {
+                    textoFinal += `[ ${listaDeTarefas[i]} ] - ${pessoa.nome}\n`;
+                });
+
+                // Prepara para salvar
+                reunioesAtualizadas.push({ id: docSnap.id, data: prog.data, texto: textoFinal });
+                await updateDoc(doc(db, "programacoes_semanais", docSnap.id), { texto_limpeza: textoFinal });
+            }
+
+            alert("Algoritmo finalizado! Escala gerada com sucesso.");
+            desenharCardsDeEdicao(reunioesAtualizadas);
+
+        } catch (error) {
+            console.error(error);
+            alert("Erro ao processar o algoritmo.");
+        } finally {
+            btnGerar.innerText = "⚙️ Gerar Escala do Mês";
+            btnGerar.disabled = false;
+        }
+    });
+}
+
+// --- DESENHAR CARTÕES DE AJUSTE LIVRE ---
+function desenharCardsDeEdicao(reunioes) {
+    const container = document.getElementById('listaCardsEscalaLimpeza');
+    container.innerHTML = '';
+
+    reunioes.forEach(r => {
+        const card = document.createElement('div');
+        card.style.cssText = "background: white; border: 1px solid #ddd; border-radius: 8px; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);";
+        
+        card.innerHTML = `
+            <div style="font-weight: bold; color: #00695c; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px;">📅 Reunião: ${r.data.split('-').reverse().join('/')}</div>
+            <textarea id="texto_limp_${r.id}" rows="12" style="width: 100%; border: 1px solid #ccc; border-radius: 5px; padding: 10px; font-family: monospace; font-size: 13px; line-height: 1.5; box-sizing: border-box; resize: vertical;">${r.texto}</textarea>
+            <button class="btn-salvar-card" data-id="${r.id}" style="width: 100%; background: #00796b; color: white; border: none; padding: 10px; margin-top: 10px; border-radius: 4px; cursor: pointer; font-weight: bold;">💾 Salvar Ajustes Manuais</button>
+        `;
+        container.appendChild(card);
+    });
+
+    // Evento de Salvar a edição manual
+    document.querySelectorAll('.btn-salvar-card').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            const id = e.target.getAttribute('data-id');
+            const novoTexto = document.getElementById(`texto_limp_${id}`).value;
+            e.target.innerText = "Salvando...";
+            
+            try {
+                await updateDoc(doc(db, "programacoes_semanais", id), { texto_limpeza: novoTexto });
+                e.target.innerText = "✅ Salvo!";
+                setTimeout(() => e.target.innerText = "💾 Salvar Ajustes Manuais", 2000);
+            } catch (error) {
+                alert("Erro ao salvar ajustes.");
+                e.target.innerText = "💾 Salvar Ajustes Manuais";
+            }
+        });
     });
 }
