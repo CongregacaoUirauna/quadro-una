@@ -210,9 +210,8 @@ const painelLimpeza = document.getElementById('painel-limpeza');
 
 if (btnAbaLimpeza) {
     btnAbaLimpeza.addEventListener('click', () => {
-        painelLimpeza.style.display = 'block'; // Força a exibição
+        painelLimpeza.style.display = 'block'; 
         
-        // Esconde a área principal e outras abas
         const areaPrincipal = document.getElementById('formSections') || document.querySelector('.container-escala');
         if (areaPrincipal) areaPrincipal.style.display = 'none';
         
@@ -222,13 +221,59 @@ if (btnAbaLimpeza) {
     });
 }
 
-// Garante que a limpeza suma ao clicar em outras abas
 document.getElementById('aba-temas')?.addEventListener('click', () => { if(painelLimpeza) painelLimpeza.style.display = 'none'; });
 document.getElementById('aba-escalas')?.addEventListener('click', () => { if(painelLimpeza) painelLimpeza.style.display = 'none'; });
 document.getElementById('aba-mecanicas')?.addEventListener('click', () => { if(painelLimpeza) painelLimpeza.style.display = 'none'; });
 document.getElementById('aba-discursos')?.addEventListener('click', () => { if(painelLimpeza) painelLimpeza.style.display = 'none'; });
 
-// --- O ALGORITMO GULOSO (GERADOR) ---
+// --- FUNÇÕES AUXILIARES DO ALGORITMO GULOSO ---
+function selecionarParticipantes(historicoUso) {
+    let familias = {};
+    configLimpeza.participantes.forEach(p => {
+        if (!familias[p.familia]) familias[p.familia] = [];
+        familias[p.familia].push(p);
+    });
+
+    let familiasArray = Object.keys(familias).map(nomeFam => {
+        let membros = familias[nomeFam];
+        let totalUso = membros.reduce((soma, m) => soma + historicoUso[m.id], 0);
+        return { nome: nomeFam, membros: membros, mediaUso: totalUso / membros.length };
+    });
+
+    familiasArray.sort((a, b) => {
+        if (a.mediaUso === b.mediaUso) return Math.random() - 0.5; // Desempate aleatório justo
+        return a.mediaUso - b.mediaUso;
+    });
+
+    let escolhidos = [];
+    for (let fam of familiasArray) {
+        for (let membro of fam.membros) {
+            if (escolhidos.length < 9) {
+                escolhidos.push(membro);
+                historicoUso[membro.id]++; // Registra o uso na mesma hora
+            }
+        }
+        if (escolhidos.length >= 9) break; 
+    }
+    return escolhidos;
+}
+
+function montarTexto(cabeca, escolhidos, tarefasBase) {
+    let listaDeTarefas = [];
+    tarefasBase.forEach(t => {
+        for (let i = 0; i < t.qtd; i++) listaDeTarefas.push(t.nome);
+    });
+    while (listaDeTarefas.length < 9) listaDeTarefas.push("Apoio Geral"); 
+
+    let textoFinal = `Cabeça de Grupo: ${cabeca}\n`;
+    textoFinal += `-------------------------\n`;
+    escolhidos.forEach((pessoa, i) => {
+        textoFinal += `[ ${listaDeTarefas[i]} ] - ${pessoa.nome}\n`;
+    });
+    return textoFinal;
+}
+
+// --- O ALGORITMO (GERADOR) ---
 const btnGerar = document.getElementById('btnGerarEscalaLimpeza');
 if (btnGerar) {
     btnGerar.addEventListener('click', async () => {
@@ -259,66 +304,37 @@ if (btnGerar) {
 
             let reunioesAtualizadas = [];
 
+            // GERA DUAS VEZES POR SEMANA (Meio e Fim)
             for (const docSnap of querySnapshot.docs) {
                 const prog = docSnap.data();
-                const dReuniao = new Date(prog.data + "T12:00:00");
-                const isFimSemana = (dReuniao.getDay() === 0 || dReuniao.getDay() === 6);
                 
-                // NOVIDADE: Identifica o tipo de reunião em texto
-                const tipoReuniaoDescricao = isFimSemana ? "Fim de Semana" : "Meio de Semana";
-                
-                let tarefasBase = isFimSemana ? configLimpeza.tarefasFimSemana : configLimpeza.tarefasMeioSemana;
-                
-                let cabecaDaVez = configLimpeza.cabecas[cabecaIndex % configLimpeza.cabecas.length];
-                cabecaIndex++;
+                // 1. Gera Meio de Semana
+                let cabecaMeio = configLimpeza.cabecas[cabecaIndex % configLimpeza.cabecas.length] || "N/A";
+                if(configLimpeza.cabecas.length > 0) cabecaIndex++;
+                let escolhidosMeio = selecionarParticipantes(historicoUso);
+                let textoMeio = montarTexto(cabecaMeio, escolhidosMeio, configLimpeza.tarefasMeioSemana);
 
-                let familias = {};
-                configLimpeza.participantes.forEach(p => {
-                    if (!familias[p.familia]) familias[p.familia] = [];
-                    familias[p.familia].push(p);
+                // 2. Gera Fim de Semana
+                let cabecaFim = configLimpeza.cabecas[cabecaIndex % configLimpeza.cabecas.length] || "N/A";
+                if(configLimpeza.cabecas.length > 0) cabecaIndex++;
+                let escolhidosFim = selecionarParticipantes(historicoUso);
+                let textoFim = montarTexto(cabecaFim, escolhidosFim, configLimpeza.tarefasFimSemana);
+
+                // 3. Prepara para UI e Salva Duplo no Banco
+                reunioesAtualizadas.push({ 
+                    id: docSnap.id, 
+                    data: prog.data, 
+                    textoMeio: textoMeio,
+                    textoFim: textoFim
                 });
 
-                let familiasArray = Object.keys(familias).map(nomeFam => {
-                    let membros = familias[nomeFam];
-                    let totalUso = membros.reduce((soma, m) => soma + historicoUso[m.id], 0);
-                    return { nome: nomeFam, membros: membros, mediaUso: totalUso / membros.length };
+                await updateDoc(doc(db, "programacoes_semanais", docSnap.id), { 
+                    texto_limpeza_meio: textoMeio,
+                    texto_limpeza_fim: textoFim
                 });
-
-                familiasArray.sort((a, b) => {
-                    if (a.mediaUso === b.mediaUso) return Math.random() - 0.5;
-                    return a.mediaUso - b.mediaUso;
-                });
-
-                let escolhidos = [];
-                for (let fam of familiasArray) {
-                    for (let membro of fam.membros) {
-                        if (escolhidos.length < 9) {
-                            escolhidos.push(membro);
-                            historicoUso[membro.id]++; 
-                        }
-                    }
-                    if (escolhidos.length >= 9) break; 
-                }
-
-                let listaDeTarefas = [];
-                tarefasBase.forEach(t => {
-                    for (let i = 0; i < t.qtd; i++) listaDeTarefas.push(t.nome);
-                });
-                while (listaDeTarefas.length < 9) listaDeTarefas.push("Apoio Geral"); 
-
-                // NOVIDADE: Texto limpo, sem o emoji da coroa
-                let textoFinal = `Cabeça de Grupo: ${cabecaDaVez}\n`;
-                textoFinal += `-------------------------\n`;
-                escolhidos.forEach((pessoa, i) => {
-                    textoFinal += `[ ${listaDeTarefas[i]} ] - ${pessoa.nome}\n`;
-                });
-
-                // Prepara para salvar, passando a etiqueta extra
-                reunioesAtualizadas.push({ id: docSnap.id, data: prog.data, texto: textoFinal, tipo: tipoReuniaoDescricao });
-                await updateDoc(doc(db, "programacoes_semanais", docSnap.id), { texto_limpeza: textoFinal });
             }
 
-            alert("Algoritmo finalizado! Escala gerada com sucesso.");
+            alert("Algoritmo finalizado! Escalas geradas com sucesso.");
             desenharCardsDeEdicao(reunioesAtualizadas);
 
         } catch (error) {
@@ -338,34 +354,47 @@ function desenharCardsDeEdicao(reunioes) {
 
     reunioes.forEach(r => {
         const card = document.createElement('div');
-        card.style.cssText = "background: white; border: 1px solid #ddd; border-radius: 8px; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);";
+        // O card foi alargado ligeiramente para acomodar confortavelmente duas caixas
+        card.style.cssText = "background: white; border: 1px solid #ddd; border-radius: 8px; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); grid-column: span 1;";
         
-        // NOVIDADE: Etiqueta de Fim de Semana ou Meio de Semana no topo do cartão
         card.innerHTML = `
-            <div style="font-weight: bold; color: #00695c; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; display: flex; justify-content: space-between; align-items: center;">
-                <span>📅 ${r.data.split('-').reverse().join('/')}</span>
-                <span style="font-size: 11px; background: #e0f2f1; padding: 3px 8px; border-radius: 12px; font-weight: normal; color: #004d40;">${r.tipo}</span>
+            <div style="font-weight: bold; color: #00695c; margin-bottom: 15px; border-bottom: 2px solid #e0f2f1; padding-bottom: 5px; text-align: center; font-size: 15px;">
+                📅 Semana: ${r.data.split('-').reverse().join('/')}
             </div>
-            <textarea id="texto_limp_${r.id}" rows="12" style="width: 100%; border: 1px solid #ccc; border-radius: 5px; padding: 10px; font-family: monospace; font-size: 13px; line-height: 1.5; box-sizing: border-box; resize: vertical;">${r.texto}</textarea>
-            <button class="btn-salvar-card" data-id="${r.id}" style="width: 100%; background: #00796b; color: white; border: none; padding: 10px; margin-top: 10px; border-radius: 4px; cursor: pointer; font-weight: bold;">💾 Salvar Ajustes Manuais</button>
+            
+            <div style="font-size: 12px; color: #004d40; font-weight: bold; margin-bottom: 5px; background: #e0f2f1; padding: 3px 8px; border-radius: 4px; display: inline-block;">☀️ Meio de Semana</div>
+            <textarea id="texto_limp_meio_${r.id}" rows="8" style="width: 100%; border: 1px solid #ccc; border-radius: 5px; padding: 10px; font-family: monospace; font-size: 12px; line-height: 1.4; box-sizing: border-box; resize: vertical; margin-bottom: 15px; background: #fafafa;">${r.textoMeio || ''}</textarea>
+
+            <div style="font-size: 12px; color: #004d40; font-weight: bold; margin-bottom: 5px; background: #e0f2f1; padding: 3px 8px; border-radius: 4px; display: inline-block;">🌙 Fim de Semana</div>
+            <textarea id="texto_limp_fim_${r.id}" rows="8" style="width: 100%; border: 1px solid #ccc; border-radius: 5px; padding: 10px; font-family: monospace; font-size: 12px; line-height: 1.4; box-sizing: border-box; resize: vertical; background: #fafafa;">${r.textoFim || ''}</textarea>
+            
+            <button class="btn-salvar-card" data-id="${r.id}" style="width: 100%; background: #00796b; color: white; border: none; padding: 12px; margin-top: 15px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 14px;">💾 Salvar Ajustes da Semana</button>
         `;
         container.appendChild(card);
     });
 
-    // Evento de Salvar a edição manual
+    // Evento de Salvar a edição manual Dupla
     document.querySelectorAll('.btn-salvar-card').forEach(btn => {
         btn.addEventListener('click', async (e) => {
             const id = e.target.getAttribute('data-id');
-            const novoTexto = document.getElementById(`texto_limp_${id}`).value;
-            e.target.innerText = "Salvando...";
+            const novoTextoMeio = document.getElementById(`texto_limp_meio_${id}`).value;
+            const novoTextoFim = document.getElementById(`texto_limp_fim_${id}`).value;
+            e.target.innerText = "⏳ Salvando...";
+            e.target.style.background = "#004d40";
             
             try {
-                await updateDoc(doc(db, "programacoes_semanais", id), { texto_limpeza: novoTexto });
-                e.target.innerText = "✅ Salvo!";
-                setTimeout(() => e.target.innerText = "💾 Salvar Ajustes Manuais", 2000);
+                await updateDoc(doc(db, "programacoes_semanais", id), { 
+                    texto_limpeza_meio: novoTextoMeio,
+                    texto_limpeza_fim: novoTextoFim
+                });
+                e.target.innerText = "✅ Salvo com Sucesso!";
+                setTimeout(() => {
+                    e.target.innerText = "💾 Salvar Ajustes da Semana";
+                    e.target.style.background = "#00796b";
+                }, 2000);
             } catch (error) {
                 alert("Erro ao salvar ajustes.");
-                e.target.innerText = "💾 Salvar Ajustes Manuais";
+                e.target.innerText = "💾 Salvar Ajustes da Semana";
             }
         });
     });
