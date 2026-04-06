@@ -66,6 +66,7 @@
                 <button id="aba-escalas" class="btn-config" style="margin-top: 0; width: auto; background-color: #e0e0e0; color: #666;">📅 Tabela Mensal</button>
                 <button id="aba-mecanicas" class="btn-config" style="margin-top: 0; width: auto; background-color: #e0e0e0; color: #666;">⚙️ Designações Mecânicas</button>
                 <button id="aba-discursos" class="btn-config" style="margin-top: 0; width: auto; background-color: #e0e0e0; color: #666;">🎤 Discursos Públicos</button>
+                <button id="aba-limpeza" class="btn-config" style="margin-top: 0; width: auto; background-color: #e0e0e0; color: #666;">🪣 Escala de Limpeza</button>
                 <button id="btnConfigLimpeza" class="btn-config" style="margin-top: 0; width: auto; background-color: #26a69a; color: white; font-weight: bold;">🧹 Configurar Limpeza</button>
             </div>
             
@@ -351,6 +352,25 @@
             </div>
             <!-- ================= FIM DO PAINEL DISCURSOS ================= -->
 
+            <!-- ================= NOVO PAINEL: ESCALA DE LIMPEZA ================= -->
+            <div id="painel-limpeza" class="hidden">
+                <div class="container-escala">
+                    <div class="escala-header" style="background: #e0f2f1; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #b2dfdb;">
+                        <h2 style="margin: 0 0 10px 0; color: #00695c; font-size: 18px;">Gerador Inteligente de Limpeza</h2>
+                        <p style="font-size: 14px; color: #333; margin-bottom: 15px;">Selecione o mês. O algoritmo distribuirá os cabeças e selecionará 9 participantes por reunião, priorizando as famílias que limparam menos vezes.</p>
+                        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                            <input type="month" id="mesGeradorLimpeza" class="btn-config" style="background: white; flex: 1; min-width: 150px;">
+                            <button id="btnGerarEscalaLimpeza" class="btn-salvar" style="margin: 0; flex: 1; min-width: 150px; background-color: #00897b;">⚙️ Gerar Escala do Mês</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Aqui os cartões de edição vão aparecer -->
+                    <div id="listaCardsEscalaLimpeza" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px;">
+                    </div>
+                </div>
+            </div>
+            <!-- ================= FIM DO PAINEL ESCALA DE LIMPEZA ================= -->
+    
             <!-- ================= MODAL DE CONFIGURAÇÃO DE LIMPEZA ================= -->
     <div id="modalLimpeza" class="modal-bg" style="display:none; z-index: 3000;">
         <div class="modal-content" style="max-width: 700px;">
