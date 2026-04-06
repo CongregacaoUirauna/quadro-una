@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestor de Programação Semanal</title>
-    
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
@@ -361,8 +362,12 @@
                         <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
                             <input type="month" id="mesGeradorLimpeza" class="btn-config" style="background: white; flex: 1; min-width: 150px;">
                             <button id="btnGerarEscalaLimpeza" class="btn-salvar" style="margin: 0; flex: 1; min-width: 150px; background-color: #00897b;">⚙️ Gerar Escala do Mês</button>
+                            <button id="btnGerarImagemLimpeza" class="btn-config" style="margin: 0; flex: 1; min-width: 150px; background-color: #f57c00; color: white;">🖼️ Gerar Imagem Consolidada</button>
                         </div>
                     </div>
+
+                    <div id="templatePrintLimpeza" style="position: absolute; left: -9999px; top: -9999px; width: 800px; background: white; padding: 30px; border-radius: 8px;">
+                        </div>
                     
                     <!-- Aqui os cartões de edição vão aparecer -->
                     <div id="listaCardsEscalaLimpeza" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px;">
