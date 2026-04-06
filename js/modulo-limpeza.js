@@ -210,14 +210,23 @@ const painelLimpeza = document.getElementById('painel-limpeza');
 
 if (btnAbaLimpeza) {
     btnAbaLimpeza.addEventListener('click', () => {
-        painelLimpeza.classList.remove('hidden');
-        document.getElementById('painel-discursos')?.classList.add('hidden');
-        document.getElementById('formSections')?.classList.add('hidden');
-        document.getElementById('painel-escalas')?.classList.add('hidden');
-        document.getElementById('painel-mecanicas')?.classList.add('hidden');
+        painelLimpeza.style.display = 'block'; // Força a exibição
+        
+        // Esconde a área principal e outras abas
+        const areaPrincipal = document.getElementById('formSections') || document.querySelector('.container-escala');
+        if (areaPrincipal) areaPrincipal.style.display = 'none';
+        
+        if (document.getElementById('painel-discursos')) document.getElementById('painel-discursos').style.display = 'none';
+        if (document.getElementById('painel-escalas')) document.getElementById('painel-escalas').style.display = 'none';
+        if (document.getElementById('painel-mecanicas')) document.getElementById('painel-mecanicas').style.display = 'none';
     });
 }
-// Garante que a aba de limpeza feche ao clicar nas outras (adicione isso à mão livre se necessário no seu código principal)
+
+// Garante que a limpeza suma ao clicar em outras abas
+document.getElementById('aba-temas')?.addEventListener('click', () => { if(painelLimpeza) painelLimpeza.style.display = 'none'; });
+document.getElementById('aba-escalas')?.addEventListener('click', () => { if(painelLimpeza) painelLimpeza.style.display = 'none'; });
+document.getElementById('aba-mecanicas')?.addEventListener('click', () => { if(painelLimpeza) painelLimpeza.style.display = 'none'; });
+document.getElementById('aba-discursos')?.addEventListener('click', () => { if(painelLimpeza) painelLimpeza.style.display = 'none'; });
 
 // --- O ALGORITMO GULOSO (GERADOR) ---
 const btnGerar = document.getElementById('btnGerarEscalaLimpeza');
@@ -234,7 +243,6 @@ if (btnGerar) {
         btnGerar.disabled = true;
 
         try {
-            // 1. Busca todas as reuniões do mês selecionado
             const dataInicio = `${mesInput}-01`;
             const dataFim = `${mesInput}-31`;
             const q = query(collection(db, "programacoes_semanais"), where("data", ">=", dataInicio), where("data", "<=", dataFim), orderBy("data", "asc"));
@@ -245,74 +253,68 @@ if (btnGerar) {
                 return;
             }
 
-            // 2. Variáveis de Controle Matemático
             let cabecaIndex = 0;
-            let historicoUso = {}; // Ex: { "id_do_joao": 2 }
+            let historicoUso = {}; 
             configLimpeza.participantes.forEach(p => historicoUso[p.id] = 0);
 
             let reunioesAtualizadas = [];
 
-            // 3. O Loop Reunião por Reunião
             for (const docSnap of querySnapshot.docs) {
                 const prog = docSnap.data();
                 const dReuniao = new Date(prog.data + "T12:00:00");
                 const isFimSemana = (dReuniao.getDay() === 0 || dReuniao.getDay() === 6);
                 
-                // Define as tarefas (Meio de Semana ou Fim de Semana)
+                // NOVIDADE: Identifica o tipo de reunião em texto
+                const tipoReuniaoDescricao = isFimSemana ? "Fim de Semana" : "Meio de Semana";
+                
                 let tarefasBase = isFimSemana ? configLimpeza.tarefasFimSemana : configLimpeza.tarefasMeioSemana;
                 
-                // Gira a Roleta do Cabeça
                 let cabecaDaVez = configLimpeza.cabecas[cabecaIndex % configLimpeza.cabecas.length];
                 cabecaIndex++;
 
-                // Agrupa candidatos por Família
                 let familias = {};
                 configLimpeza.participantes.forEach(p => {
                     if (!familias[p.familia]) familias[p.familia] = [];
                     familias[p.familia].push(p);
                 });
 
-                // Calcula a média de participações da família no mês
                 let familiasArray = Object.keys(familias).map(nomeFam => {
                     let membros = familias[nomeFam];
                     let totalUso = membros.reduce((soma, m) => soma + historicoUso[m.id], 0);
                     return { nome: nomeFam, membros: membros, mediaUso: totalUso / membros.length };
                 });
 
-                // Ordena: Quem limpou menos vai pro topo. Se der empate, embaralha aleatório.
                 familiasArray.sort((a, b) => {
                     if (a.mediaUso === b.mediaUso) return Math.random() - 0.5;
                     return a.mediaUso - b.mediaUso;
                 });
 
-                // Seleciona as 9 pessoas exatas
                 let escolhidos = [];
                 for (let fam of familiasArray) {
                     for (let membro of fam.membros) {
                         if (escolhidos.length < 9) {
                             escolhidos.push(membro);
-                            historicoUso[membro.id]++; // Registra que ele limpou
+                            historicoUso[membro.id]++; 
                         }
                     }
-                    if (escolhidos.length >= 9) break; // Corta a família se bater a meta de 9
+                    if (escolhidos.length >= 9) break; 
                 }
 
-                // Cria o array literal de tarefas baseado na Quantidade que você definiu (ex: 2x Pátio)
                 let listaDeTarefas = [];
                 tarefasBase.forEach(t => {
                     for (let i = 0; i < t.qtd; i++) listaDeTarefas.push(t.nome);
                 });
-                while (listaDeTarefas.length < 9) listaDeTarefas.push("Apoio Geral"); // Preenche se faltar
+                while (listaDeTarefas.length < 9) listaDeTarefas.push("Apoio Geral"); 
 
-                // GERA O TEXTO EDITÁVEL LIVRE (A Sacada de Mestre)
-                let textoFinal = `👑 Cabeça de Grupo: ${cabecaDaVez}\n`;
+                // NOVIDADE: Texto limpo, sem o emoji da coroa
+                let textoFinal = `Cabeça de Grupo: ${cabecaDaVez}\n`;
                 textoFinal += `-------------------------\n`;
                 escolhidos.forEach((pessoa, i) => {
                     textoFinal += `[ ${listaDeTarefas[i]} ] - ${pessoa.nome}\n`;
                 });
 
-                // Prepara para salvar
-                reunioesAtualizadas.push({ id: docSnap.id, data: prog.data, texto: textoFinal });
+                // Prepara para salvar, passando a etiqueta extra
+                reunioesAtualizadas.push({ id: docSnap.id, data: prog.data, texto: textoFinal, tipo: tipoReuniaoDescricao });
                 await updateDoc(doc(db, "programacoes_semanais", docSnap.id), { texto_limpeza: textoFinal });
             }
 
@@ -338,8 +340,12 @@ function desenharCardsDeEdicao(reunioes) {
         const card = document.createElement('div');
         card.style.cssText = "background: white; border: 1px solid #ddd; border-radius: 8px; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);";
         
+        // NOVIDADE: Etiqueta de Fim de Semana ou Meio de Semana no topo do cartão
         card.innerHTML = `
-            <div style="font-weight: bold; color: #00695c; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px;">📅 Reunião: ${r.data.split('-').reverse().join('/')}</div>
+            <div style="font-weight: bold; color: #00695c; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; display: flex; justify-content: space-between; align-items: center;">
+                <span>📅 ${r.data.split('-').reverse().join('/')}</span>
+                <span style="font-size: 11px; background: #e0f2f1; padding: 3px 8px; border-radius: 12px; font-weight: normal; color: #004d40;">${r.tipo}</span>
+            </div>
             <textarea id="texto_limp_${r.id}" rows="12" style="width: 100%; border: 1px solid #ccc; border-radius: 5px; padding: 10px; font-family: monospace; font-size: 13px; line-height: 1.5; box-sizing: border-box; resize: vertical;">${r.texto}</textarea>
             <button class="btn-salvar-card" data-id="${r.id}" style="width: 100%; background: #00796b; color: white; border: none; padding: 10px; margin-top: 10px; border-radius: 4px; cursor: pointer; font-weight: bold;">💾 Salvar Ajustes Manuais</button>
         `;
