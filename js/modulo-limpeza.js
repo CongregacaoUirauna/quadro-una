@@ -211,30 +211,48 @@ let reunioesDoMesEmMemoria = []; // Guarda as semanas geradas para a imagem
 const btnAbaLimpeza = document.getElementById('aba-limpeza');
 const painelLimpeza = document.getElementById('painel-limpeza');
 
-// Função central para esconder a limpeza e mostrar o painel principal
+// Função central para neutralizar a limpeza quando o usuário clica em outras áreas
 function sairDaAbaLimpeza() {
     if (painelLimpeza) painelLimpeza.style.display = 'none';
-    const areaPrincipal = document.getElementById('formSections') || document.querySelector('.container-escala');
-    if (areaPrincipal) areaPrincipal.style.display = 'block'; // Devolve a tela principal
+    // Opcional: Garante que o painel estrutural volta a aparecer se as outras abas chamarem
+    const painelTemas = document.getElementById('painel-estrutural-temas');
+    if (painelTemas && document.getElementById('aba-temas').style.backgroundColor === 'rgb(26, 115, 232)') {
+        painelTemas.classList.remove('hidden');
+    }
 }
 
 if (btnAbaLimpeza) {
     btnAbaLimpeza.addEventListener('click', () => {
+        // 1. Mostra o painel de limpeza
         painelLimpeza.style.display = 'block'; 
-        const areaPrincipal = document.getElementById('formSections') || document.querySelector('.container-escala');
-        if (areaPrincipal) areaPrincipal.style.display = 'none';
-        
-        if (document.getElementById('painel-discursos')) document.getElementById('painel-discursos').style.display = 'none';
-        if (document.getElementById('painel-escalas')) document.getElementById('painel-escalas').style.display = 'none';
-        if (document.getElementById('painel-mecanicas')) document.getElementById('painel-mecanicas').style.display = 'none';
+
+        // 2. Esconde todos os outros painéis forçadamente, usando as classes corretas do admin.html
+        document.getElementById('painel-estrutural-temas').classList.add('hidden');
+        document.getElementById('painel-escala-abas').classList.add('hidden');
+        document.getElementById('painel-mecanicas').classList.add('hidden');
+        if (document.getElementById('painel-discursos')) {
+            document.getElementById('painel-discursos').style.display = 'none';
+        }
+
+        // 3. Atualiza as cores dos botões (Limpeza fica verde/azul, resto cinza)
+        btnAbaLimpeza.style.backgroundColor = '#1a73e8';
+        btnAbaLimpeza.style.color = '#fff';
+
+        ['aba-temas', 'aba-escalas', 'aba-mecanicas', 'aba-discursos'].forEach(id => {
+            const btn = document.getElementById(id);
+            if (btn) {
+                btn.style.backgroundColor = '#e0e0e0';
+                btn.style.color = '#666';
+            }
+        });
     });
 }
 
 // 1. Sair clicando em outras abas
-document.getElementById('aba-temas')?.addEventListener('click', sairDaAbaLimpeza);
-document.getElementById('aba-escalas')?.addEventListener('click', sairDaAbaLimpeza);
-document.getElementById('aba-mecanicas')?.addEventListener('click', sairDaAbaLimpeza);
-document.getElementById('aba-discursos')?.addEventListener('click', sairDaAbaLimpeza);
+const outrasAbasParaSair = ['aba-temas', 'aba-escalas', 'aba-mecanicas', 'aba-discursos'];
+outrasAbasParaSair.forEach(id => {
+    document.getElementById(id)?.addEventListener('click', sairDaAbaLimpeza);
+});
 
 // 2. Sair clicando no botão "+ Nova Programação"
 document.getElementById('btnNovaProgramacao')?.addEventListener('click', sairDaAbaLimpeza);
