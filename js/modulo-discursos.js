@@ -21,36 +21,42 @@ export function initModuloDiscursos() {
 function configurarNavegacaoAbas() {
     const btnAbaDiscursos = document.getElementById('aba-discursos');
     const painelDiscursos = document.getElementById('painel-discursos');
-    
-    // Pega as outras áreas (usando um seletor abrangente para a área principal)
-    // Se o ID da sua área principal for diferente de 'formSections', ajuste abaixo.
-    const areaPrincipal = document.getElementById('formSections') || document.querySelector('.container-escala'); 
-    const painelEscalas = document.getElementById('painel-escalas'); 
-    const painelMecanicas = document.getElementById('painel-mecanicas');
 
-    // Quando clicar em Discursos: Mostra discursos, esconde o resto
     btnAbaDiscursos.addEventListener('click', () => {
+        // 1. Mostra o painel de discursos
         painelDiscursos.style.display = 'block';
-        if(areaPrincipal) areaPrincipal.style.display = 'none';
-        if(painelEscalas) painelEscalas.style.display = 'none';
-        if(painelMecanicas) painelMecanicas.style.display = 'none';
+
+        // 2. Esconde os outros painéis usando os IDs corretos do admin.html
+        document.getElementById('painel-estrutural-temas').classList.add('hidden');
+        document.getElementById('painel-escala-abas').classList.add('hidden');
+        document.getElementById('painel-mecanicas').classList.add('hidden');
+        
+        // Se a aba limpeza já existir no DOM, esconde ela também
+        const painelLimpeza = document.getElementById('painel-limpeza');
+        if (painelLimpeza) painelLimpeza.style.display = 'none';
+
+        // 3. Atualiza as cores dos botões (Discursos fica azul, resto cinza)
+        btnAbaDiscursos.style.backgroundColor = '#1a73e8';
+        btnAbaDiscursos.style.color = '#fff';
+
+        ['aba-temas', 'aba-escalas', 'aba-mecanicas', 'aba-limpeza'].forEach(id => {
+            const btn = document.getElementById(id);
+            if (btn) {
+                btn.style.backgroundColor = '#e0e0e0';
+                btn.style.color = '#666';
+            }
+        });
+
+        // 4. Carrega os dados da tabela
         carregarDiscursosDaTabela(); 
     });
 
-    // Quando clicar nas outras abas: Esconde discursos, mostra a área principal
-    document.getElementById('aba-temas')?.addEventListener('click', () => {
-        painelDiscursos.style.display = 'none';
-        if(areaPrincipal) areaPrincipal.style.display = 'block';
-    });
-    
-    document.getElementById('aba-escalas')?.addEventListener('click', () => {
-        painelDiscursos.style.display = 'none';
-        if(areaPrincipal) areaPrincipal.style.display = 'none'; // A lógica atual do seu painel já cuida de mostrar a escala
-    });
-    
-    document.getElementById('aba-mecanicas')?.addEventListener('click', () => {
-        painelDiscursos.style.display = 'none';
-        if(areaPrincipal) areaPrincipal.style.display = 'none'; // Idem
+    // 5. Garante que o painel de discursos suma se clicar nas outras abas
+    const outrasAbas = ['aba-temas', 'aba-escalas', 'aba-mecanicas', 'aba-limpeza'];
+    outrasAbas.forEach(id => {
+        document.getElementById(id)?.addEventListener('click', () => {
+            painelDiscursos.style.display = 'none';
+        });
     });
 }
 
