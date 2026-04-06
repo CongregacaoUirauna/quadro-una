@@ -66,6 +66,7 @@
                 <button id="aba-escalas" class="btn-config" style="margin-top: 0; width: auto; background-color: #e0e0e0; color: #666;">📅 Tabela Mensal</button>
                 <button id="aba-mecanicas" class="btn-config" style="margin-top: 0; width: auto; background-color: #e0e0e0; color: #666;">⚙️ Designações Mecânicas</button>
                 <button id="aba-discursos" class="btn-config" style="margin-top: 0; width: auto; background-color: #e0e0e0; color: #666;">🎤 Discursos Públicos</button>
+                <button id="btnConfigLimpeza" class="btn-config" style="margin-top: 0; width: auto; background-color: #26a69a; color: white; font-weight: bold;">🧹 Configurar Limpeza</button>
             </div>
             
             <div id="painel-estrutural-temas">
@@ -350,6 +351,73 @@
             </div>
             <!-- ================= FIM DO PAINEL DISCURSOS ================= -->
 
+            <!-- ================= MODAL DE CONFIGURAÇÃO DE LIMPEZA ================= -->
+    <div id="modalLimpeza" class="modal-bg" style="display:none; z-index: 3000;">
+        <div class="modal-content" style="max-width: 700px;">
+            <span class="modal-close" id="fecharModalLimpeza">&times;</span>
+            <h2 style="color: #00796b; margin-top: 0; border-bottom: 2px solid #b2dfdb; padding-bottom: 10px;">🧹 Configurações de Limpeza</h2>
+            
+            <div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #ddd; padding-bottom: 10px;">
+                <button id="tabLimpezaCabecas" style="flex: 1; padding: 10px; background: #00796b; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">Cabeças e Pessoal</button>
+                <button id="tabLimpezaTarefas" style="flex: 1; padding: 10px; background: #e0e0e0; color: #333; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">Tarefas e Quantidades</button>
+            </div>
+
+            <!-- ABA 1: Pessoal -->
+            <div id="areaLimpezaPessoal">
+                <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 250px;">
+                        <h4 style="margin-bottom: 10px; color: #333;"> Cabeças de Grupo</h4>
+                        <div class="input-group">
+                            <input type="text" id="inputNovoCabeca" placeholder="Nome do Cabeça">
+                            <button class="btn-salvar" style="margin: 0; width: auto; padding: 10px;" id="btnAddCabeca">Add</button>
+                        </div>
+                        <ul id="listaCabecas" style="list-style: none; padding: 0; border: 1px solid #eee; height: 150px; overflow-y: auto; background: #fafafa; margin-top: 10px; border-radius: 5px;"></ul>
+                    </div>
+                    
+                    <div style="flex: 1; min-width: 250px;">
+                        <h4 style="margin-bottom: 10px; color: #333;">👥 Participantes (Famílias)</h4>
+                        <div style="display: flex; gap: 5px; flex-direction: column;">
+                            <input type="text" id="inputNomeParticipante" placeholder="Nome do Irmão(ã)">
+                            <div class="input-group">
+                                <input type="text" id="inputFamiliaID" placeholder="ID da Família (Ex: Silva)">
+                                <button class="btn-salvar" style="margin: 0; width: auto; padding: 10px;" id="btnAddParticipante">Add</button>
+                            </div>
+                        </div>
+                        <ul id="listaParticipantes" style="list-style: none; padding: 0; border: 1px solid #eee; height: 150px; overflow-y: auto; background: #fafafa; margin-top: 10px; border-radius: 5px;"></ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ABA 2: Tarefas -->
+            <div id="areaLimpezaTarefas" style="display: none;">
+                <p style="font-size: 13px; color: #666;">Defina as tarefas e quantas pessoas são necessárias para cada uma.</p>
+                <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 250px;">
+                        <h4 style="margin-bottom: 10px; color: #333;">📅 Meio de Semana</h4>
+                        <div class="input-group">
+                            <input type="text" id="inputTarefaMeio" placeholder="Nova Tarefa">
+                            <input type="number" id="inputQtdMeio" value="1" min="1" style="width: 60px;" title="Qtd de pessoas">
+                            <button class="btn-salvar" style="margin: 0; width: auto; padding: 10px;" id="btnAddTarefaMeio">+</button>
+                        </div>
+                        <ul id="listaTarefasMeio" style="list-style: none; padding: 0; border: 1px solid #eee; height: 150px; overflow-y: auto; background: #fafafa; margin-top: 10px; border-radius: 5px;"></ul>
+                    </div>
+
+                    <div style="flex: 1; min-width: 250px;">
+                        <h4 style="margin-bottom: 10px; color: #333;">📆 Fim de Semana</h4>
+                        <div class="input-group">
+                            <input type="text" id="inputTarefaFim" placeholder="Nova Tarefa">
+                            <input type="number" id="inputQtdFim" value="1" min="1" style="width: 60px;" title="Qtd de pessoas">
+                            <button class="btn-salvar" style="margin: 0; width: auto; padding: 10px;" id="btnAddTarefaFim">+</button>
+                        </div>
+                        <ul id="listaTarefasFim" style="list-style: none; padding: 0; border: 1px solid #eee; height: 150px; overflow-y: auto; background: #fafafa; margin-top: 10px; border-radius: 5px;"></ul>
+                    </div>
+                </div>
+            </div>
+            
+            <button id="btnSalvarConfigLimpeza" class="btn-salvar" style="background-color: #00796b; margin-top: 20px;">💾 Salvar Configurações no Banco</button>
+        </div>
+    </div>
+    <!-- ================= FIM DO MODAL ================= -->
     
     <div id="modalConfig" class="modal-bg">
         <div class="modal-content">
