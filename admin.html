@@ -539,29 +539,28 @@
         
         // --- GERENCIAMENTO DE ESTADO DE AUTENTICAÇÃO ---
         onAuthStateChanged(auth, async (user) => {
+            const sidebar = document.getElementById('painelSidebar');
+            const sistema = document.getElementById('painelSistema');
+            const login = document.getElementById('telaLogin');
+
             if (user) {
-                document.getElementById('telaLogin').style.display = 'none';
-                document.getElementById('painelSidebar').style.display = 'flex';
-                document.getElementById('painelSistema').style.display = 'block';
+                login.style.display = 'none';
+                sidebar.style.setProperty('display', 'flex', 'important'); // Força o Flex
+                sistema.style.setProperty('display', 'block', 'important'); // Força o Block
                 
-                // Inicializa os dados
                 await carregarConfiguracoes();
-                
-                // Passamos os callbacks para a Sidebar interagir com o form sem se acoplarem fortemente
                 carregarHistoricoSidebar(carregarProgramacaoEdicao, prepararNovoFormulario);
-                
-                // Prepara a interface
                 prepararNovoFormulario();
                 initMotorPDF();
                 initModuloTemas();
                 initModuloMecanicas();
-                initModuloDiscursos(); // INICIALIZA O MOTOR DE DISCURSOS
+                initModuloDiscursos();
                 initModuloLimpeza();
                 
             } else {
-                document.getElementById('telaLogin').style.display = 'block';
-                document.getElementById('painelSidebar').style.display = 'none';
-                document.getElementById('painelSistema').style.display = 'none';
+                login.style.display = 'block';
+                sidebar.style.setProperty('display', 'none', 'important'); // Mata a sidebar no login
+                sistema.style.setProperty('display', 'none', 'important'); // Mata o sistema no login
             }
         });
 
