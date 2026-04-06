@@ -204,6 +204,9 @@ function configurarSalvamento() {
 // ================== FASE 2: MOTOR DE GERAÇÃO DE ESCALA ======================
 // ============================================================================
 
+// === VARIÁVEL DE MEMÓRIA DO MÊS ATUAL ===
+let reunioesDoMesEmMemoria = []; // Guarda as semanas geradas para a imagem
+
 // --- NAVEGAÇÃO DA ABA ---
 const btnAbaLimpeza = document.getElementById('aba-limpeza');
 const painelLimpeza = document.getElementById('painel-limpeza');
@@ -241,7 +244,7 @@ function selecionarParticipantes(historicoUso) {
     });
 
     familiasArray.sort((a, b) => {
-        if (a.mediaUso === b.mediaUso) return Math.random() - 0.5; // Desempate aleatório justo
+        if (a.mediaUso === b.mediaUso) return Math.random() - 0.5; 
         return a.mediaUso - b.mediaUso;
     });
 
@@ -250,7 +253,7 @@ function selecionarParticipantes(historicoUso) {
         for (let membro of fam.membros) {
             if (escolhidos.length < 9) {
                 escolhidos.push(membro);
-                historicoUso[membro.id]++; // Registra o uso na mesma hora
+                historicoUso[membro.id]++; 
             }
         }
         if (escolhidos.length >= 9) break; 
@@ -302,26 +305,23 @@ if (btnGerar) {
             let historicoUso = {}; 
             configLimpeza.participantes.forEach(p => historicoUso[p.id] = 0);
 
-            let reunioesAtualizadas = [];
+            reunioesDoMesEmMemoria = []; // Limpa a memória do mês
 
-            // GERA DUAS VEZES POR SEMANA (Meio e Fim)
             for (const docSnap of querySnapshot.docs) {
                 const prog = docSnap.data();
                 
-                // 1. Gera Meio de Semana
                 let cabecaMeio = configLimpeza.cabecas[cabecaIndex % configLimpeza.cabecas.length] || "N/A";
                 if(configLimpeza.cabecas.length > 0) cabecaIndex++;
                 let escolhidosMeio = selecionarParticipantes(historicoUso);
                 let textoMeio = montarTexto(cabecaMeio, escolhidosMeio, configLimpeza.tarefasMeioSemana);
 
-                // 2. Gera Fim de Semana
-                let cabecaFim = configLimpeza.cabecas[cabecaIndex % configLimpeza.cabecas.length] || "N/A";
+                let cabecaFim = configLimpeza.cabecas[cabecaIndex % configLimazas.length] || "N/A";
                 if(configLimpeza.cabecas.length > 0) cabecaIndex++;
                 let escolhidosFim = selecionarParticipantes(historicoUso);
                 let textoFim = montarTexto(cabecaFim, escolhidosFim, configLimpeza.tarefasFimSemana);
 
-                // 3. Prepara para UI e Salva Duplo no Banco
-                reunioesAtualizadas.push({ 
+                // Salva na memória do mês para uso posterior
+                reunioesDoMesEmMemoria.push({ 
                     id: docSnap.id, 
                     data: prog.data, 
                     textoMeio: textoMeio,
@@ -335,7 +335,7 @@ if (btnGerar) {
             }
 
             alert("Algoritmo finalizado! Escalas geradas com sucesso.");
-            desenharCardsDeEdicao(reunioesAtualizadas);
+            desenharCardsDeEdicao(); // Usa a memória agora
 
         } catch (error) {
             console.error(error);
@@ -348,13 +348,12 @@ if (btnGerar) {
 }
 
 // --- DESENHAR CARTÕES DE AJUSTE LIVRE ---
-function desenharCardsDeEdicao(reunioes) {
+function desenharCardsDeEdicao() {
     const container = document.getElementById('listaCardsEscalaLimpeza');
     container.innerHTML = '';
 
-    reunioes.forEach(r => {
+    reunioesDoMesEmMemoria.forEach(r => {
         const card = document.createElement('div');
-        // O card foi alargado ligeiramente para acomodar confortavelmente duas caixas
         card.style.cssText = "background: white; border: 1px solid #ddd; border-radius: 8px; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); grid-column: span 1;";
         
         card.innerHTML = `
@@ -373,29 +372,111 @@ function desenharCardsDeEdicao(reunioes) {
         container.appendChild(card);
     });
 
-    // Evento de Salvar a edição manual Dupla
+    // Evento de Salvar
     document.querySelectorAll('.btn-salvar-card').forEach(btn => {
         btn.addEventListener('click', async (e) => {
             const id = e.target.getAttribute('data-id');
             const novoTextoMeio = document.getElementById(`texto_limp_meio_${id}`).value;
             const novoTextoFim = document.getElementById(`texto_limp_fim_${id}`).value;
             e.target.innerText = "⏳ Salvando...";
-            e.target.style.background = "#004d40";
             
             try {
                 await updateDoc(doc(db, "programacoes_semanais", id), { 
                     texto_limpeza_meio: novoTextoMeio,
                     texto_limpeza_fim: novoTextoFim
                 });
-                e.target.innerText = "✅ Salvo com Sucesso!";
-                setTimeout(() => {
-                    e.target.innerText = "💾 Salvar Ajustes da Semana";
-                    e.target.style.background = "#00796b";
-                }, 2000);
+                // Atualiza a memória local também
+                let reuniaoMemoria = reunioesDoMesEmMemoria.find(r => r.id === id);
+                if(reuniaoMemoria) {
+                    reuniaoMemoria.textoMeio = novoTextoMeio;
+                    reuniaoMemoria.textoFim = novoTextoFim;
+                }
+                e.target.innerText = "✅ Salvo!";
+                setTimeout(() => e.target.innerText = "💾 Salvar Ajustes da Semana", 2000);
             } catch (error) {
-                alert("Erro ao salvar ajustes.");
+                alert("Erro ao salvar.");
                 e.target.innerText = "💾 Salvar Ajustes da Semana";
             }
         });
+    });
+}
+
+// === FASE 3: GERAÇÃO DA IMAGEM CONSOLIDADA (A MÁGICA FINAL) ===
+const btnGerarImagem = document.getElementById('btnGerarImagemLimpeza');
+if (btnGerarImagem) {
+    btnGerarImagem.addEventListener('click', async () => {
+        const mesInput = document.getElementById('mesGeradorLimpeza').value;
+        
+        if (reunioesDoMesEmMemoria.length === 0 || !mesInput) {
+            return alert("Gere a escala do mês primeiro para poder criar a imagem consolidada.");
+        }
+
+        btnGerarImagem.innerText = "🖼️ Gerando Imagem...";
+        btnGerarImagem.disabled = true;
+
+        // 1. Prepara o conteúdo HTML elegante dentro da div invisível
+        const template = document.getElementById('templatePrintLimpeza');
+        const d_mes = new Date(mesInput + "-01T12:00:00");
+        const meses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+        const mesNomeAno = `${meses[d_mes.getMonth()]} / ${d_mes.getFullYear()}`;
+
+        // Estilo do Template (Clean e Alta Qualidade)
+        template.innerHTML = `
+            <div style="text-align: center; border-bottom: 3px solid #00796b; padding-bottom: 15px; margin-bottom: 25px;">
+                <h1 style="margin: 0; color: #00796b; font-size: 26px;">Escala Mensal de Limpeza do Salão</h1>
+                <h2 style="margin: 5px 0 0 0; color: #004d40; font-weight: normal; font-size: 18px;">${mesNomeAno}</h2>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                ${reunioesDoMesEmMemoria.map(r => `
+                    <div style="border: 1px solid #e0f2f1; border-radius: 8px; background: #fff; overflow: hidden; padding-bottom: 10px;">
+                        <div style="background: #e0f2f1; padding: 10px; font-weight: bold; color: #004d40; text-align: center; font-size: 15px; border-bottom: 1px solid #b2dfdb;">
+                            📅 Semana: ${r.data.split('-').reverse().join('/')}
+                        </div>
+                        
+                        <div style="padding: 10px;">
+                            <h4 style="margin: 0 0 5px 0; color: #00796b; font-size: 13px;">☀️ Meio de Semana</h4>
+                            <pre style="margin: 0 0 15px 0; background: #fafafa; padding: 8px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 11px; white-space: pre-wrap; color: #333; line-height: 1.4; border: 1px solid #eee;">${r.textoMeio || ''}</pre>
+                            
+                            <h4 style="margin: 0 0 5px 0; color: #00796b; font-size: 13px;">🌙 Fim de Semana</h4>
+                            <pre style="margin: 0; background: #fafafa; padding: 8px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 11px; white-space: pre-wrap; color: #333; line-height: 1.4; border: 1px solid #eee;">${r.textoFim || ''}</pre>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+
+            <div style="text-align: center; margin-top: 30px; font-size: 12px; color: #999; border-top: 1px solid #eee; padding-top: 10px;">
+                Quadro Una - Gerado automaticamente para a congregação.
+            </div>
+        `;
+
+        // 2. Chama a Biblioteca html2canvas (Tira o print)
+        try {
+            // Pequeno delay para garantir que o navegador renderizou o template invisível
+            await new Promise(r => setTimeout(r, 200)); 
+
+            const canvas = await html2canvas(template, {
+                scale: 2, // Dobra a resolução para imagem ficar nítida em celulares
+                useCORS: true, // Evita erros se houver imagens externas
+                logging: false,
+                backgroundColor: "#ffffff" // Garante fundo branco
+            });
+
+            // 3. Converte em Imagem e Baixa automaticamente
+            const image = canvas.toDataURL("image/png");
+            const link = document.createElement('a');
+            link.href = image;
+            link.download = `Escala-Limpeza-${mesNomeAno.replace(' / ','-')}.png`; // Nome do arquivo
+            link.click();
+            
+            // alert("Imagem consolidada gerada e baixada com sucesso!");
+
+        } catch (error) {
+            console.error("Erro ao gerar imagem:", error);
+            alert("Erro ao gerar a imagem consolidada.");
+        } finally {
+            btnGerarImagem.innerText = "🖼️ Gerar Imagem Consolidada";
+            btnGerarImagem.disabled = false;
+        }
     });
 }
