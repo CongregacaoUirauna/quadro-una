@@ -124,63 +124,6 @@
         .agenda-futura { margin-top: 10px; background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
         .agenda-item { border-bottom: 1px solid #eee; padding: 10px 0; }
         .agenda-item:last-child { border-bottom: none; padding-bottom: 0; }
-
-        /* ========================================================= */
-        /* --- MODO CELULAR (Responsividade para o Painel Admin) --- */
-        /* ========================================================= */
-        @media screen and (max-width: 768px) {
-            /* Empilha o layout principal (remove o lado-a-lado) */
-            body {
-                display: flex !important;
-                flex-direction: column !important;
-                overflow-x: hidden !important;
-            }
-
-            /* 1. Barra Lateral (Gestor Semanal) */
-            /* Usa seletores abrangentes caso você não tenha uma classe específica na sidebar */
-            aside, .sidebar, div[style*="width: 250px"], div[style*="width: 280px"], div[style*="width: 300px"] {
-                width: 100% !important;
-                height: auto !important;
-                max-height: 35vh !important; /* Ocupa apenas 35% da altura da tela no topo */
-                position: relative !important;
-                border-right: none !important;
-                border-bottom: 3px solid #1a73e8 !important;
-                overflow-y: auto !important;
-            }
-
-            /* 2. Área Principal de Conteúdo */
-            main, .main-content, div[style*="flex: 1"] {
-                width: 100% !important;
-                margin-left: 0 !important;
-                padding: 15px !important;
-                box-sizing: border-box !important;
-            }
-
-            /* 3. Botões e Abas de Navegação (Facilita o "Touch") */
-            #nav-abas-principais {
-                flex-direction: column !important;
-                gap: 8px !important;
-                padding-bottom: 10px !important;
-            }
-
-            #nav-abas-principais button {
-                width: 100% !important;
-                margin: 0 !important;
-            }
-
-            /* 4. Força formulários e inputs a não vazarem da tela */
-            form > div {
-                flex-direction: column !important;
-            }
-            
-            input, select, textarea, .btn-salvar, .btn-config {
-                width: 100% !important;
-                max-width: 100% !important;
-                box-sizing: border-box !important;
-                margin-left: 0 !important;
-                margin-right: 0 !important;
-            }
-        }
         
     </style>
 </head>
