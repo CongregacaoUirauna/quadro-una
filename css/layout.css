@@ -192,3 +192,76 @@ select.alerta-fadiga {
         color: black !important; font-weight: bold; width: auto; 
     }
 }
+
+/* =========================================================
+   RESPONSIVIDADE PARA CELULARES E TELAS PEQUENAS
+   ========================================================= */
+@media (max-width: 768px) {
+    /* 1. Muda o container principal de lado a lado para empilhado (coluna) */
+    body {
+        flex-direction: column !important;
+        display: flex;
+    }
+
+    /* 2. Barra Lateral (Gestor Semanal) vai para o topo */
+    #painelSidebar {
+        width: 100% !important;
+        height: 35vh !important; /* Ocupa cerca de 35% da altura da tela */
+        border-right: none !important;
+        border-bottom: 3px solid #1a73e8;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        position: relative !important;
+        /* Garante que o painel apareça empilhado quando ativo no celular */
+        display: flex !important; 
+    }
+
+    /* 3. Área Principal ocupa o resto da tela */
+    #painelSistema {
+        width: 100% !important;
+        height: 65vh !important; /* Ocupa o restante da tela */
+        padding: 15px 10px !important;
+    }
+
+    /* 4. Organiza os botões do topo (Config, S-89, Quadro, Sair) */
+    .topo-acoes {
+        flex-wrap: wrap !important;
+        gap: 10px !important;
+        justify-content: center !important;
+    }
+
+    .topo-acoes button {
+        flex: 1 1 45% !important; /* Faz os botões ocuparem quase metade da tela (2 por linha) */
+        margin: 0 !important;
+        font-size: 14px !important;
+        padding: 10px 5px !important;
+        white-space: normal !important; /* Permite quebrar o texto do botão se for grande */
+    }
+
+    /* 5. Organiza as Abas Principais (Temas, Tabela, Mecânicas, Discursos) */
+    #nav-abas-principais {
+        flex-wrap: wrap !important;
+        gap: 8px !important;
+        justify-content: center !important;
+    }
+
+    #nav-abas-principais button {
+        flex: 1 1 45% !important;
+        margin: 0 !important;
+        font-size: 13px !important;
+        padding: 8px 5px !important;
+    }
+
+    /* 6. Ajustes nos formulários para não vazarem da tela */
+    input[type="date"], input[type="text"], select {
+        width: 100% !important;
+        min-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+    
+    /* Ajusta grupos de inputs que estão lado a lado */
+    .input-group, div[style*="display: flex; gap: 10px"] {
+        flex-direction: column !important;
+        gap: 15px !important;
+        align-items: stretch !important;
+    }
+}
