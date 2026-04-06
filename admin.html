@@ -505,6 +505,7 @@
         import { initMotorPDF } from './js/motor-pdf.js';
         import { initModuloTemas, prepararNovoFormulario, carregarProgramacaoEdicao } from './js/modulo-temas.js';
         import { initModuloMecanicas } from './js/modulo-mecanicas.js';
+        import { initModuloLimpeza } from './js/modulo-limpeza.js';
         
         // NOVO MÓDULO IMPORTADO AQUI:
         import { initModuloDiscursos } from './js/modulo-discursos.js';
@@ -528,6 +529,7 @@
                 initModuloTemas();
                 initModuloMecanicas();
                 initModuloDiscursos(); // INICIALIZA O MOTOR DE DISCURSOS
+                initModuloLimpeza();
                 
             } else {
                 document.getElementById('telaLogin').style.display = 'block';
