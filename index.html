@@ -179,44 +179,29 @@
 
         async function carregarDados() {
             try {
-                // ... (mantenha a lógica da dataCorte que já existe aqui intacta) ...
-                // Apenas adicione a busca de discursos logo abaixo da busca das programações:
+                // Janela Dinâmica (Segunda a Segunda)
+                const hoje = new Date();
+                const diaDaSemana = hoje.getDay(); 
+                const diasParaSubtrair = diaDaSemana === 0 ? 6 : diaDaSemana - 1;
                 
-        const q = query(
-            collection(db, "programacoes_semanais"),
-            where("data", ">=", dataCorte),
-            orderBy("data", "desc")
-        );
-        const querySnapshot = await getDocs(q);
+                const dataLimite = new Date(hoje);
+                dataLimite.setDate(hoje.getDate() - diasParaSubtrair);
+                const dataCorte = dataLimite.toISOString().split('T')[0]; 
 
-        // --- NOVA INJEÇÃO: Busca os Discursos Futuros ---
-        const qDisc = query(collection(db, "agendamento_discursos"), where("data", ">=", dataCorte), orderBy("data", "asc"));
-        const discSnapshot = await getDocs(qDisc);
-        agendaDiscursos = []; // Limpa por segurança
-        discSnapshot.forEach(doc => agendaDiscursos.push(doc.data()));
-        // ------------------------------------------------
-                
-                querySnapshot.forEach((doc) => {
-                
-                // --- NOVA INJEÇÃO: Janela Dinâmica (Segunda a Segunda) ---
-            const hoje = new Date();
-            const diaDaSemana = hoje.getDay(); // 0 é Domingo, 1 é Segunda...
-            
-            // Se for domingo (0), voltamos 6 dias. Qualquer outro dia, voltamos até a segunda (diaDaSemana - 1)
-            const diasParaSubtrair = diaDaSemana === 0 ? 6 : diaDaSemana - 1;
-            
-            const dataLimite = new Date(hoje);
-            dataLimite.setDate(hoje.getDate() - diasParaSubtrair);
-            const dataCorte = dataLimite.toISOString().split('T')[0]; // Trava o piso na Segunda-feira
+                // Busca as reuniões
+                const q = query(
+                    collection(db, "programacoes_semanais"),
+                    where("data", ">=", dataCorte),
+                    orderBy("data", "desc")
+                );
+                const querySnapshot = await getDocs(q);
 
-        // Busca apenas as reuniões recentes e futuras
-        const q = query(
-            collection(db, "programacoes_semanais"),
-            where("data", ">=", dataCorte),
-            orderBy("data", "desc")
-        );
-        const querySnapshot = await getDocs(q);
-        // -------------------------------------------------------------------
+                // --- INJEÇÃO: Busca os Discursos Futuros ---
+                const qDisc = query(collection(db, "agendamento_discursos"), where("data", ">=", dataCorte), orderBy("data", "asc"));
+                const discSnapshot = await getDocs(qDisc);
+                agendaDiscursos = []; // Limpa por segurança
+                discSnapshot.forEach(doc => agendaDiscursos.push(doc.data()));
+                // -------------------------------------------
                 
                 querySnapshot.forEach((doc) => {
                     todasAsProgramacoes[doc.id] = doc.data();
@@ -228,26 +213,20 @@
                     return;
                 }
 
-                datasOrdenadas.sort(); // Antigas para mais novas
+                datasOrdenadas.sort(); 
                 
                 const select = document.getElementById('selectDatas');
                 select.innerHTML = '';
                 
-                // A MÁGICA: Como o Firebase já cortou o passado usando a Segunda-feira (dataCorte),
-                // a primeira data do array será SEMPRE a da semana atual. Zero necessidade de loops.
                 const dataParaSelecionar = datasOrdenadas[0];
 
-                // Inverte para exibir mais novas no topo do select
                 [...datasOrdenadas].reverse().forEach(dataId => { 
                     const p = todasAsProgramacoes[dataId];
-                    
-                    // Ajuste da Data Visual e Sufixo do Menu
                     let dataVisual = dataId;
                     let sufixoMenu = "";
                     
                     if (p) {
                         if (p.tipo_evento === "Visita") {
-                            // Transforma a data do menu para Terça-feira
                             let d = new Date(dataId + "T12:00:00");
                             let diffParaTerca = 2 - d.getDay(); 
                             d.setDate(d.getDate() + diffParaTerca);
@@ -263,7 +242,7 @@
                     }
 
                     const opt = document.createElement('option');
-                    opt.value = dataId; // O valor oculto (value) continua sendo o original do banco
+                    opt.value = dataId; 
                     opt.innerText = formatarDataBR(dataVisual) + sufixoMenu;
                     
                     if (dataId === dataParaSelecionar) opt.selected = true;
@@ -672,34 +651,31 @@
             // =========================================================================
             // --- 4. MOTOR DE DISCURSOS (A MÁGICA DA JANELA DA SEMANA) ---
             // =========================================================================
-            if (["Assembleia", "Congresso", "Celebracao"].includes(dados.tipo_evento)) return; // Ignora se for evento especial inteiro
+            if (["Assembleia", "Congresso", "Celebracao"].includes(dados.tipo_evento)) return; // Ignora se for evento especial
 
-            // 1. Acha o Domingo e a Segunda da semana atual sendo desenhada
+            // 1. Acha o Domingo e a Segunda da semana atual
             const dReuniao = new Date(dados.data + "T12:00:00");
-            const diffSegunda = dReuniao.getDay() === 0 ? -6 : 1 - dReuniao.getDay(); // Distância para segunda
+            const diffSegunda = dReuniao.getDay() === 0 ? -6 : 1 - dReuniao.getDay(); 
             
             const inicioSemana = new Date(dReuniao);
             inicioSemana.setDate(dReuniao.getDate() + diffSegunda);
-            inicioSemana.setHours(0,0,0,0); // Crava 00:00 de Segunda
+            inicioSemana.setHours(0,0,0,0); 
             
             const fimSemana = new Date(inicioSemana);
             fimSemana.setDate(inicioSemana.getDate() + 6);
-            fimSemana.setHours(23,59,59,999); // Crava 23:59 de Domingo
+            fimSemana.setHours(23,59,59,999); 
 
             let discursoDestaSemana = null;
             let discursosFuturosHTML = '';
-            let contFuturos = 0; // Para limitar o tamanho da sanfona
+            let contFuturos = 0; 
             
             // 2. Varre a memória procurando discursos
             agendaDiscursos.forEach(disc => {
                 const dDisc = new Date(disc.data + "T12:00:00");
                 
-                // Bateu dentro da semana (Segunda a Domingo)?
                 if (dDisc >= inicioSemana && dDisc <= fimSemana) {
                     discursoDestaSemana = disc;
-                } 
-                // Se for das próximas semanas, joga pra Sanfona (limite de 5 semanas pra não ficar gigante)
-                else if (dDisc > fimSemana && contFuturos < 5) {
+                } else if (dDisc > fimSemana && contFuturos < 5) {
                     contFuturos++;
                     discursosFuturosHTML += `
                         <div class="agenda-item">
@@ -711,7 +687,7 @@
                 }
             });
 
-            // 3. Renderiza o Card Bonito se tiver discurso na semana
+            // 3. Renderiza o Card
             if (discursoDestaSemana) {
                 const htmlDiscursoPrincipal = `
                     <div class="card-discurso">
@@ -721,11 +697,10 @@
                         ${discursoDestaSemana.grupo_lanche ? `<div class="discurso-lanche">☕ Equipe do Lanche: ${discursoDestaSemana.grupo_lanche}</div>` : ''}
                     </div>
                 `;
-                // Anexa o card logo abaixo do board da reunião atual
                 board.innerHTML += htmlDiscursoPrincipal;
             }
 
-            // 4. Renderiza a Sanfona se houver previsão futura
+            // 4. Renderiza a Sanfona
             if (discursosFuturosHTML !== '') {
                 const htmlSanfona = `
                     <button class="btn-expandir-agenda" onclick="document.getElementById('agenda-sanfona').classList.toggle('hidden')">
