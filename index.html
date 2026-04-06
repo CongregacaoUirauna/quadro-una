@@ -111,12 +111,12 @@
         #loading { text-align: center; padding: 50px; color: var(--cor-texto-secundario); font-weight: bold; }
         .hidden { display: none !important; }
 
-        /* --- ESTILOS DO DISCURSO E SANFONA --- */
-        .card-discurso { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: white; border-radius: 12px; padding: 15px 20px; margin-top: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border: 1px solid #162c55; }
-        .discurso-badge { background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: bold; display: inline-block; margin-bottom: 10px; letter-spacing: 0.5px; text-transform: uppercase;}
-        .discurso-tema { font-size: 16px; font-weight: bold; margin-bottom: 5px; line-height: 1.4; text-shadow: 1px 1px 2px rgba(0,0,0,0.2); }
-        .discurso-orador { font-size: 14.5px; color: #e3f2fd; }
-        .discurso-lanche { margin-top: 10px; font-size: 12.5px; background: rgba(0,0,0,0.25); padding: 5px 10px; border-radius: 6px; display: inline-block; font-weight: 500;}
+        /* --- ESTILOS DO DISCURSO E SANFONA (Versão Claro/Alto Contraste) --- */
+        .card-discurso { background-color: #fff; color: #333; border-radius: 12px; padding: 15px 20px; margin-top: 20px; border-left: 5px solid #1e3c72; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .discurso-badge { background-color: #e3f2fd; color: #1e3c72; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: bold; display: inline-block; margin-bottom: 10px; letter-spacing: 0.5px; text-transform: uppercase;}
+        .discurso-tema { font-size: 16px; font-weight: bold; margin-bottom: 5px; line-height: 1.4; color: #1e3c72;}
+        .discurso-orador { font-size: 14.5px; color: #555; }
+        .discurso-lanche { margin-top: 10px; font-size: 12.5px; background-color: #fafafa; color: #666; border: 1px solid #eee; padding: 5px 10px; border-radius: 6px; display: inline-block; font-weight: 500;}
         
         .btn-expandir-agenda { background: transparent; border: 1px dashed #b0bec5; color: var(--cor-texto-secundario); width: 100%; padding: 12px; border-radius: 8px; margin-top: 15px; cursor: pointer; font-weight: bold; transition: background-color 0.2s; font-size: 14px;}
         .btn-expandir-agenda:hover { background: #f5f5f5; color: var(--cor-destaque); border-color: var(--cor-destaque); }
@@ -682,6 +682,7 @@
                             <div style="font-size: 12px; color: var(--cor-destaque); font-weight: bold;">📅 ${formatarDataBR(disc.data)}</div>
                             <div style="font-size: 14px; font-weight: 600; color: var(--cor-texto); margin: 2px 0;">${disc.tema}</div>
                             <div style="font-size: 13px; color: var(--cor-texto-secundario);">👤 ${disc.orador} (${disc.congregacao})</div>
+                            ${disc.grupo_lanche ? `<div style="font-size: 12px; color: #666; margin-top: 3px; background: #fafafa; padding: 2px 5px; border-radius: 4px; display: inline-block;">☕ Grupo do Lanche: ${disc.grupo_lanche}</div>` : ''}
                         </div>
                     `;
                 }
@@ -694,7 +695,7 @@
                         <div class="discurso-badge">🎤 Discurso Público da Semana</div>
                         <div class="discurso-tema">${discursoDestaSemana.tema}</div>
                         <div class="discurso-orador">👤 ${discursoDestaSemana.orador} — <strong>${discursoDestaSemana.congregacao}</strong></div>
-                        ${discursoDestaSemana.grupo_lanche ? `<div class="discurso-lanche">☕ Equipe do Lanche: ${discursoDestaSemana.grupo_lanche}</div>` : ''}
+                        ${discursoDestaSemana.grupo_lanche ? `<div class="discurso-lanche">☕ Grupo do Lanche: ${discursoDestaSemana.grupo_lanche}</div>` : ''}
                     </div>
                 `;
                 board.innerHTML += htmlDiscursoPrincipal;
