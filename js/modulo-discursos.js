@@ -22,25 +22,36 @@ function configurarNavegacaoAbas() {
     const btnAbaDiscursos = document.getElementById('aba-discursos');
     const painelDiscursos = document.getElementById('painel-discursos');
     
-    // Pega os outros painéis (ajuste os IDs se os seus forem diferentes)
-    const painelTemas = document.getElementById('formSections'); 
+    // Pega as outras áreas (usando um seletor abrangente para a área principal)
+    // Se o ID da sua área principal for diferente de 'formSections', ajuste abaixo.
+    const areaPrincipal = document.getElementById('formSections') || document.querySelector('.container-escala'); 
     const painelEscalas = document.getElementById('painel-escalas'); 
     const painelMecanicas = document.getElementById('painel-mecanicas');
 
-    // Quando clicar na aba de Discursos, mostra ela e esconde as outras
+    // Quando clicar em Discursos: Mostra discursos, esconde o resto
     btnAbaDiscursos.addEventListener('click', () => {
-        painelDiscursos.classList.remove('hidden');
-        if(painelTemas) painelTemas.classList.add('hidden');
-        if(painelEscalas) painelEscalas.classList.add('hidden');
-        if(painelMecanicas) painelMecanicas.classList.add('hidden');
-        
-        carregarDiscursosDaTabela(); // Atualiza a tabela sempre que abrir a aba
+        painelDiscursos.style.display = 'block';
+        if(areaPrincipal) areaPrincipal.style.display = 'none';
+        if(painelEscalas) painelEscalas.style.display = 'none';
+        if(painelMecanicas) painelMecanicas.style.display = 'none';
+        carregarDiscursosDaTabela(); 
     });
 
-    // Garante que quando clicar nas outras abas, o painel de discursos suma
-    document.getElementById('aba-temas')?.addEventListener('click', () => painelDiscursos.classList.add('hidden'));
-    document.getElementById('aba-escalas')?.addEventListener('click', () => painelDiscursos.classList.add('hidden'));
-    document.getElementById('aba-mecanicas')?.addEventListener('click', () => painelDiscursos.classList.add('hidden'));
+    // Quando clicar nas outras abas: Esconde discursos, mostra a área principal
+    document.getElementById('aba-temas')?.addEventListener('click', () => {
+        painelDiscursos.style.display = 'none';
+        if(areaPrincipal) areaPrincipal.style.display = 'block';
+    });
+    
+    document.getElementById('aba-escalas')?.addEventListener('click', () => {
+        painelDiscursos.style.display = 'none';
+        if(areaPrincipal) areaPrincipal.style.display = 'none'; // A lógica atual do seu painel já cuida de mostrar a escala
+    });
+    
+    document.getElementById('aba-mecanicas')?.addEventListener('click', () => {
+        painelDiscursos.style.display = 'none';
+        if(areaPrincipal) areaPrincipal.style.display = 'none'; // Idem
+    });
 }
 
 // === 3. BANCO DE TEMAS (FIREBASE) ===
