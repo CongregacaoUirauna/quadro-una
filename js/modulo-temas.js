@@ -70,13 +70,28 @@ export function initModuloTemas() {
 
 // --- FLUXO DE NOVO FORMULÁRIO E DATAS ---
 export function prepararNovoFormulario() {
-    // --- NOVA INJEÇÃO: Força a mudança visual para a Aba de Temas instantaneamente ---
+    // --- FORÇA A MUDANÇA VISUAL PARA A ABA DE TEMAS ---
     document.getElementById('painel-estrutural-temas').classList.remove('hidden');
     document.getElementById('painel-escala-abas').classList.add('hidden');
+    document.getElementById('painel-mecanicas').classList.add('hidden');
+    
+    // Trava as abas novas que possuem display inline (Discursos e Limpeza)
+    const painelDiscursos = document.getElementById('painel-discursos');
+    if (painelDiscursos) painelDiscursos.style.display = 'none';
+    const painelLimpeza = document.getElementById('painel-limpeza');
+    if (painelLimpeza) painelLimpeza.style.display = 'none';
+
+    // Pinta a aba principal e reseta todas as outras
     document.getElementById('aba-temas').style.backgroundColor = '#1a73e8';
     document.getElementById('aba-temas').style.color = '#fff';
-    document.getElementById('aba-escalas').style.backgroundColor = '#e0e0e0';
-    document.getElementById('aba-escalas').style.color = '#666';
+    
+    ['aba-escalas', 'aba-mecanicas', 'aba-discursos', 'aba-limpeza'].forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) {
+            btn.style.backgroundColor = '#e0e0e0';
+            btn.style.color = '#666';
+        }
+    });
     // --------------------------------------------------------------------------------
     document.getElementById('formReuniao').reset();
     document.getElementById('usarSalaB').dispatchEvent(new Event('change')); // Reseta visual da sala B
@@ -228,13 +243,28 @@ export async function carregarProgramacaoEdicao(dataId, liElement) {
     if(liElement) liElement.classList.add('active');
     document.getElementById('mensagem').innerText = "Carregando dados...";
 
-    // --- NOVA INJEÇÃO: Força a mudança visual para a Aba de Temas instantaneamente ---
+    // --- FORÇA A MUDANÇA VISUAL PARA A ABA DE TEMAS ---
     document.getElementById('painel-estrutural-temas').classList.remove('hidden');
     document.getElementById('painel-escala-abas').classList.add('hidden');
+    document.getElementById('painel-mecanicas').classList.add('hidden');
+    
+    // Trava as abas novas que possuem display inline (Discursos e Limpeza)
+    const painelDiscursos = document.getElementById('painel-discursos');
+    if (painelDiscursos) painelDiscursos.style.display = 'none';
+    const painelLimpeza = document.getElementById('painel-limpeza');
+    if (painelLimpeza) painelLimpeza.style.display = 'none';
+
+    // Pinta a aba principal e reseta todas as outras
     document.getElementById('aba-temas').style.backgroundColor = '#1a73e8';
     document.getElementById('aba-temas').style.color = '#fff';
-    document.getElementById('aba-escalas').style.backgroundColor = '#e0e0e0';
-    document.getElementById('aba-escalas').style.color = '#666';
+    
+    ['aba-escalas', 'aba-mecanicas', 'aba-discursos', 'aba-limpeza'].forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) {
+            btn.style.backgroundColor = '#e0e0e0';
+            btn.style.color = '#666';
+        }
+    });
     // --------------------------------------------------------------------------------
     
     try {
