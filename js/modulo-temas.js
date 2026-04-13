@@ -193,30 +193,74 @@ async function buscarDadosSemanaAnterior(dataAtualStr) {
 }
 
 // --- CRIAÇÃO DE PARTES DINÂMICAS ---
-function criarParteMinisterio(tema="", tempo="", est="", aju="", estB="", ajuB="") {
+function criarParteMinisterio(tipo="", tema="", tempo="", est="", aju="", estB="", ajuB="") {
     const todos = [...configGlobal.irmaos, ...configGlobal.irmas].sort();
+    const apenasIrmaos = [...configGlobal.irmaos].sort();
     const gerarOpts = (arr, ph, sel) => `<option value="">${ph}</option>` + arr.map(n => `<option value="${n}" ${n===sel?'selected':''}>${n}</option>`).join('');
     
     const displaySalaB = document.getElementById('usarSalaB').checked ? 'flex' : 'none';
+
+    // Inteligência no carregamento (se já for discurso salvo)
+    const isDiscurso = tipo === "Discurso" || tipo === "Explicando suas Crenças (Discurso)" || tema === "Discurso";
+    const displayAjudante = isDiscurso ? 'none' : '';
+    const listaTitular = isDiscurso ? apenasIrmaos : todos;
 
     const div = document.createElement('div');
     div.className = 'dinamico-item';
     div.style.display = 'flex'; div.style.flexDirection = 'column'; div.style.gap = '5px';
     div.innerHTML = `
-        <div class="input-group">
-            <input type="text" class="min-tema" placeholder="Tema da Parte" style="width: 60%; font-weight: bold;" value="${tema}">
-            <input type="number" class="min-tempo" placeholder="Min" style="width: 20%;" value="${tempo}">
-            <button type="button" class="btn-remove" style="width: 20%;" onclick="this.parentElement.parentElement.remove()">X</button>
+        <div class="input-group" style="gap: 5px;">
+            <select class="min-tipo" style="flex: 2; font-size: 12px; font-weight: bold; border-color: #45818e;">
+                <option value="">Tipo da Parte...</option>
+                <option value="Iniciando Conversas" ${tipo==='Iniciando Conversas'?'selected':''}>Iniciando Conversas</option>
+                <option value="Cultivando o Interesse" ${tipo==='Cultivando o Interesse'?'selected':''}>Cultivando o Interesse</option>
+                <option value="Fazendo Discípulos" ${tipo==='Fazendo Discípulos'?'selected':''}>Fazendo Discípulos</option>
+                <option value="Explicando suas Crenças (Demonstração)" ${tipo==='Explicando suas Crenças (Demonstração)'?'selected':''}>Crenças (Demonstração)</option>
+                <option value="Explicando suas Crenças (Discurso)" ${tipo==='Explicando suas Crenças (Discurso)'?'selected':''}>Crenças (Discurso)</option>
+                <option value="Discurso" ${tipo==='Discurso' || tema==='Discurso'?'selected':''}>Discurso</option>
+            </select>
+            <input type="text" class="min-tema" placeholder="Detalhes (Opcional)" style="flex: 2;" value="${tema === tipo ? '' : tema}">
+            <input type="number" class="min-tempo" placeholder="Min" style="flex: 1; min-width: 50px;" value="${tempo}">
+            <button type="button" class="btn-remove" style="width: 30px; padding: 0;" onclick="this.parentElement.parentElement.remove()">X</button>
         </div>
         <div class="input-group">
-            <select class="min-estudante" style="width: 50%;">${gerarOpts(todos, "Principal: Estudante", est)}</select>
-            <select class="min-ajudante" style="width: 50%;">${gerarOpts(todos, "Principal: Ajudante", aju)}</select>
+            <select class="min-estudante" style="width: 50%;">${gerarOpts(listaTitular, "Principal: Estudante", est)}</select>
+            <select class="min-ajudante" style="width: 50%; display: ${displayAjudante};">${gerarOpts(todos, "Principal: Ajudante", aju)}</select>
         </div>
         <div class="input-group sala-b-group" style="display: ${displaySalaB}; margin-top: 5px; border-top: 1px dashed #ccc; padding-top: 5px;">
-            <select class="min-estudante-b" style="width: 50%; border-color: #1a73e8;">${gerarOpts(todos, "Sala B: Estudante", estB)}</select>
-            <select class="min-ajudante-b" style="width: 50%; border-color: #1a73e8;">${gerarOpts(todos, "Sala B: Ajudante", ajuB)}</select>
+            <select class="min-estudante-b" style="width: 50%; border-color: #1a73e8;">${gerarOpts(listaTitular, "Sala B: Estudante", estB)}</select>
+            <select class="min-ajudante-b" style="width: 50%; border-color: #1a73e8; display: ${displayAjudante};">${gerarOpts(todos, "Sala B: Ajudante", ajuB)}</select>
         </div>
     `;
+
+    // Inteligência Ativa ao mudar o Tipo
+    const selectTipo = div.querySelector('.min-tipo');
+    const selectEst = div.querySelector('.min-estudante');
+    const selectAju = div.querySelector('.min-ajudante');
+    const selectEstB = div.querySelector('.min-estudante-b');
+    const selectAjuB = div.querySelector('.min-ajudante-b');
+
+    selectTipo.addEventListener('change', (e) => {
+        const isDisc = e.target.value === "Discurso" || e.target.value === "Explicando suas Crenças (Discurso)";
+        const valEst = selectEst.value;
+        const valEstB = selectEstB.value;
+
+        if (isDisc) {
+            selectAju.style.display = 'none'; selectAju.value = "";
+            selectAjuB.style.display = 'none'; selectAjuB.value = "";
+            selectEst.innerHTML = gerarOpts(apenasIrmaos, "Principal: Estudante", "");
+            selectEstB.innerHTML = gerarOpts(apenasIrmaos, "Sala B: Estudante", "");
+        } else {
+            selectAju.style.display = '';
+            selectAjuB.style.display = '';
+            selectEst.innerHTML = gerarOpts(todos, "Principal: Estudante", "");
+            selectEstB.innerHTML = gerarOpts(todos, "Sala B: Estudante", "");
+        }
+        // Tenta manter quem já estava selecionado
+        if(Array.from(selectEst.options).some(opt => opt.value === valEst)) selectEst.value = valEst;
+        if(Array.from(selectEstB.options).some(opt => opt.value === valEstB)) selectEstB.value = valEstB;
+    });
+
     document.getElementById('containerMinisterio').appendChild(div);
 }
 
@@ -297,7 +341,7 @@ export async function carregarProgramacaoEdicao(dataId, liElement) {
                 document.getElementById('leituraBiblia').value = d.tesouros?.leitura || "";
                 
                 document.getElementById('containerMinisterio').innerHTML = '';
-                if(d.ministerio) d.ministerio.forEach(p => criarParteMinisterio(p.tema, p.tempo, p.estudante, p.ajudante, p.estudante_b, p.ajudante_b));
+                if(d.ministerio) d.ministerio.forEach(p => criarParteMinisterio(p.tipo || p.tema, p.tema, p.tempo, p.estudante, p.ajudante, p.estudante_b, p.ajudante_b));
                 
                 document.getElementById('canticoIntermediario').value = d.vida_crista?.cantico_intermediario || "";
                 document.getElementById('containerVidaCrista').innerHTML = '';
@@ -334,7 +378,7 @@ async function salvarProgramacao() {
         const min = [], vc = [];
         document.querySelectorAll('#containerMinisterio .dinamico-item').forEach(i => {
             min.push({
-                tema: i.querySelector('.min-tema').value, tempo: i.querySelector('.min-tempo').value,
+                tipo: i.querySelector('.min-tipo').value, tema: i.querySelector('.min-tema').value, tempo: i.querySelector('.min-tempo').value,
                 estudante: i.querySelector('.min-estudante').value, ajudante: i.querySelector('.min-ajudante').value,
                 estudante_b: i.querySelector('.min-estudante-b').value, ajudante_b: i.querySelector('.min-ajudante-b').value
             });
@@ -797,7 +841,7 @@ async function carregarDadosMensais(datas) {
                         const blocos = container.querySelectorAll('.bloco-parte-min');
                         d.ministerio.forEach((parte, index) => {
                             if (blocos[index]) {
-                                blocos[index].querySelector('.min-rotulo').value = parte.tema || "";
+                                blocos[index].querySelector('.min-rotulo').value = parte.tipo || parte.tema || "";
                                 // Dispara o evento para ocultar ajudante e filtrar gênero ANTES de injetar o titular
                                 // INJEÇÃO: O { bubbles: true } faz o "grito" subir até a tabela ouvir o evento
                                 blocos[index].querySelector('.min-rotulo').dispatchEvent(new Event('change', { bubbles: true }));
@@ -876,7 +920,7 @@ async function salvarEstudantesMensal() {
                 const titular = bloco.querySelector('.min-titular').value;
                 const ajudante = bloco.querySelector('.min-ajudante').value;
                 if (rotulo || titular) {
-                    ministerio.push({ tema: rotulo, estudante: titular, ajudante: ajudante });
+                    ministerio.push({ tipo: rotulo, tema: rotulo, estudante: titular, ajudante: ajudante });
                 }
             });
 
