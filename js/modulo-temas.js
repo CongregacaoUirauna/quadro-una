@@ -629,6 +629,9 @@ function renderizarLinhasTabelas(datas) {
                 <select class="geral-joias" style="width: 100%;"><option value="">Joias Espirituais...</option>${optsEnsino}</select>
             </td>
             <td style="padding: 10px; border: 1px solid #ddd; vertical-align: top;">
+                <div class="container-partes-nvc-tabela" style="margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px dashed #ccc;">
+                    <div style="font-size: 11px; color: #999; font-style: italic;">Salve a estrutura na aba 'Temas e Cânticos' primeiro.</div>
+                </div>
                 <select class="geral-estudo-dir" style="width: 100%; margin-bottom: 8px;"><option value="">Dirigente do Estudo...</option>${optsEnsino}</select>
                 <select class="geral-estudo-lei" style="width: 100%; margin-bottom: 8px;"><option value="">Leitor do Estudo...</option>${`<option value="">Selecione...</option>` + configGlobal.leitores_estudo.map(n => `<option value="${n}">${n}</option>`).join('')}</select>
                 <select class="geral-oracao-final" style="width: 100%;"><option value="">Oração Final...</option>${optsOracao}</select>
@@ -814,6 +817,31 @@ async function carregarDadosMensais(datas) {
                         trGer.querySelector('.geral-joias').value = d.tesouros.parte_2 || "";
                     }
                     if (d.vida_crista) {
+                        // --- INJEÇÃO: Partes Dinâmicas da Nossa Vida Cristã (Interligadas) ---
+                        const containerNvc = trGer.querySelector('.container-partes-nvc-tabela');
+                        if (d.vida_crista.partes && d.vida_crista.partes.length > 0) {
+                            containerNvc.innerHTML = ''; // Limpa a mensagem padrão
+                            const optsEnsino = `<option value="">Selecione...</option>` + (configGlobal.aprovados_ensino || []).map(n => `<option value="${n}">${n}</option>`).join('');
+                            
+                            d.vida_crista.partes.forEach(parte => {
+                                const divParte = document.createElement('div');
+                                divParte.className = 'bloco-nvc-tabela';
+                                divParte.style.marginBottom = '8px';
+                                divParte.innerHTML = `
+                                    <div style="font-size: 11px; color: #9c27b0; font-weight: bold; margin-bottom: 2px; line-height: 1.1;">${parte.tema || 'Parte sem título'} (${parte.tempo || 0} min)</div>
+                                    <select class="geral-nvc-designado" style="width: 100%; font-size: 13px;">${optsEnsino}</select>
+                                    <input type="hidden" class="geral-nvc-tema" value="${parte.tema || ''}">
+                                    <input type="hidden" class="geral-nvc-tempo" value="${parte.tempo || ''}">
+                                `;
+                                containerNvc.appendChild(divParte);
+                                // Seta o irmão que já estava salvo (se houver)
+                                divParte.querySelector('.geral-nvc-designado').value = parte.designado || "";
+                            });
+                        } else {
+                            containerNvc.innerHTML = `<div style="font-size: 11px; color: #999; margin-bottom: 8px; font-style: italic;">Nenhuma parte extra configurada nesta semana.</div>`;
+                        }
+                        // ----------------------------------------------------------------------
+                        
                         trGer.querySelector('.geral-estudo-dir').value = d.vida_crista.estudo_dirigente || "";
                         trGer.querySelector('.geral-estudo-lei').value = d.vida_crista.estudo_leitor || "";
                         trGer.querySelector('.geral-oracao-final').value = d.vida_crista.oracao_final || "";
@@ -883,10 +911,20 @@ async function salvarGeralMensal() {
             const dataIso = linha.getAttribute('data-date');
             const docRef = doc(db, "programacoes_semanais", dataIso);
 
-            await setDoc(docRef, { data: dataIso }, { merge: true });
+           await setDoc(docRef, { data: dataIso }, { merge: true });
 
-            // Usamos dot-notation para proteger os dados salvos pela Aba de Estudantes
-            await updateDoc(docRef, {
+            // Captura as partes dinâmicas da Nossa Vida Cristã (Interligadas)
+            const partesNvc = [];
+            linha.querySelectorAll('.bloco-nvc-tabela').forEach(bloco => {
+                partesNvc.push({
+                    tema: bloco.querySelector('.geral-nvc-tema').value,
+                    tempo: bloco.querySelector('.geral-nvc-tempo').value,
+                    designado: bloco.querySelector('.geral-nvc-designado').value
+                });
+            });
+
+            // Constrói o objeto de atualização (dot-notation para proteger Aba de Estudantes)
+            const updateObj = {
                 "presidente": linha.querySelector('.geral-presidente').value,
                 "abertura.oracao": linha.querySelector('.geral-oracao-inicial').value,
                 "tesouros.parte_1": linha.querySelector('.geral-discurso').value, 
@@ -894,7 +932,15 @@ async function salvarGeralMensal() {
                 "vida_crista.estudo_dirigente": linha.querySelector('.geral-estudo-dir').value,
                 "vida_crista.estudo_leitor": linha.querySelector('.geral-estudo-lei').value,
                 "vida_crista.oracao_final": linha.querySelector('.geral-oracao-final').value
-            });
+            };
+
+            // Só atualiza o banco se a tabela já leu a estrutura de Temas do banco com sucesso
+            const containerNvc = linha.querySelector('.container-partes-nvc-tabela');
+            if (containerNvc && !containerNvc.innerText.includes("Salve a estrutura na aba 'Temas e Cânticos' primeiro")) {
+                updateObj["vida_crista.partes"] = partesNvc;
+            }
+
+            await updateDoc(docRef, updateObj);
         }
         
         btn.innerText = "✓ Salvo com Sucesso"; btn.style.backgroundColor = "#25D366";
