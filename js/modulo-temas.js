@@ -681,12 +681,12 @@ function ativarInteligenciaUI() {
 
             // Só esconde o ajudante e filtra para irmãos se for explicitamente um formato de Discurso
             if (e.target.value === "Discurso" || e.target.value === "Explicando suas Crenças (Discurso)") {
-                selectAjudante.classList.add('hidden');
+                selectAjudante.style.display = 'none'; // <-- INJEÇÃO: Força o CSS para garantir que suma
                 selectAjudante.value = ""; 
                 // REGRA ESTREITA: Muda a lista do Titular para mostrar APENAS IRMÃOS
                 selectTitular.innerHTML = optsApenasIrmaos;
             } else {
-                selectAjudante.classList.remove('hidden');
+                selectAjudante.style.display = ''; // <-- INJEÇÃO: Restaura a exibição
                 // Restaura a lista mista para partes comuns (incluindo a Demonstração)
                 selectTitular.innerHTML = optsTodos;
             }
@@ -799,7 +799,8 @@ async function carregarDadosMensais(datas) {
                             if (blocos[index]) {
                                 blocos[index].querySelector('.min-rotulo').value = parte.tema || "";
                                 // Dispara o evento para ocultar ajudante e filtrar gênero ANTES de injetar o titular
-                                blocos[index].querySelector('.min-rotulo').dispatchEvent(new Event('change'));
+                                // INJEÇÃO: O { bubbles: true } faz o "grito" subir até a tabela ouvir o evento
+                                blocos[index].querySelector('.min-rotulo').dispatchEvent(new Event('change', { bubbles: true }));
                                 blocos[index].querySelector('.min-titular').value = parte.estudante || "";
                                 blocos[index].querySelector('.min-ajudante').value = parte.ajudante || "";
                             }
