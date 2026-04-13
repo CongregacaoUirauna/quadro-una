@@ -377,10 +377,17 @@ async function salvarProgramacao() {
     if (!["Assembleia", "Congresso", "Celebracao"].includes(tipoEvento)) {
         const min = [], vc = [];
         document.querySelectorAll('#containerMinisterio .dinamico-item').forEach(i => {
+            const tipoSelecionado = i.querySelector('.min-tipo').value;
+            const textoDigitado = i.querySelector('.min-tema').value.trim();
+
             min.push({
-                tipo: i.querySelector('.min-tipo').value, tema: i.querySelector('.min-tema').value, tempo: i.querySelector('.min-tempo').value,
-                estudante: i.querySelector('.min-estudante').value, ajudante: i.querySelector('.min-ajudante').value,
-                estudante_b: i.querySelector('.min-estudante-b').value, ajudante_b: i.querySelector('.min-ajudante-b').value
+                tipo: tipoSelecionado, 
+                tema: textoDigitado || tipoSelecionado, // ✨ MÁGICA: Se não digitar nada, ele salva o nome padrão selecionado!
+                tempo: i.querySelector('.min-tempo').value,
+                estudante: i.querySelector('.min-estudante').value, 
+                ajudante: i.querySelector('.min-ajudante').value,
+                estudante_b: i.querySelector('.min-estudante-b').value, 
+                ajudante_b: i.querySelector('.min-ajudante-b').value
             });
         });
         
