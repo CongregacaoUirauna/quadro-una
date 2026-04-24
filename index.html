@@ -42,8 +42,13 @@
         /* Cabeçalho e Controles */
         .header { background-color: #fff; padding: 15px 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); text-align: center; position: sticky; top: 0; z-index: 100;}
         .header h1 { margin: 0; font-size: 20px; color: var(--cor-texto); font-weight: 600; }
+
+        /* Sistema de Abas do Portal */
+        .nav-portal { display: flex; max-width: 600px; margin: 15px auto 0 auto; background: #eee; border-radius: 10px; padding: 4px; gap: 4px; }
+        .btn-tab { flex: 1; padding: 10px; border: none; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer; transition: 0.3s; color: #666; background: transparent; }
+        .btn-tab.active { background: #fff; color: var(--cor-destaque); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         
-        .controles-topo { max-width: 600px; margin: 15px auto 0 auto; display: flex; flex-direction: column; gap: 10px;}
+        .controles-topo { max-width: 600px; margin: 10px auto 0 auto; display: flex; flex-direction: column; gap: 10px;}
         
         .seletor-data select { width: 100%; padding: 10px 15px; border-radius: 8px; border: 1px solid #ccc; font-size: 15px; background-color: #f8f9fa; outline: none; font-weight: bold; color: var(--cor-texto); cursor: pointer; box-sizing: border-box;}
         
@@ -131,7 +136,13 @@
 
     <header class="header">
         <h1>Quadro de Anúncios</h1>
-        <div class="controles-topo">
+        
+        <div class="nav-portal">
+            <button class="btn-tab active" id="tab-reunioes" onclick="alternarAbaPortal('reunioes')">📅 Reuniões</button>
+            <button class="btn-tab" id="tab-portal" onclick="alternarAbaPortal('portal')">📢 Portal e Mural</button>
+        </div>
+
+        <div class="controles-topo" id="filtros-reunioes">
             <div class="busca-container">
                 <span class="busca-icone">🔍</span>
                 <input type="text" id="inputBuscaNome" placeholder="Digite seu nome para buscar suas designações..." autocomplete="off">
@@ -145,13 +156,51 @@
     </header>
 
     <div class="container">
-        <div id="areaAnuncios"></div>
-        <div id="loading">Buscando programação...</div>
-        
-        <div id="board" class="hidden">
+        <div id="seccao-reunioes">
+            <div id="areaAnuncios"></div>
+            <div id="loading">Buscando programação...</div>
+            
+            <div id="board" class="hidden"></div>
+
+            <div id="painelBusca" class="hidden">
+                <h3 style="margin-top: 0; color: var(--cor-destaque); border-bottom: 2px solid #eee; padding-bottom: 10px;" id="tituloBusca">Resultados:</h3>
+                <div id="conteudoBusca"></div>
+            </div>
+        </div>
+
+        <div id="seccao-portal" class="hidden">
+            <div id="banner-relatorio-container" class="hidden"></div>
+
+            <div class="card" style="border-left: 5px solid #ef6c00;">
+                <div style="padding: 20px;">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                        <span style="font-size: 20px;">📍</span>
+                        <h3 style="margin: 0; color: #ef6c00;">Ponto de Parada Atual</h3>
+                    </div>
+                    <p id="txt-ponto-parada" style="font-size: 18px; font-weight: bold; margin: 0; color: #333;">A carregar local...</p>
+                    <small style="color: #666; display: block; margin-top: 5px;">Atualizado em tempo real pelos responsáveis.</small>
+                </div>
             </div>
 
-        <div id="painelBusca" class="hidden">
+            <div class="card">
+                <div style="padding: 20px;">
+                    <h3 style="margin: 0 0 15px 0; color: var(--cor-destaque); display: flex; align-items: center; gap: 10px;">
+                        <span>📝</span> Mural da Congregação
+                    </h3>
+                    <div id="txt-mural-avisos" style="white-space: pre-wrap; line-height: 1.6; color: #444;">Nenhum aviso no momento.</div>
+                </div>
+            </div>
+
+            <div class="card" id="card-limpeza-mensal">
+                <div style="padding: 20px;">
+                    <h3 style="margin: 0 0 15px 0; color: #00796b; display: flex; align-items: center; gap: 10px;">
+                        <span>🧹</span> Escala de Limpeza do Mês
+                    </h3>
+                    <div id="conteudo-limpeza-consolidada" style="font-size: 14px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
             <h3 style="margin-top: 0; color: var(--cor-destaque); border-bottom: 2px solid #eee; padding-bottom: 10px;" id="tituloBusca">Resultados:</h3>
             <div id="conteudoBusca"></div>
         </div>
@@ -822,6 +871,95 @@
             carregarDados();
             carregarAnunciosPublicos(); // Dispara o motor de anúncios junto com as reuniões
         };
+
+        // --- MOTOR DE NAVEGAÇÃO DO PORTAL ---
+        window.alternarAbaPortal = (aba) => {
+            const btnReunioes = document.getElementById('tab-reunioes');
+            const btnPortal = document.getElementById('tab-portal');
+            const seccaoReunioes = document.getElementById('seccao-reunioes');
+            const seccaoPortal = document.getElementById('seccao-portal');
+            const filtros = document.getElementById('filtros-reunioes');
+
+            if (aba === 'reunioes') {
+                btnReunioes.classList.add('active');
+                btnPortal.classList.remove('active');
+                seccaoReunioes.classList.remove('hidden');
+                seccaoPortal.classList.add('hidden');
+                filtros.classList.remove('hidden');
+            } else {
+                btnPortal.classList.add('active');
+                btnReunioes.classList.remove('active');
+                seccaoPortal.classList.remove('hidden');
+                seccaoReunioes.classList.add('hidden');
+                filtros.classList.add('hidden');
+                carregarDadosMural(); // Carrega os dados sempre que abre o portal
+            }
+        };
+
+        async function carregarDadosMural() {
+            try {
+                // 1. Busca os Anúncios e Configurações (Mural/Pregação)
+                // Nota: Assumimos que o admin salva na coleção 'configuracoes' no doc 'mural_pregação'
+                const docRef = doc(db, "configuracoes", "mural_pregacao");
+                const docSnap = await getDoc(docRef);
+
+                if (docSnap.exists()) {
+                    const dados = docSnap.data();
+                    
+                    // Ponto de Parada
+                    document.getElementById('txt-ponto-parada').innerText = dados.ponto_parada || "Não informado";
+                    
+                    // Avisos
+                    document.getElementById('txt-mural-avisos').innerText = dados.aviso_texto || "Sem avisos esporádicos.";
+
+                    // Relatórios (Banner de Destaque)
+                    const bannerRel = document.getElementById('banner-relatorio-container');
+                    if (dados.relatorio_ativo) {
+                        bannerRel.innerHTML = `
+                            <div class="banner-anuncio" style="background: linear-gradient(135deg, #e3f2fd, #bbdefb); border-left: 5px solid #1a73e8;">
+                                <div class="banner-titulo" style="color: #0d47a1;">📋 Envio de Relatório de Campo</div>
+                                <div class="banner-texto">Irmãos, o prazo para envio dos relatórios está aberto. Por favor, enviem o quanto antes.</div>
+                                <div class="banner-acoes">
+                                    <a href="${dados.relatorio_link || '#'}" target="_blank" class="btn-anuncio btn-link">🔗 Enviar Relatório Agora</a>
+                                </div>
+                            </div>
+                        `;
+                        bannerRel.classList.remove('hidden');
+                    } else {
+                        bannerRel.classList.add('hidden');
+                    }
+                }
+
+                // 2. Mágica da Limpeza Consolidada
+                consolidarLimpezaMensal();
+
+            } catch (e) { console.error("Erro ao carregar mural:", e); }
+        }
+
+        async function consolidarLimpezaMensal() {
+            const container = document.getElementById('conteudo-limpeza-consolidada');
+            container.innerHTML = "A consolidar escalas...";
+            
+            // Vamos ler as últimas 5 semanas para garantir que cobrimos o mês atual
+            const q = query(collection(db, "programacoes_semanais"), orderBy("data", "desc"), limit(5));
+            const snap = await getDocs(q);
+            
+            let htmlLimpeza = '';
+            snap.forEach(doc => {
+                const p = doc.data();
+                if (p.texto_limpeza_meio || p.texto_limpeza_fim) {
+                    htmlLimpeza += `
+                        <div style="margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
+                            <div style="font-weight: bold; color: #00796b; margin-bottom: 5px;">📅 Semana de ${formatarDataBR(p.data)}</div>
+                            ${p.texto_limpeza_meio ? `<div style="margin-bottom: 3px;"><strong>Meio:</strong> ${p.texto_limpeza_meio}</div>` : ''}
+                            ${p.texto_limpeza_fim ? `<div><strong>Fim:</strong> ${p.texto_limpeza_fim}</div>` : ''}
+                        </div>
+                    `;
+                }
+            });
+            container.innerHTML = htmlLimpeza || "Nenhuma escala de limpeza encontrada para este período.";
+        }
+
         
     </script>
 </body>
