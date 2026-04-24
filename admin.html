@@ -69,6 +69,7 @@
                 <button id="aba-mecanicas" class="btn-config" style="margin-top: 0; width: auto; background-color: #e0e0e0; color: #666;">⚙️ Designações Mecânicas</button>
                 <button id="aba-discursos" class="btn-config" style="margin-top: 0; width: auto; background-color: #e0e0e0; color: #666;">🎤 Discursos Públicos</button>
                 <button id="aba-limpeza" class="btn-config" style="margin-top: 0; width: auto; background-color: #e0e0e0; color: #666;">🪣 Escala de Limpeza</button>
+                <button id="aba-mural" class="btn-config" style="margin-top: 0; width: auto; background-color: #e0e0e0; color: #666;">📢 Mural e Pregação</button>
                 <button id="btnConfigLimpeza" class="btn-config" style="margin-top: 0; width: auto; background-color: #26a69a; color: white; font-weight: bold;">🧹 Configurar Limpeza</button>
             </div>
             
@@ -375,6 +376,44 @@
             </div>
             <!-- ================= FIM DO PAINEL ESCALA DE LIMPEZA ================= -->
 
+            <div id="painel-mural" style="display: none; width: 100%; clear: both;">
+                <div class="container-escala">
+                    <div class="escala-header" style="background: #fff3e0; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #ffe0b2;">
+                        <h2 style="margin: 0 0 10px 0; color: #e65100; font-size: 18px;">Gestão do Mural e Pregação</h2>
+                        <p style="font-size: 14px; color: #333;">Controle o que aparece no Portal Público para os irmãos.</p>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                        <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #ddd; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                            <h3 style="margin-top: 0; color: #e65100; border-bottom: 1px solid #eee; padding-bottom: 10px;">🚗 Status da Pregação (Ao Vivo)</h3>
+                            <label>Ponto de Parada Atual:</label>
+                            <input type="text" id="inputPontoParada" placeholder="Ex: Praça Central / Rua das Flores" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px;">
+                            <button id="btnSalvarPontoParada" class="btn-salvar" style="margin: 0; background-color: #ef6c00; width: 100%;">📍 Atualizar Ponto de Parada</button>
+                        </div>
+
+                        <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #ddd; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                            <h3 style="margin-top: 0; color: #1565c0; border-bottom: 1px solid #eee; padding-bottom: 10px;">📋 Relatórios de Campo</h3>
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+                                <label class="switch" style="position: relative; display: inline-block; width: 50px; height: 24px;">
+                                    <input type="checkbox" id="toggleRelatorio" style="opacity: 0; width: 0; height: 0;">
+                                    <span class="slider round" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px;"></span>
+                                </label>
+                                <span id="statusRelatorioTexto" style="font-weight: bold; font-size: 14px;">Banner Desativado</span>
+                            </div>
+                            <label>Link do Formulário (Opcional):</label>
+                            <input type="text" id="inputLinkRelatorio" placeholder="https://forms.gle/..." style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px;">
+                            <button id="btnSalvarRelatorio" class="btn-salvar" style="margin: 0; background-color: #1565c0; width: 100%;">💾 Salvar Configurações</button>
+                        </div>
+
+                        <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #ddd; box-shadow: 0 2px 4px rgba(0,0,0,0.05); grid-column: 1 / -1;">
+                            <h3 style="margin-top: 0; color: #2e7d32; border-bottom: 1px solid #eee; padding-bottom: 10px;">📝 Avisos do Mural</h3>
+                            <textarea id="textoAvisoMural" placeholder="Digite aqui o aviso que aparecerá no mural..." style="width: 100%; height: 100px; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-family: sans-serif;"></textarea>
+                            <button id="btnSalvarAvisoMural" class="btn-salvar" style="margin: 10px 0 0 0; background-color: #2e7d32; width: 100%;">📢 Publicar no Mural</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
                 </div> 
             </div> 
             
@@ -633,6 +672,31 @@
             
             // Reseta cor dos outros botões
             ['aba-temas', 'aba-mecanicas', 'aba-discursos', 'aba-limpeza'].forEach(id => {
+                const btn = document.getElementById(id);
+                if(btn) {
+                    btn.style.backgroundColor = '#e0e0e0';
+                    btn.style.color = '#666';
+                }
+            });
+        });
+
+        // ABA: Mural e Pregação
+        const btnAbaMural = document.getElementById('aba-mural');
+        const painelMural = document.getElementById('painel-mural');
+
+        btnAbaMural.addEventListener('click', () => {
+            painelMural.style.display = 'block';
+            painelTemas.classList.add('hidden');
+            painelEscalas.classList.add('hidden');
+            document.getElementById('painel-mecanicas').classList.add('hidden');
+            document.getElementById('painel-discursos').style.display = 'none';
+            document.getElementById('painel-limpeza').style.display = 'none';
+
+            btnAbaMural.style.backgroundColor = '#ef6c00'; // Laranja para destacar pregação
+            btnAbaMural.style.color = '#fff';
+
+            // Reseta cor dos outros botões
+            ['aba-temas', 'aba-escalas', 'aba-mecanicas', 'aba-discursos', 'aba-limpeza'].forEach(id => {
                 const btn = document.getElementById(id);
                 if(btn) {
                     btn.style.backgroundColor = '#e0e0e0';
