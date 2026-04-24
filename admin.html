@@ -413,6 +413,43 @@
                     </div>
                 </div>
             </div>
+
+                        <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #ddd; box-shadow: 0 2px 4px rgba(0,0,0,0.05); grid-column: 1 / -1; margin-top: 20px;">
+                            <h3 style="margin-top: 0; color: #2e7d32; border-bottom: 1px solid #eee; padding-bottom: 10px;">📅 Configurar Escala Mensal de Pregação</h3>
+                            
+                            <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; background: #f9f9f9; padding: 15px; border-radius: 8px;">
+                                <div style="flex: 1; min-width: 150px;">
+                                    <label style="font-size: 12px; font-weight: bold;">Data:</label>
+                                    <input type="date" id="inputPregaData" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                                </div>
+                                <div style="flex: 2; min-width: 200px;">
+                                    <label style="font-size: 12px; font-weight: bold;">Local / Ponto de Encontro:</label>
+                                    <input type="text" id="inputPregaLocal" placeholder="Ex: Praça ou Residência" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                                </div>
+                                <div style="flex: 2; min-width: 200px;">
+                                    <label style="font-size: 12px; font-weight: bold;">Dirigente:</label>
+                                    <input type="text" id="inputPregaDirigente" placeholder="Nome do Irmão" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                                </div>
+                                <div style="display: flex; align-items: flex-end;">
+                                    <button id="btnAdicionarLinhaPrega" class="btn-salvar" style="margin: 0; background-color: #2e7d32; width: auto; padding: 10px 20px;">+ Adicionar</button>
+                                </div>
+                            </div>
+
+                            <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px;">
+                                <thead style="background: #eee;">
+                                    <tr>
+                                        <th style="padding: 10px; text-align: left; font-size: 13px;">Data</th>
+                                        <th style="padding: 10px; text-align: left; font-size: 13px;">Local</th>
+                                        <th style="padding: 10px; text-align: left; font-size: 13px;">Dirigente</th>
+                                        <th style="padding: 10px; text-align: center; font-size: 13px;">Ação</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabelaCorpoPregaAdmin">
+                                    </tbody>
+                            </table>
+
+                            <button id="btnSalvarEscalaPregacaoCompleta" class="btn-salvar" style="margin: 0; background-color: #1b5e20; width: 100%;">💾 Salvar Escala Completa no Firebase</button>
+                        </div>
             
                 </div> 
             </div> 
