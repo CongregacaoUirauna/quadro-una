@@ -655,6 +655,7 @@
         import { initModuloTemas, prepararNovoFormulario, carregarProgramacaoEdicao } from './js/modulo-temas.js';
         import { initModuloMecanicas } from './js/modulo-mecanicas.js';
         import { initModuloLimpeza } from './js/modulo-limpeza.js';
+        import { initModuloAcessos } from './js/modulo-acessos.js';
         
         // NOVO MÓDULO IMPORTADO AQUI:
         import { initModuloDiscursos } from './js/modulo-discursos.js';
@@ -676,6 +677,11 @@
                     alert("Sua conta não possui permissões configuradas. Contate o administrador.");
                     signOut(auth);
                     return;
+                }
+
+                if (permissoesUsuario.is_super_admin) {
+                    document.getElementById('aba-acessos').style.display = 'inline-block';
+                    initModuloAcessos();
                 }
 
                 // 2. APLICA A MAQUIAGEM NA INTERFACE (Oculta abas proibidas)
