@@ -1005,31 +1005,42 @@
                 
                 const snap = await getDocs(q);
                 
-                let htmlLimpeza = '';
+                // Abre a tabela responsiva
+                let htmlLimpeza = `
+                    <div class="table-responsive" style="overflow-x: auto; margin-top: 10px;">
+                        <table style="width: 100%; border-collapse: collapse; text-align: left; background: #fff;">
+                            <thead>
+                                <tr style="border-bottom: 2px solid #b2dfdb; color: #00796b; font-size: 13px;">
+                                    <th style="padding: 10px 5px; min-width: 80px;">Semana</th>
+                                    <th style="padding: 10px 5px; min-width: 160px;">☀️ Meio de Semana</th>
+                                    <th style="padding: 10px 5px; min-width: 160px;">🌙 Fim de Semana</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+                
+                let temLimpeza = false;
+
                 snap.forEach(doc => {
                     const p = doc.data();
                     
-                    // Só desenha a semana se houver limpeza designada
                     if (p.texto_limpeza_meio || p.texto_limpeza_fim) {
+                        temLimpeza = true;
                         htmlLimpeza += `
-                            <div style="margin-bottom: 20px; border-bottom: 2px solid #f0f0f0; padding-bottom: 15px;">
-                                <div style="font-weight: bold; color: #00796b; margin-bottom: 10px; font-size: 15px;">📅 Semana de ${formatarDataBR(p.data)}</div>
-                                
-                                ${p.texto_limpeza_meio ? `
-                                    <div style="font-size: 12px; color: #004d40; font-weight: bold; margin-bottom: 5px; background: #e0f2f1; padding: 4px 10px; border-radius: 6px; display: inline-block;">☀️ Meio de Semana</div>
-                                    <div style="white-space: pre-wrap; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.5; color: #444; margin-bottom: 15px; background: #fafafa; padding: 12px; border-radius: 8px; border: 1px solid #eee;">${p.texto_limpeza_meio}</div>
-                                ` : ''}
-                                
-                                ${p.texto_limpeza_fim ? `
-                                    <div style="font-size: 12px; color: #004d40; font-weight: bold; margin-bottom: 5px; background: #e0f2f1; padding: 4px 10px; border-radius: 6px; display: inline-block;">🌙 Fim de Semana</div>
-                                    <div style="white-space: pre-wrap; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.5; color: #444; background: #fafafa; padding: 12px; border-radius: 8px; border: 1px solid #eee;">${p.texto_limpeza_fim}</div>
-                                ` : ''}
-                            </div>
+                            <tr style="border-bottom: 1px solid #eee;">
+                                <td style="padding: 12px 5px; font-weight: bold; color: #00695c; vertical-align: top; font-size: 13px;">
+                                    ${formatarDataBR(p.data)}
+                                </td>
+                                <td style="padding: 10px 5px; white-space: pre-wrap; font-family: 'Courier New', monospace; font-size: 11.5px; line-height: 1.4; color: #444; vertical-align: top; background: #fafafa; border-right: 1px solid #fff;">${p.texto_limpeza_meio || '<span style="color:#999; font-style:italic;">Sem limpeza</span>'}</td>
+                                <td style="padding: 10px 5px; white-space: pre-wrap; font-family: 'Courier New', monospace; font-size: 11.5px; line-height: 1.4; color: #444; vertical-align: top; background: #fafafa;">${p.texto_limpeza_fim || '<span style="color:#999; font-style:italic;">Sem limpeza</span>'}</td>
+                            </tr>
                         `;
                     }
                 });
                 
-                container.innerHTML = htmlLimpeza || "<div style='text-align: center; color: #999; padding: 15px;'>Nenhuma escala de limpeza configurada para as próximas reuniões.</div>";
+                htmlLimpeza += `</tbody></table></div>`; // Fecha a tabela
+                
+                container.innerHTML = temLimpeza ? htmlLimpeza : "<div style='text-align: center; color: #999; padding: 15px;'>Nenhuma escala de limpeza configurada para as próximas reuniões.</div>";
             } catch (e) {
                 console.error("Erro ao carregar limpeza:", e);
                 container.innerHTML = "<div style='color: red; text-align: center; padding: 10px;'>Erro ao carregar a escala de limpeza.</div>";
