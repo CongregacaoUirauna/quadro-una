@@ -940,8 +940,17 @@
                         containerPonto.innerText = "Nenhum ponto de parada ativo no momento.";
                     }
                     
-                    // Avisos
-                    document.getElementById('txt-mural-avisos').innerText = dados.aviso_texto || "Sem avisos esporádicos.";
+                    // Avisos com Conversor Automático de Links
+                    const textoAviso = dados.aviso_texto || "Sem avisos esporádicos.";
+                    
+                    // O "Motor" que caça links (Expressão Regular) e transforma em tag <a>
+                    const urlRegex = /(https?:\/\/[^\s]+)/g;
+                    const textoComLinks = textoAviso.replace(urlRegex, function(url) {
+                        return `<a href="${url}" target="_blank" style="color: #1a73e8; text-decoration: underline; font-weight: 500;">${url}</a>`;
+                    });
+                    
+                    // Usamos innerHTML para o navegador desenhar o link azul clicável
+                    document.getElementById('txt-mural-avisos').innerHTML = textoComLinks;
 
                     // Relatórios (Banner de Destaque)
                     const bannerRel = document.getElementById('banner-relatorio-container');
