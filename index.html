@@ -950,6 +950,20 @@
                     }
                 }
 
+                // Ponto de Parada: Renderização de Lista
+                const containerPonto = document.getElementById('txt-ponto-parada');
+                const pontos = dados.pontos_parada_array || [];
+                
+                if (pontos.length > 0) {
+                    containerPonto.innerHTML = `
+                        <ul style="margin: 10px 0 0 0; padding-left: 20px; text-align: left;">
+                            ${pontos.map(p => `<li style="margin-bottom: 5px;">${p}</li>`).join('')}
+                        </ul>
+                    `;
+                } else {
+                    containerPonto.innerText = "Nenhum ponto de parada ativo no momento.";
+                }
+                
                 // 2. Mágica da Limpeza Consolidada
                 consolidarLimpezaMensal();
 
