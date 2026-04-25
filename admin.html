@@ -682,12 +682,13 @@
             document.getElementById('painel-mecanicas').classList.add('hidden'); 
             document.getElementById('painel-discursos').style.display = 'none'; // 🟢 TRAVA DISCURSOS
             document.getElementById('painel-limpeza').style.display = 'none'; // 🟢 TRAVA LIMPEZA
+            if(document.getElementById('painel-mural')) document.getElementById('painel-mural').style.display = 'none'; // 🟢 TRAVA MURAL
             
             btnAbaTemas.style.backgroundColor = '#1a73e8';
             btnAbaTemas.style.color = '#fff';
             
             // Reseta cor dos outros botões
-            ['aba-escalas', 'aba-mecanicas', 'aba-discursos', 'aba-limpeza'].forEach(id => {
+            ['aba-escalas', 'aba-mecanicas', 'aba-discursos', 'aba-limpeza', 'aba-mural'].forEach(id => {
                 const btn = document.getElementById(id);
                 if(btn) {
                     btn.style.backgroundColor = '#e0e0e0';
