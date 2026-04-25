@@ -385,10 +385,17 @@
 
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
                         <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #ddd; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-                            <h3 style="margin-top: 0; color: #e65100; border-bottom: 1px solid #eee; padding-bottom: 10px;">🚗 Status da Pregação (Ao Vivo)</h3>
-                            <label>Ponto de Parada Atual:</label>
-                            <input type="text" id="inputPontoParada" placeholder="Ex: Praça Central / Rua das Flores" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px;">
-                            <button id="btnSalvarPontoParada" class="btn-salvar" style="margin: 0; background-color: #ef6c00; width: 100%;">📍 Atualizar Ponto de Parada</button>
+                            <h3 style="margin-top: 0; color: #e65100; border-bottom: 1px solid #eee; padding-bottom: 10px;">🚗 Pontos de Parada Ativos</h3>
+                            
+                            <div style="display: flex; gap: 5px; margin-bottom: 15px;">
+                                <input type="text" id="inputNovoPontoParada" placeholder="Novo ponto (Ex: Rua X / Praça Y)" style="flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+                                <button id="btnAdicionarPontoLista" class="btn-salvar" style="margin: 0; width: auto; background-color: #ef6c00;">+</button>
+                            </div>
+                        
+                            <ul id="listaPontosAtivosAdmin" style="list-style: none; padding: 0; margin-bottom: 15px; border: 1px solid #eee; border-radius: 5px; max-height: 150px; overflow-y: auto;">
+                                </ul>
+                        
+                            <button id="btnSalvarPontosParada" class="btn-salvar" style="margin: 0; background-color: #ef6c00; width: 100%;">📍 Atualizar Todos no Portal</button>
                         </div>
 
                         <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #ddd; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
