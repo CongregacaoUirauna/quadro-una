@@ -233,12 +233,16 @@ if (btnAbaLimpeza) {
         if (document.getElementById('painel-discursos')) {
             document.getElementById('painel-discursos').style.display = 'none';
         }
+        if (document.getElementById('painel-mural')) {
+            document.getElementById('painel-mural').style.display = 'none'; // 🟢 APAGA O MURAL
+        }
 
         // 3. Atualiza as cores dos botões (Limpeza fica verde/azul, resto cinza)
         btnAbaLimpeza.style.backgroundColor = '#1a73e8';
         btnAbaLimpeza.style.color = '#fff';
 
-        ['aba-temas', 'aba-escalas', 'aba-mecanicas', 'aba-discursos'].forEach(id => {
+        // 🟢 INCLUI 'aba-mural' NA LISTA DE RESET DE CORES
+        ['aba-temas', 'aba-escalas', 'aba-mecanicas', 'aba-discursos', 'aba-mural'].forEach(id => {
             const btn = document.getElementById(id);
             if (btn) {
                 btn.style.backgroundColor = '#e0e0e0';
@@ -248,8 +252,8 @@ if (btnAbaLimpeza) {
     });
 }
 
-// 1. Sair clicando em outras abas
-const outrasAbasParaSair = ['aba-temas', 'aba-escalas', 'aba-mecanicas', 'aba-discursos'];
+// 1. Sair clicando em outras abas (🟢 INCLUI O MURAL AQUI TAMBÉM)
+const outrasAbasParaSair = ['aba-temas', 'aba-escalas', 'aba-mecanicas', 'aba-discursos', 'aba-mural'];
 outrasAbasParaSair.forEach(id => {
     document.getElementById(id)?.addEventListener('click', sairDaAbaLimpeza);
 });
