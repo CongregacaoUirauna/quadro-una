@@ -163,7 +163,7 @@ export async function carregarPermissoes(email) {
             permissoesUsuario = docSnap.data();
         } else {
             // 🟢 MODO DE SOBREVIVÊNCIA: Substitua pelo seu e-mail real de administrador!
-            const isDono = email === "SEU_EMAIL_AQUI@gmail.com"; 
+            const isDono = email === "glebstonleticia@gmail.com"; 
             
             permissoesUsuario = {
                 is_super_admin: isDono,
