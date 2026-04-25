@@ -148,3 +148,40 @@ export async function carregarHistoricoSidebar(onEditCallback, onResetFormCallba
         console.error("Erro na Sidebar:", e);
     }
 }
+
+// =========================================
+// GESTÃO DE PRIVILÉGIOS E ACESSOS (RBAC)
+// =========================================
+
+export let permissoesUsuario = null;
+
+export async function carregarPermissoes(email) {
+    try {
+        const docSnap = await getDoc(doc(db, "usuarios_permissoes", email));
+        
+        if (docSnap.exists()) {
+            permissoesUsuario = docSnap.data();
+        } else {
+            // 🟢 MODO DE SOBREVIVÊNCIA: Substitua pelo seu e-mail real de administrador!
+            const isDono = email === "SEU_EMAIL_AQUI@gmail.com"; 
+            
+            permissoesUsuario = {
+                is_super_admin: isDono,
+                acesso_temas: isDono,
+                acesso_escalas: isDono,
+                acesso_mecanicas: isDono,
+                acesso_discursos: isDono,
+                acesso_limpeza: isDono,
+                acesso_mural: isDono
+            };
+            
+            // Se for o dono, já cria o perfil de Super Admin no banco de dados automaticamente
+            if (isDono) {
+                await setDoc(doc(db, "usuarios_permissoes", email), permissoesUsuario);
+            }
+        }
+    } catch (error) {
+        console.error("Erro ao carregar permissões:", error);
+        permissoesUsuario = null; // Em caso de erro, bloqueia tudo por segurança
+    }
+}
