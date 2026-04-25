@@ -986,24 +986,54 @@
             const container = document.getElementById('conteudo-limpeza-consolidada');
             container.innerHTML = "A consolidar escalas...";
             
-            // Vamos ler as últimas 5 semanas para garantir que cobrimos o mês atual
-            const q = query(collection(db, "programacoes_semanais"), orderBy("data", "desc"), limit(5));
-            const snap = await getDocs(q);
-            
-            let htmlLimpeza = '';
-            snap.forEach(doc => {
-                const p = doc.data();
-                if (p.texto_limpeza_meio || p.texto_limpeza_fim) {
-                    htmlLimpeza += `
-                        <div style="margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
-                            <div style="font-weight: bold; color: #00796b; margin-bottom: 5px;">📅 Semana de ${formatarDataBR(p.data)}</div>
-                            ${p.texto_limpeza_meio ? `<div style="margin-bottom: 3px;"><strong>Meio:</strong> ${p.texto_limpeza_meio}</div>` : ''}
-                            ${p.texto_limpeza_fim ? `<div><strong>Fim:</strong> ${p.texto_limpeza_fim}</div>` : ''}
-                        </div>
-                    `;
-                }
-            });
-            container.innerHTML = htmlLimpeza || "Nenhuma escala de limpeza encontrada para este período.";
+            try {
+                // 1. Inteligência Temporal: Pegar da segunda-feira atual para a frente
+                const hoje = new Date();
+                const diaDaSemana = hoje.getDay(); 
+                const diasParaSubtrair = diaDaSemana === 0 ? 6 : diaDaSemana - 1;
+                const dataLimite = new Date(hoje);
+                dataLimite.setDate(hoje.getDate() - diasParaSubtrair);
+                const dataCorte = dataLimite.toISOString().split('T')[0];
+
+                // 2. Busca apenas as reuniões atuais e futuras (Evita meses distantes vazios)
+                const q = query(
+                    collection(db, "programacoes_semanais"), 
+                    where("data", ">=", dataCorte),
+                    orderBy("data", "asc"), 
+                    limit(5)
+                );
+                
+                const snap = await getDocs(q);
+                
+                let htmlLimpeza = '';
+                snap.forEach(doc => {
+                    const p = doc.data();
+                    
+                    // Só desenha a semana se houver limpeza designada
+                    if (p.texto_limpeza_meio || p.texto_limpeza_fim) {
+                        htmlLimpeza += `
+                            <div style="margin-bottom: 20px; border-bottom: 2px solid #f0f0f0; padding-bottom: 15px;">
+                                <div style="font-weight: bold; color: #00796b; margin-bottom: 10px; font-size: 15px;">📅 Semana de ${formatarDataBR(p.data)}</div>
+                                
+                                ${p.texto_limpeza_meio ? `
+                                    <div style="font-size: 12px; color: #004d40; font-weight: bold; margin-bottom: 5px; background: #e0f2f1; padding: 4px 10px; border-radius: 6px; display: inline-block;">☀️ Meio de Semana</div>
+                                    <div style="white-space: pre-wrap; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.5; color: #444; margin-bottom: 15px; background: #fafafa; padding: 12px; border-radius: 8px; border: 1px solid #eee;">${p.texto_limpeza_meio}</div>
+                                ` : ''}
+                                
+                                ${p.texto_limpeza_fim ? `
+                                    <div style="font-size: 12px; color: #004d40; font-weight: bold; margin-bottom: 5px; background: #e0f2f1; padding: 4px 10px; border-radius: 6px; display: inline-block;">🌙 Fim de Semana</div>
+                                    <div style="white-space: pre-wrap; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.5; color: #444; background: #fafafa; padding: 12px; border-radius: 8px; border: 1px solid #eee;">${p.texto_limpeza_fim}</div>
+                                ` : ''}
+                            </div>
+                        `;
+                    }
+                });
+                
+                container.innerHTML = htmlLimpeza || "<div style='text-align: center; color: #999; padding: 15px;'>Nenhuma escala de limpeza configurada para as próximas reuniões.</div>";
+            } catch (e) {
+                console.error("Erro ao carregar limpeza:", e);
+                container.innerHTML = "<div style='color: red; text-align: center; padding: 10px;'>Erro ao carregar a escala de limpeza.</div>";
+            }
         }
 
         async function carregarEscalaMensalPregacao() {
