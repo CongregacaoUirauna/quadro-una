@@ -926,8 +926,19 @@
                 if (docSnap.exists()) {
                     const dados = docSnap.data();
                     
-                    // Ponto de Parada
-                    document.getElementById('txt-ponto-parada').innerText = dados.ponto_parada || "Não informado";
+                    // Ponto de Parada: Renderização de Lista (Agora dentro do escopo correto)
+                    const containerPonto = document.getElementById('txt-ponto-parada');
+                    const pontos = dados.pontos_parada_array || [];
+                    
+                    if (pontos.length > 0) {
+                        containerPonto.innerHTML = `
+                            <ul style="margin: 10px 0 0 0; padding-left: 20px; text-align: left;">
+                                ${pontos.map(p => `<li style="margin-bottom: 5px;">${p}</li>`).join('')}
+                            </ul>
+                        `;
+                    } else {
+                        containerPonto.innerText = "Nenhum ponto de parada ativo no momento.";
+                    }
                     
                     // Avisos
                     document.getElementById('txt-mural-avisos').innerText = dados.aviso_texto || "Sem avisos esporádicos.";
@@ -948,20 +959,9 @@
                     } else {
                         bannerRel.classList.add('hidden');
                     }
-                }
-
-                // Ponto de Parada: Renderização de Lista
-                const containerPonto = document.getElementById('txt-ponto-parada');
-                const pontos = dados.pontos_parada_array || [];
-                
-                if (pontos.length > 0) {
-                    containerPonto.innerHTML = `
-                        <ul style="margin: 10px 0 0 0; padding-left: 20px; text-align: left;">
-                            ${pontos.map(p => `<li style="margin-bottom: 5px;">${p}</li>`).join('')}
-                        </ul>
-                    `;
                 } else {
-                    containerPonto.innerText = "Nenhum ponto de parada ativo no momento.";
+                    // Fallback de segurança caso o documento ainda não exista no Firebase
+                    document.getElementById('txt-ponto-parada').innerText = "Nenhum ponto de parada ativo no momento.";
                 }
                 
                 // 2. Mágica da Limpeza Consolidada
