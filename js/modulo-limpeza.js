@@ -311,11 +311,62 @@ function montarTexto(cabeca, escolhidos, tarefasBase) {
     return textoFinal;
 }
 
-// --- O ALGORITMO (GERADOR) ---
+// --- O ALGORITMO (GERADOR) E LEITURA DE MEMÓRIA ---
+
+// 1. Ouvinte para carregar a escala salva assim que selecionar o mês
+const mesInputLimpeza = document.getElementById('mesGeradorLimpeza');
+if (mesInputLimpeza) {
+    mesInputLimpeza.addEventListener('change', async (e) => {
+        const mesVal = e.target.value;
+        if (!mesVal) return;
+
+        const dataInicio = `${mesVal}-01`;
+        const dataFim = `${mesVal}-31`;
+        
+        try {
+            const q = query(collection(db, "programacoes_semanais"), where("data", ">=", dataInicio), where("data", "<=", dataFim), orderBy("data", "asc"));
+            const querySnapshot = await getDocs(q);
+
+            reunioesDoMesEmMemoria = [];
+            let temLimpeza = false;
+
+            querySnapshot.forEach(docSnap => {
+                const prog = docSnap.data();
+                if (prog.texto_limpeza_meio || prog.texto_limpeza_fim) temLimpeza = true;
+                
+                reunioesDoMesEmMemoria.push({ 
+                    id: docSnap.id, 
+                    data: prog.data, 
+                    textoMeio: prog.texto_limpeza_meio || '',
+                    textoFim: prog.texto_limpeza_fim || ''
+                });
+            });
+
+            // Só desenha se encontrou dados, caso contrário deixa a área limpa esperando a geração
+            if (temLimpeza) {
+                desenharCardsDeEdicao();
+            } else {
+                document.getElementById('listaCardsEscalaLimpeza').innerHTML = '';
+            }
+        } catch (error) {
+            console.error("Erro ao carregar mês existente:", error);
+        }
+    });
+}
+
+// 2. O Algoritmo de Geração (com aviso de sobrescrita)
 const btnGerar = document.getElementById('btnGerarEscalaLimpeza');
 if (btnGerar) {
     btnGerar.addEventListener('click', async () => {
         const mesInput = document.getElementById('mesGeradorLimpeza').value;
+        
+        // --- NOVA TRAVA DE SEGURANÇA ---
+        const temDadosExistentes = reunioesDoMesEmMemoria.some(r => r.textoMeio !== '' || r.textoFim !== '');
+        if (temDadosExistentes) {
+            const confirma = confirm("⚠️ Já existe uma escala de limpeza salva para este mês.\n\nSe você continuar, a escala atual será APAGADA e o algoritmo sorteará novas famílias.\n\nDeseja gerar uma NOVA escala?");
+            if (!confirma) return;
+        }
+        // -------------------------------
         if (!mesInput) return alert("Selecione um mês primeiro!");
         
         if(configLimpeza.cabecas.length === 0 || configLimpeza.participantes.length === 0) {
