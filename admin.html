@@ -612,6 +612,7 @@
         
         // NOVO MÓDULO IMPORTADO AQUI:
         import { initModuloDiscursos } from './js/modulo-discursos.js';
+        import { initModuloAnuncios } from './js/modulo-anuncios.js';
         
         // --- GERENCIAMENTO DE ESTADO DE AUTENTICAÇÃO ---
         onAuthStateChanged(auth, async (user) => {
@@ -632,6 +633,7 @@
                 initModuloMecanicas();
                 initModuloDiscursos();
                 initModuloLimpeza();
+                initModuloAnuncios();
                 
             } else {
                 login.style.display = 'block';
@@ -741,57 +743,6 @@
                 }
             });
         });
-
-        // --- GESTÃO DA ESCALA DE PREGAÇÃO ---
-        let listaPregaTemporaria = [];
-
-        // Adicionar à tabela visual
-        document.getElementById('btnAdicionarLinhaPrega').addEventListener('click', (e) => {
-            e.preventDefault();
-            const data = document.getElementById('inputPregaData').value;
-            const local = document.getElementById('inputPregaLocal').value;
-            const dirigente = document.getElementById('inputPregaDirigente').value;
-
-            if (!data || !local || !dirigente) {
-                alert("Preencha todos os campos da pregação.");
-                return;
-            }
-
-            const item = { data, local, dirigente, id: Date.now() };
-            listaPregaTemporaria.push(item);
-            renderizarTabelaPregaAdmin();
-
-            // Limpar campos
-            document.getElementById('inputPregaLocal').value = '';
-            document.getElementById('inputPregaDirigente').value = '';
-        });
-
-        function renderizarTabelaPregaAdmin() {
-            const corpo = document.getElementById('tabelaCorpoPregaAdmin');
-            corpo.innerHTML = '';
-            
-            // Ordenar por data
-            listaPregaTemporaria.sort((a, b) => new Date(a.data) - new Date(b.data));
-
-            listaPregaTemporaria.forEach(item => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td style="padding: 8px; border-bottom: 1px solid #eee;">${item.data.split('-').reverse().join('/')}</td>
-                    <td style="padding: 8px; border-bottom: 1px solid #eee;">${item.local}</td>
-                    <td style="padding: 8px; border-bottom: 1px solid #eee;">${item.dirigente}</td>
-                    <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">
-                        <button onclick="removerItemPrega(${item.id})" style="background: none; border: none; color: red; cursor: pointer;">🗑️</button>
-                    </td>
-                `;
-                corpo.appendChild(tr);
-            });
-        }
-
-        // Função global para o botão de apagar funcionar
-        window.removerItemPrega = (id) => {
-            listaPregaTemporaria = listaPregaTemporaria.filter(i => i.id !== id);
-            renderizarTabelaPregaAdmin();
-        };
         
     </script>
 </body>
