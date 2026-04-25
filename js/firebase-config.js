@@ -23,4 +23,4 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 
 // Exportamos as instâncias prontas para serem importadas nos motores e módulos de UI
-export { app, db, auth };
+export { app, db, auth, firebaseConfig };
