@@ -2,6 +2,7 @@ import { doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/f
 import { db } from './firebase-config.js'; 
 
 let listaPregaTemporaria = [];
+let listaPontosTemporaria = []; // 🟢 NOVA VARIÁVEL PARA OS PONTOS
 
 export function initModuloAnuncios() {
     carregarDadosMuralAdmin();
@@ -14,7 +15,11 @@ async function carregarDadosMuralAdmin() {
         const docMural = await getDoc(doc(db, "configuracoes", "mural_pregacao"));
         if (docMural.exists()) {
             const dados = docMural.data();
-            document.getElementById('inputPontoParada').value = dados.ponto_parada || "";
+            
+            // 🟢 NOVA LÓGICA: Carrega a lista do banco e já desenha na tela
+            listaPontosTemporaria = dados.pontos_parada_array || [];
+            renderizarListaPontosAdmin();
+            
             document.getElementById('toggleRelatorio').checked = dados.relatorio_ativo || false;
             document.getElementById('inputLinkRelatorio').value = dados.relatorio_link || "";
             document.getElementById('textoAvisoMural').value = dados.aviso_texto || "";
@@ -163,4 +168,16 @@ function renderizarTabelaPregaAdmin() {
         `;
         corpo.appendChild(tr);
     });
+}
+
+function renderizarListaPontosAdmin() {
+    const ul = document.getElementById('listaPontosAtivosAdmin');
+    if (!ul) return;
+    
+    ul.innerHTML = listaPontosTemporaria.map((ponto, i) => `
+        <li style="display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; border-bottom: 1px solid #eee; font-size: 14px;">
+            <span>${ponto}</span>
+            <button class="btn-remover-ponto" data-index="${i}" style="background: none; border: none; color: red; cursor: pointer; font-weight: bold; font-size: 16px;">✕</button>
+        </li>
+    `).join('');
 }
