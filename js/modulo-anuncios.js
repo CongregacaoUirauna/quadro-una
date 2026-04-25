@@ -104,20 +104,21 @@ function configurarOuvintesMural() {
 
     // --- GESTÃO DA ESCALA MENSAL DE PREGAÇÃO ---
     
-    // Adicionar linha temporária
+    // Adicionar linha temporária (Agora capturando a HORA)
     document.getElementById('btnAdicionarLinhaPrega').addEventListener('click', (e) => {
         e.preventDefault();
         const data = document.getElementById('inputPregaData').value;
-        const hora = document.getElementById('inputPregaHora').value;
+        const hora = document.getElementById('inputPregaHora').value; // 🟢 Captura a hora
         const local = document.getElementById('inputPregaLocal').value;
         const dirigente = document.getElementById('inputPregaDirigente').value;
 
-        if (!data || !local || !dirigente) {
-            alert("Preencha todos os campos da pregação.");
+        if (!data || !hora || !local || !dirigente) {
+            alert("Preencha todos os campos, incluindo a hora da pregação.");
             return;
         }
 
-        listaPregaTemporaria.push({ data, local, dirigente, id: Date.now() });
+        // 🟢 Injeta a variável 'hora' no pacote que vai pro Firebase
+        listaPregaTemporaria.push({ data, hora, local, dirigente, id: Date.now() });
         renderizarTabelaPregaAdmin();
 
         document.getElementById('inputPregaLocal').value = '';
@@ -157,9 +158,10 @@ function renderizarTabelaPregaAdmin() {
 
     listaPregaTemporaria.forEach(item => {
         const tr = document.createElement('tr');
+        // 🟢 O "item.hora || '--:--'" garante que dados antigos não mostrem "undefined"
         tr.innerHTML = `
             <td style="padding: 8px; border-bottom: 1px solid #eee;">${item.data.split('-').reverse().join('/')}</td>
-            <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">${item.hora}</td>
+            <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold; color: #1a73e8;">${item.hora || '--:--'}</td>
             <td style="padding: 8px; border-bottom: 1px solid #eee;">${item.local}</td>
             <td style="padding: 8px; border-bottom: 1px solid #eee;">${item.dirigente}</td>
             <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">
