@@ -81,6 +81,7 @@ function configurarOuvintesMural() {
     document.getElementById('btnAdicionarLinhaPrega').addEventListener('click', (e) => {
         e.preventDefault();
         const data = document.getElementById('inputPregaData').value;
+        const hora = document.getElementById('inputPregaHora').value;
         const local = document.getElementById('inputPregaLocal').value;
         const dirigente = document.getElementById('inputPregaDirigente').value;
 
@@ -130,12 +131,13 @@ function renderizarTabelaPregaAdmin() {
     listaPregaTemporaria.forEach(item => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            ${item.data.split('-').reverse().join('/')}
-            ${item.local}
-            ${item.dirigente}
-            
-                🗑️
-            
+            <td style="padding: 8px; border-bottom: 1px solid #eee;">${item.data.split('-').reverse().join('/')}</td>
+            <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">${item.hora}</td>
+            <td style="padding: 8px; border-bottom: 1px solid #eee;">${item.local}</td>
+            <td style="padding: 8px; border-bottom: 1px solid #eee;">${item.dirigente}</td>
+            <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">
+                <button class="btn-remover-prega" data-id="${item.id}" style="background: none; border: none; color: red; cursor: pointer;">🗑️</button>
+            </td>
         `;
         corpo.appendChild(tr);
     });
