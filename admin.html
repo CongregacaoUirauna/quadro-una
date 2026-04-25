@@ -71,6 +71,7 @@
                 <button id="aba-limpeza" class="btn-config" style="margin-top: 0; width: auto; background-color: #e0e0e0; color: #666;"> 🧼 Escala de Limpeza</button>
                 <button id="aba-mural" class="btn-config" style="margin-top: 0; width: auto; background-color: #e0e0e0; color: #666;">📢 Mural e Pregação</button>
                 <button id="btnConfigLimpeza" class="btn-config" style="margin-top: 0; width: auto; background-color: #26a69a; color: white; font-weight: bold;">🧹 Configurar Limpeza</button>
+                <button id="aba-acessos" class="btn-config" style="margin-top: 0; width: auto; background-color: #e0e0e0; color: #666; display: none;">👥 Gestão de Acessos</button>
             </div>
             
             <div id="painel-estrutural-temas">
@@ -460,7 +461,42 @@
                             <button id="btnSalvarEscalaPregacaoCompleta" class="btn-salvar" style="margin: 0; background-color: #1b5e20; width: 100%;">💾 Salvar Escala Completa no Firebase</button>
                         </div>
                         </div>
-            
+
+                        <div id="painel-acessos" style="display: none; width: 100%; clear: both;">
+                            <div class="container-escala">
+                                <div class="escala-header" style="background: #f3e5f5; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #ce93d8;">
+                                    <h2 style="margin: 0 0 10px 0; color: #7b1fa2; font-size: 18px;">Gestão de Usuários e Privilégios</h2>
+                                    <p style="font-size: 14px; color: #333;">Cadastre novos usuários e defina quais abas cada um pode acessar.</p>
+                                </div>
+                        
+                                <div style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 20px;">
+                                    <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #ddd; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                                        <h3 style="margin-top: 0; color: #7b1fa2; border-bottom: 1px solid #eee; padding-bottom: 10px;">Novo Cadastro</h3>
+                                        <input type="email" id="novoUsuarioEmail" placeholder="E-mail do Irmão" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px;">
+                                        <input type="password" id="novoUsuarioSenha" placeholder="Senha Temporária" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px;">
+                                        
+                                        <div style="margin: 15px 0;">
+                                            <label style="display: block; font-weight: bold; margin-bottom: 10px;">Permissões:</label>
+                                            <label style="display: block; margin-bottom: 5px;"><input type="checkbox" class="perm-check" value="acesso_temas"> Temas e Cânticos</label>
+                                            <label style="display: block; margin-bottom: 5px;"><input type="checkbox" class="perm-check" value="acesso_escalas"> Tabela Mensal</label>
+                                            <label style="display: block; margin-bottom: 5px;"><input type="checkbox" class="perm-check" value="acesso_mecanicas"> Mecânicas</label>
+                                            <label style="display: block; margin-bottom: 5px;"><input type="checkbox" class="perm-check" value="acesso_discursos"> Discursos</label>
+                                            <label style="display: block; margin-bottom: 5px;"><input type="checkbox" class="perm-check" value="acesso_limpeza"> Limpeza</label>
+                                            <label style="display: block; margin-bottom: 15px;"><input type="checkbox" class="perm-check" value="acesso_mural"> Mural e Pregação</label>
+                                        </div>
+                        
+                                        <button id="btnCriarUsuario" class="btn-salvar" style="margin: 0; background-color: #7b1fa2; width: 100%;">👤 Criar e Liberar Acesso</button>
+                                    </div>
+                        
+                                    <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #ddd; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                                        <h3 style="margin-top: 0; color: #333; border-bottom: 1px solid #eee; padding-bottom: 10px;">Usuários com Acesso</h3>
+                                        <div id="listaUsuariosAcessos" style="max-height: 400px; overflow-y: auto;">
+                                            </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    
                 </div> 
             </div> 
             
