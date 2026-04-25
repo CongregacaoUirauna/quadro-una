@@ -44,14 +44,36 @@ function configurarOuvintesMural() {
         atualizarTextoSwitch(e.target.checked);
     });
 
-    // AÇÃO 1: Salvar Ponto de Parada
-    document.getElementById('btnSalvarPontoParada').addEventListener('click', async () => {
-        const btn = document.getElementById('btnSalvarPontoParada');
-        const valor = document.getElementById('inputPontoParada').value;
-        btn.innerText = "⏳ Salvando...";
-        await setDoc(doc(db, "configuracoes", "mural_pregacao"), { ponto_parada: valor }, { merge: true });
-        btn.innerText = "✅ Salvo!";
-        setTimeout(() => btn.innerText = "📍 Atualizar Ponto de Parada", 2000);
+    // --- GESTÃO DA LISTA DE PONTOS DE PARADA ---
+    
+    // 1. Adicionar ponto à lista visual
+    document.getElementById('btnAdicionarPontoLista').addEventListener('click', () => {
+        const input = document.getElementById('inputNovoPontoParada');
+        if (!input.value.trim()) return;
+        
+        listaPontosTemporaria.push(input.value.trim());
+        input.value = '';
+        renderizarListaPontosAdmin();
+    });
+
+    // 2. Remover ponto da lista (Delegação de evento)
+    document.getElementById('listaPontosAtivosAdmin').addEventListener('click', (e) => {
+        if (e.target.classList.contains('btn-remover-ponto')) {
+            const index = e.target.getAttribute('data-index');
+            listaPontosTemporaria.splice(index, 1);
+            renderizarListaPontosAdmin();
+        }
+    });
+
+    // 3. Salvar array completo no Firebase
+    document.getElementById('btnSalvarPontosParada').addEventListener('click', async () => {
+        const btn = document.getElementById('btnSalvarPontosParada');
+        btn.innerText = "⏳ Atualizando Portal...";
+        await setDoc(doc(db, "configuracoes", "mural_pregacao"), { 
+            pontos_parada_array: listaPontosTemporaria 
+        }, { merge: true });
+        btn.innerText = "✅ Portal Atualizado!";
+        setTimeout(() => btn.innerText = "📍 Atualizar Todos no Portal", 2000);
     });
 
     // AÇÃO 2: Salvar Configurações de Relatório
