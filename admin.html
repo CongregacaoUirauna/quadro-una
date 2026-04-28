@@ -385,7 +385,7 @@
                     </div>
 
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
-                        <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #ddd; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                        <div id="bloco-pontos-parada" style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #ddd; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
                             <h3 style="margin-top: 0; color: #e65100; border-bottom: 1px solid #eee; padding-bottom: 10px;">🚗 Pontos de Parada Ativos</h3>
                             
                             <div style="display: flex; gap: 5px; margin-bottom: 15px;">
@@ -399,7 +399,7 @@
                             <button id="btnSalvarPontosParada" class="btn-salvar" style="margin: 0; background-color: #ef6c00; width: 100%;">📍 Atualizar Todos no Portal</button>
                         </div>
 
-                        <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #ddd; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                        <div id="bloco-relatorios-campo" style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #ddd; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
                             <h3 style="margin-top: 0; color: #1565c0; border-bottom: 1px solid #eee; padding-bottom: 10px;">📋 Relatórios de Campo</h3>
                             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
                                 <label class="switch" style="position: relative; display: inline-block; width: 50px; height: 24px;">
@@ -413,13 +413,13 @@
                             <button id="btnSalvarRelatorio" class="btn-salvar" style="margin: 0; background-color: #1565c0; width: 100%;">💾 Salvar Configurações</button>
                         </div>
 
-                        <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #ddd; box-shadow: 0 2px 4px rgba(0,0,0,0.05); grid-column: 1 / -1;">
+                        <div id="bloco-avisos-mural" style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #ddd; box-shadow: 0 2px 4px rgba(0,0,0,0.05); grid-column: 1 / -1;">
                             <h3 style="margin-top: 0; color: #2e7d32; border-bottom: 1px solid #eee; padding-bottom: 10px;">📝 Avisos do Mural</h3>
                             <textarea id="textoAvisoMural" placeholder="Digite aqui o aviso que aparecerá no mural..." style="width: 100%; height: 100px; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-family: sans-serif;"></textarea>
                             <button id="btnSalvarAvisoMural" class="btn-salvar" style="margin: 10px 0 0 0; background-color: #2e7d32; width: 100%;">📢 Publicar no Mural</button>
                         </div>
                         
-                        <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #ddd; box-shadow: 0 2px 4px rgba(0,0,0,0.05); grid-column: 1 / -1; margin-top: 20px;">
+                        <div id="bloco-escala-pregacao" style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #ddd; box-shadow: 0 2px 4px rgba(0,0,0,0.05); grid-column: 1 / -1; margin-top: 20px;">
                             <h3 style="margin-top: 0; color: #2e7d32; border-bottom: 1px solid #eee; padding-bottom: 10px;">📅 Configurar Escala Mensal de Pregação</h3>
                             
                             <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; background: #f9f9f9; padding: 15px; border-radius: 8px;">
@@ -480,7 +480,8 @@
                                             <label style="display: block; margin-bottom: 5px;"><input type="checkbox" class="perm-check" value="acesso_mecanicas"> Mecânicas</label>
                                             <label style="display: block; margin-bottom: 5px;"><input type="checkbox" class="perm-check" value="acesso_discursos"> Discursos</label>
                                             <label style="display: block; margin-bottom: 5px;"><input type="checkbox" class="perm-check" value="acesso_limpeza"> Limpeza</label>
-                                            <label style="display: block; margin-bottom: 15px;"><input type="checkbox" class="perm-check" value="acesso_mural"> Mural e Pregação</label>
+                                            <label style="display: block; margin-bottom: 5px;"><input type="checkbox" class="perm-check" value="acesso_mural"> Mural (Admin Total)</label>
+                                            <label style="display: block; margin-bottom: 15px;"><input type="checkbox" class="perm-check" value="acesso_pontos_parada"> Pontos de Parada (Só Dirigentes)</label>
                                         </div>
                         
                                         <button id="btnCriarUsuario" class="btn-salvar" style="margin: 0; background-color: #7b1fa2; width: 100%;">👤 Criar e Liberar Acesso</button>
@@ -682,9 +683,10 @@
                     { id: 'aba-mecanicas', perm: 'acesso_mecanicas' },
                     { id: 'aba-discursos', perm: 'acesso_discursos' },
                     { id: 'aba-limpeza', perm: 'acesso_limpeza' },
-                    { id: 'aba-mural', perm: 'acesso_mural' },
+                    // Ajuste aqui: Aba Mural aparece se tiver acesso_mural OU acesso_pontos_parada
+                    { id: 'aba-mural', perms: ['acesso_mural', 'acesso_pontos_parada'] },
                     { id: 'aba-acessos', perm: 'is_super_admin' },
-                    { id: 'btnConfigLimpeza', perm: 'acesso_limpeza' } // 🟢 Incluído aqui para não sumir
+                    { id: 'btnConfigLimpeza', perm: 'acesso_limpeza' } 
                 ];
 
                 let primeiraAbaDisponivel = null;
@@ -703,6 +705,17 @@
                         }
                     }
                 });
+
+                // --- LÓGICA DO COMPONENTE CEGO (SUB-PERMISSÕES) ---
+                // Se o usuário NÃO for Super Admin e NÃO tiver acesso_mural total, mas tiver acesso_pontos_parada...
+                if (!perms.is_super_admin && !perms.acesso_mural && perms.acesso_pontos_parada) {
+                    const idsParaEsconder = ['bloco-relatorios-campo', 'bloco-avisos-mural', 'bloco-escala-pregacao'];
+                    idsParaEsconder.forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el) el.style.display = 'none';
+                    });
+                }
+                // --------------------------------------------------
 
                 // 4. Liberação da Interface
                 sidebar.style.setProperty('display', 'flex', 'important');
