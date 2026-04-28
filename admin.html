@@ -473,15 +473,32 @@
                                         <input type="email" id="novoUsuarioEmail" placeholder="E-mail do Irmão" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px;">
                                         <input type="password" id="novoUsuarioSenha" placeholder="Senha Temporária" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px;">
                                         
-                                        <div style="margin: 15px 0;">
-                                            <label style="display: block; font-weight: bold; margin-bottom: 15px;">Permissões:</label>
-                                            <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; cursor: pointer;"><input type="checkbox" class="perm-check" value="acesso_temas" style="margin:0;"> Temas e Cânticos</label>
-                                            <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; cursor: pointer;"><input type="checkbox" class="perm-check" value="acesso_escalas" style="margin:0;"> Tabela Mensal</label>
-                                            <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; cursor: pointer;"><input type="checkbox" class="perm-check" value="acesso_mecanicas" style="margin:0;"> Mecânicas</label>
-                                            <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; cursor: pointer;"><input type="checkbox" class="perm-check" value="acesso_discursos" style="margin:0;"> Discursos</label>
-                                            <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; cursor: pointer;"><input type="checkbox" class="perm-check" value="acesso_limpeza" style="margin:0;"> Limpeza</label>
-                                            <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; cursor: pointer;"><input type="checkbox" class="perm-check" value="acesso_mural" style="margin:0;"> Mural (Admin Total)</label>
-                                            <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 15px; cursor: pointer;"><input type="checkbox" class="perm-check" value="acesso_pontos_parada" style="margin:0;"> Pontos de Parada (Só Dirigentes)</label>
+                                        <div style="margin: 15px 0; text-align: left;">
+                                            <label style="display: block; font-weight: bold; margin-bottom: 15px; text-align: left;">Permissões:</label>
+                                            
+                                            <div style="display: flex; flex-direction: column; gap: 12px; padding-left: 5px;">
+                                                <label style="display: flex; flex-direction: row; align-items: center; justify-content: flex-start; cursor: pointer; text-align: left; font-weight: normal; margin: 0;">
+                                                    <input type="checkbox" class="perm-check" value="acesso_temas" style="width: auto; margin: 0 10px 0 0; transform: scale(1.2);"> Temas e Cânticos
+                                                </label>
+                                                <label style="display: flex; flex-direction: row; align-items: center; justify-content: flex-start; cursor: pointer; text-align: left; font-weight: normal; margin: 0;">
+                                                    <input type="checkbox" class="perm-check" value="acesso_escalas" style="width: auto; margin: 0 10px 0 0; transform: scale(1.2);"> Tabela Mensal
+                                                </label>
+                                                <label style="display: flex; flex-direction: row; align-items: center; justify-content: flex-start; cursor: pointer; text-align: left; font-weight: normal; margin: 0;">
+                                                    <input type="checkbox" class="perm-check" value="acesso_mecanicas" style="width: auto; margin: 0 10px 0 0; transform: scale(1.2);"> Mecânicas
+                                                </label>
+                                                <label style="display: flex; flex-direction: row; align-items: center; justify-content: flex-start; cursor: pointer; text-align: left; font-weight: normal; margin: 0;">
+                                                    <input type="checkbox" class="perm-check" value="acesso_discursos" style="width: auto; margin: 0 10px 0 0; transform: scale(1.2);"> Discursos
+                                                </label>
+                                                <label style="display: flex; flex-direction: row; align-items: center; justify-content: flex-start; cursor: pointer; text-align: left; font-weight: normal; margin: 0;">
+                                                    <input type="checkbox" class="perm-check" value="acesso_limpeza" style="width: auto; margin: 0 10px 0 0; transform: scale(1.2);"> Limpeza
+                                                </label>
+                                                <label style="display: flex; flex-direction: row; align-items: center; justify-content: flex-start; cursor: pointer; text-align: left; font-weight: normal; margin: 0;">
+                                                    <input type="checkbox" class="perm-check" value="acesso_mural" style="width: auto; margin: 0 10px 0 0; transform: scale(1.2);"> Mural (Admin Total)
+                                                </label>
+                                                <label style="display: flex; flex-direction: row; align-items: center; justify-content: flex-start; cursor: pointer; text-align: left; font-weight: normal; margin: 0;">
+                                                    <input type="checkbox" class="perm-check" value="acesso_pontos_parada" style="width: auto; margin: 0 10px 0 0; transform: scale(1.2);"> Pontos de Parada (Só Dirigentes)
+                                                </label>
+                                            </div>
                                         </div>
                         
                                         <button id="btnCriarUsuario" class="btn-salvar" style="margin: 0; background-color: #7b1fa2; width: 100%;">👤 Criar e Liberar Acesso</button>
