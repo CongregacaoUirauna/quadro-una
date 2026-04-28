@@ -162,7 +162,7 @@ export async function carregarPermissoes(email) {
         if (docSnap.exists()) {
             permissoesUsuario = docSnap.data();
         } else {
-            // 🟢 MODO DE SOBREVIVÊNCIA: Substitua pelo seu e-mail real de administrador!
+            // Modo de Sobrevivência para o seu e-mail de Admin
             const isDono = email === "glebstonleticia@gmail.com"; 
             
             permissoesUsuario = {
@@ -175,13 +175,14 @@ export async function carregarPermissoes(email) {
                 acesso_mural: isDono
             };
             
-            // Se for o dono, já cria o perfil de Super Admin no banco de dados automaticamente
             if (isDono) {
                 await setDoc(doc(db, "usuarios_permissoes", email), permissoesUsuario);
             }
         }
+        console.log("✅ Permissões carregadas para:", email, permissoesUsuario);
+        return permissoesUsuario; // 🟢 Retorno explícito para o admin.html
     } catch (error) {
-        console.error("Erro ao carregar permissões:", error);
-        permissoesUsuario = null; // Em caso de erro, bloqueia tudo por segurança
+        console.error("❌ Erro crítico de permissões:", error);
+        return null;
     }
 }
