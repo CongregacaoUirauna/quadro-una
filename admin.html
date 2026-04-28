@@ -474,14 +474,14 @@
                                         <input type="password" id="novoUsuarioSenha" placeholder="Senha Temporária" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px;">
                                         
                                         <div style="margin: 15px 0;">
-                                            <label style="display: block; font-weight: bold; margin-bottom: 10px;">Permissões:</label>
-                                            <label style="display: block; margin-bottom: 5px;"><input type="checkbox" class="perm-check" value="acesso_temas"> Temas e Cânticos</label>
-                                            <label style="display: block; margin-bottom: 5px;"><input type="checkbox" class="perm-check" value="acesso_escalas"> Tabela Mensal</label>
-                                            <label style="display: block; margin-bottom: 5px;"><input type="checkbox" class="perm-check" value="acesso_mecanicas"> Mecânicas</label>
-                                            <label style="display: block; margin-bottom: 5px;"><input type="checkbox" class="perm-check" value="acesso_discursos"> Discursos</label>
-                                            <label style="display: block; margin-bottom: 5px;"><input type="checkbox" class="perm-check" value="acesso_limpeza"> Limpeza</label>
-                                            <label style="display: block; margin-bottom: 5px;"><input type="checkbox" class="perm-check" value="acesso_mural"> Mural (Admin Total)</label>
-                                            <label style="display: block; margin-bottom: 15px;"><input type="checkbox" class="perm-check" value="acesso_pontos_parada"> Pontos de Parada (Só Dirigentes)</label>
+                                            <label style="display: block; font-weight: bold; margin-bottom: 15px;">Permissões:</label>
+                                            <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; cursor: pointer;"><input type="checkbox" class="perm-check" value="acesso_temas" style="margin:0;"> Temas e Cânticos</label>
+                                            <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; cursor: pointer;"><input type="checkbox" class="perm-check" value="acesso_escalas" style="margin:0;"> Tabela Mensal</label>
+                                            <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; cursor: pointer;"><input type="checkbox" class="perm-check" value="acesso_mecanicas" style="margin:0;"> Mecânicas</label>
+                                            <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; cursor: pointer;"><input type="checkbox" class="perm-check" value="acesso_discursos" style="margin:0;"> Discursos</label>
+                                            <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; cursor: pointer;"><input type="checkbox" class="perm-check" value="acesso_limpeza" style="margin:0;"> Limpeza</label>
+                                            <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; cursor: pointer;"><input type="checkbox" class="perm-check" value="acesso_mural" style="margin:0;"> Mural (Admin Total)</label>
+                                            <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 15px; cursor: pointer;"><input type="checkbox" class="perm-check" value="acesso_pontos_parada" style="margin:0;"> Pontos de Parada (Só Dirigentes)</label>
                                         </div>
                         
                                         <button id="btnCriarUsuario" class="btn-salvar" style="margin: 0; background-color: #7b1fa2; width: 100%;">👤 Criar e Liberar Acesso</button>
@@ -694,8 +694,11 @@
                 mapaAbas.forEach(item => {
                     const btn = document.getElementById(item.id);
                     if (btn) {
-                        // Se for Super Admin OU tiver a permissão específica, mostra
-                        if (perms.is_super_admin || perms[item.perm]) {
+                        // Verifica se a permissão é uma array (várias) ou uma string (única)
+                        const temAcesso = perms.is_super_admin || 
+                            (item.perms ? item.perms.some(p => perms[p]) : perms[item.perm]);
+
+                        if (temAcesso) {
                             btn.style.display = 'inline-block';
                             if (!primeiraAbaDisponivel && item.id.startsWith('aba-')) {
                                 primeiraAbaDisponivel = btn;
