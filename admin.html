@@ -670,22 +670,17 @@
             if (user) {
                 login.style.display = 'none';
                 
-                // 1. CARREGA AS PERMISSÕES PRIMEIRO (Portão de Segurança)
+                // 1. CARREGA AS PERMISSÕES (O Portão de Segurança)
                 await carregarPermissoes(user.email);
                 
                 if (!permissoesUsuario) {
-                    alert("Sua conta não possui permissões configuradas. Contate o administrador.");
+                    alert("Acesso não configurado.");
                     signOut(auth);
                     return;
                 }
 
-                if (permissoesUsuario.is_super_admin) {
-                    document.getElementById('aba-acessos').style.display = 'inline-block';
-                    initModuloAcessos();
-                }
-
-                // 2. APLICA A MAQUIAGEM NA INTERFACE (Oculta abas proibidas)
-                const abas = [
+                // 2. MAQUIAGEM RBAC (Esconde/Mostra o que é permitido)
+                const abasConfig = [
                     { id: 'aba-temas', perm: 'acesso_temas' },
                     { id: 'aba-escalas', perm: 'acesso_escalas' },
                     { id: 'aba-mecanicas', perm: 'acesso_mecanicas' },
@@ -694,45 +689,44 @@
                     { id: 'aba-mural', perm: 'acesso_mural' }
                 ];
 
-                let primeiraAbaLiberada = null;
-
-                abas.forEach(aba => {
+                let primeiraAba = null;
+                abasConfig.forEach(aba => {
                     const btn = document.getElementById(aba.id);
                     if (btn) {
                         if (permissoesUsuario[aba.perm] || permissoesUsuario.is_super_admin) {
                             btn.style.display = 'inline-block';
-                            if (!primeiraAbaLiberada) primeiraAbaLiberada = btn; // Guarda a primeira aba que achar
-                        } else {
-                            btn.style.display = 'none';
-                        }
+                            if (!primeiraAba) primeiraAba = btn;
+                        } else { btn.style.display = 'none'; }
                     }
                 });
 
-                // Esconde botões estruturais se não for Super Admin
-                if (!permissoesUsuario.is_super_admin) {
-                    document.getElementById('btnConfig').style.display = 'none';
-                    document.getElementById('btnConfigLimpeza').style.display = 'none';
-                    document.getElementById('btnNovaProgramacao').style.display = 'none';
+                // Aba secreta de acessos
+                if (permissoesUsuario.is_super_admin) {
+                    document.getElementById('aba-acessos').style.display = 'inline-block';
                 }
 
-                // 3. ROTEAMENTO INTELIGENTE
-                if (primeiraAbaLiberada) {
-                    sidebar.style.setProperty('display', 'flex', 'important');
-                    sistema.style.setProperty('display', 'block', 'important');
-                    
-                    // Inicializa os módulos base
-                    await carregarConfiguracoes();
-                    carregarHistoricoSidebar(carregarProgramacaoEdicao, prepararNovoFormulario);
-                    prepararNovoFormulario();
-                    initMotorPDF();
-                    initModuloTemas();
-                    initModuloMecanicas();
-                    initModuloDiscursos();
-                    initModuloLimpeza();
+                // 3. INICIALIZAÇÃO DOS MOTORES
+                sidebar.style.setProperty('display', 'flex', 'important');
+                sistema.style.setProperty('display', 'block', 'important');
+                
+                await carregarConfiguracoes();
+                carregarHistoricoSidebar(carregarProgramacaoEdicao, prepararNovoFormulario);
+                prepararNovoFormulario();
+                initMotorPDF();
+                initModuloTemas();
+                initModuloMecanicas();
+                initModuloDiscursos();
+                initModuloLimpeza();
+                
+                // 🟢 AS DUAS PEÇAS QUE FALTAVAM:
+                import('./js/modulo-anuncios.js').then(m => m.initModuloAnuncios());
+                if (permissoesUsuario.is_super_admin) {
+                    import('./js/modulo-acessos.js').then(m => m.initModuloAcessos());
+                }
 
-                    // Simula um clique na primeira aba permitida para renderizar a tela certa
-                    setTimeout(() => primeiraAbaLiberada.click(), 100); 
-                } else {
+                if (primeiraAba) setTimeout(() => primeiraAba.click(), 100);
+
+            } else {
                     alert("Você não tem acesso a nenhuma ferramenta. Contate o administrador.");
                     signOut(auth);
                     return;
