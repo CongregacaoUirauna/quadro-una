@@ -759,90 +759,66 @@
 
         document.getElementById('btnSair').addEventListener('click', () => signOut(auth));
 
-       // --- CONTROLE DE NAVEGAÇÃO ENTRE ABAS ---
-        const btnAbaTemas = document.getElementById('aba-temas');
-        const btnAbaEscalas = document.getElementById('aba-escalas');
-        const painelTemas = document.getElementById('painel-estrutural-temas');
-        const painelEscalas = document.getElementById('painel-escala-abas');
+       // --- CONTROLE DE NAVEGAÇÃO ENTRE ABAS (ROTEADOR UNIVERSAL) ---
+        // 1. Mapeamento dos botões e seus painéis respectivos
+        const listaPainéis = [
+            { btnId: 'aba-temas', painelId: 'painel-estrutural-temas', corDestaque: '#1a73e8' },
+            { btnId: 'aba-escalas', painelId: 'painel-escala-abas', corDestaque: '#1a73e8' },
+            { btnId: 'aba-mecanicas', painelId: 'painel-mecanicas', corDestaque: '#2a6b77' }, // Cor ajustada para Mecânica
+            { btnId: 'aba-discursos', painelId: 'painel-discursos', corDestaque: '#1565c0' }, // Cor ajustada para Discursos
+            { btnId: 'aba-limpeza', painelId: 'painel-limpeza', corDestaque: '#00695c' },    // Cor ajustada para Limpeza
+            { btnId: 'aba-mural', painelId: 'painel-mural', corDestaque: '#ef6c00' },       // Laranja do Mural
+            { btnId: 'aba-acessos', painelId: 'painel-acessos', corDestaque: '#7b1fa2' }      // Roxo dos Acessos
+        ];
 
-        // ABA 1: Temas e Cânticos (Com Auto-Sincronização do Lápis)
-        btnAbaTemas.addEventListener('click', () => {
-            painelTemas.classList.remove('hidden');
-            painelEscalas.classList.add('hidden');
-            document.getElementById('painel-mecanicas').classList.add('hidden'); 
-            document.getElementById('painel-discursos').style.display = 'none'; // 🟢 TRAVA DISCURSOS
-            document.getElementById('painel-limpeza').style.display = 'none'; // 🟢 TRAVA LIMPEZA
-            if(document.getElementById('painel-mural')) document.getElementById('painel-mural').style.display = 'none'; // 🟢 TRAVA MURAL
-            
-            btnAbaTemas.style.backgroundColor = '#1a73e8';
-            btnAbaTemas.style.color = '#fff';
-            
-            // Reseta cor dos outros botões
-            ['aba-escalas', 'aba-mecanicas', 'aba-discursos', 'aba-limpeza', 'aba-mural'].forEach(id => {
-                const btn = document.getElementById(id);
-                if(btn) {
-                    btn.style.backgroundColor = '#e0e0e0';
-                    btn.style.color = '#666';
+        // 2. Função Mestre de Troca de Abas
+        function alternarAbas(botaoClicadoId) {
+            listaPainéis.forEach(item => {
+                const botao = document.getElementById(item.btnId);
+                const painel = document.getElementById(item.painelId);
+
+                if (!botao || !painel) return;
+
+                if (item.btnId === botaoClicadoId) {
+                    // ATIVA A ABA CLICADA
+                    painel.style.display = 'block';
+                    painel.classList.remove('hidden'); // Remove a classe antiga para evitar conflitos de !important
+                    botao.style.backgroundColor = item.corDestaque;
+                    botao.style.color = '#fff';
+                } else {
+                    // DESATIVA AS OUTRAS ABAS
+                    painel.style.display = 'none';
+                    painel.classList.add('hidden');    // Adiciona por redundância para manter compatibilidade com CSS velho
+                    botao.style.backgroundColor = '#e0e0e0';
+                    botao.style.color = '#666';
                 }
             });
+        }
 
-            const dataAtual = document.getElementById('dataReuniao').value;
-            if (dataAtual) {
-                const itensHistorico = document.querySelectorAll('#listaHistorico .history-item');
-                itensHistorico.forEach(li => {
-                    const span = li.querySelector('span');
-                    if (span) {
-                        const dataConvertida = span.innerText.split('/').reverse().join('-');
-                        if (dataConvertida === dataAtual) span.click(); 
+        // 3. Acoplamento Dinâmico de Eventos
+        listaPainéis.forEach(item => {
+            const btn = document.getElementById(item.btnId);
+            if (btn) {
+                btn.addEventListener('click', () => {
+                    alternarAbas(item.btnId);
+
+                    // --- LÓGICA ESPECÍFICA DA ABA TEMAS (Sincronismo de Lápis do Histórico) ---
+                    if (item.btnId === 'aba-temas') {
+                        const dataAtual = document.getElementById('dataReuniao').value;
+                        if (dataAtual) {
+                            const itensHistorico = document.querySelectorAll('#listaHistorico .history-item');
+                            itensHistorico.forEach(li => {
+                                const span = li.querySelector('span');
+                                if (span) {
+                                    const dataConvertida = span.innerText.split('/').reverse().join('-');
+                                    if (dataConvertida === dataAtual) span.click(); 
+                                }
+                            });
+                        }
                     }
+                    // --------------------------------------------------------------------------
                 });
             }
-        });
-
-        // ABA 2: Tabela Mensal
-        btnAbaEscalas.addEventListener('click', () => {
-            painelEscalas.classList.remove('hidden');
-            painelTemas.classList.add('hidden');
-            document.getElementById('painel-mecanicas').classList.add('hidden'); 
-            document.getElementById('painel-discursos').style.display = 'none'; // 🟢 TRAVA DISCURSOS
-            document.getElementById('painel-limpeza').style.display = 'none'; // 🟢 TRAVA LIMPEZA
-            
-            btnAbaEscalas.style.backgroundColor = '#1a73e8';
-            btnAbaEscalas.style.color = '#fff';
-            
-            // Reseta cor dos outros botões
-            ['aba-temas', 'aba-mecanicas', 'aba-discursos', 'aba-limpeza'].forEach(id => {
-                const btn = document.getElementById(id);
-                if(btn) {
-                    btn.style.backgroundColor = '#e0e0e0';
-                    btn.style.color = '#666';
-                }
-            });
-        });
-
-        // ABA: Mural e Pregação
-        const btnAbaMural = document.getElementById('aba-mural');
-        const painelMural = document.getElementById('painel-mural');
-
-        btnAbaMural.addEventListener('click', () => {
-            painelMural.style.display = 'block';
-            painelTemas.classList.add('hidden');
-            painelEscalas.classList.add('hidden');
-            document.getElementById('painel-mecanicas').classList.add('hidden');
-            document.getElementById('painel-discursos').style.display = 'none';
-            document.getElementById('painel-limpeza').style.display = 'none';
-
-            btnAbaMural.style.backgroundColor = '#ef6c00'; // Laranja para destacar pregação
-            btnAbaMural.style.color = '#fff';
-
-            // Reseta cor dos outros botões
-            ['aba-temas', 'aba-escalas', 'aba-mecanicas', 'aba-discursos', 'aba-limpeza'].forEach(id => {
-                const btn = document.getElementById(id);
-                if(btn) {
-                    btn.style.backgroundColor = '#e0e0e0';
-                    btn.style.color = '#666';
-                }
-            });
         });
         
     </script>
