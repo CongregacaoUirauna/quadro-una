@@ -35,28 +35,51 @@ async function configurarCriacaoUsuario() {
         const senha = document.getElementById('novoUsuarioSenha').value;
         const btn = document.getElementById('btnCriarUsuario');
 
-        if (!email || !senha) return alert("Preencha e-mail e senha.");
+        if (!email) return alert("Preencha pelo menos o e-mail do irmão.");
 
-        btn.innerText = "⏳ Criando...";
+        btn.innerText = "⏳ Processando...";
+        
+        // 1. Já coletamos as permissões antes de saber se é novo ou antigo
+        let permissoes = { is_super_admin: false };
+        document.querySelectorAll('.perm-check').forEach(check => {
+            permissoes[check.value] = check.checked;
+        });
+
         try {
-            // 1. Cria o usuário no Auth (App Secundário não desloga o principal)
+            // Se o admin não digitou senha, assumimos que ele quer apenas atualizar
+            if (!senha) {
+                throw { code: 'auth/email-already-in-use' }; // Força a cair na armadilha abaixo
+            }
+
+            // 2. Tenta criar o usuário novo no Auth
             await createUserWithEmailAndPassword(secondaryAuth, email, senha);
 
-            // 2. Coleta as permissões marcadas
-            let permissoes = { is_super_admin: false };
-            document.querySelectorAll('.perm-check').forEach(check => {
-                permissoes[check.value] = check.checked;
-            });
-
-            // 3. Salva no Firestore
+            // 3. Salva no banco de dados
             await setDoc(doc(db, "usuarios_permissoes", email), permissoes);
 
-            alert("Usuário criado e permissões liberadas!");
+            alert("✅ Usuário criado e permissões liberadas!");
             limparFormulario();
             carregarUsuarios();
+
         } catch (e) {
-            console.error(e);
-            alert("Erro ao criar usuário: " + e.message);
+            // --- A ARMADILHA DO E-MAIL REPETIDO ---
+            if (e.code === 'auth/email-already-in-use') {
+                if(confirm("⚠️ Este e-mail já possui cadastro no sistema!\n\nDeseja ignorar a senha e APENAS ATUALIZAR as permissões marcadas para este irmão?")) {
+                    try {
+                        await setDoc(doc(db, "usuarios_permissoes", email), permissoes);
+                        alert("✅ Permissões atualizadas com sucesso!");
+                        limparFormulario();
+                        carregarUsuarios();
+                    } catch(errBanco) {
+                        alert("Erro ao gravar permissão: " + errBanco.message);
+                    }
+                }
+            } else if (e.code === 'auth/weak-password') {
+                alert("⚠️ A senha deve ter pelo menos 6 caracteres.");
+            } else {
+                console.error(e);
+                alert("❌ Erro ao criar usuário: " + e.message);
+            }
         } finally {
             btn.innerText = "👤 Criar e Liberar Acesso";
         }
