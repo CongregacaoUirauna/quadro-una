@@ -724,14 +724,14 @@
                     import('./js/modulo-acessos.js').then(m => m.initModuloAcessos());
                 }
 
-                if (primeiraAba) setTimeout(() => primeiraAba.click(), 100);
-
-            } else {
+                if (primeiraAba) {
+                    setTimeout(() => primeiraAba.click(), 100);
+                } else {
                     alert("Você não tem acesso a nenhuma ferramenta. Contate o administrador.");
                     signOut(auth);
                     return;
                 }
-                
+
             } else {
                 login.style.display = 'block';
                 sidebar.style.setProperty('display', 'none', 'important'); // Mata a sidebar no login
