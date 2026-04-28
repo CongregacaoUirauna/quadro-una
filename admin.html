@@ -668,47 +668,52 @@
             const login = document.getElementById('telaLogin');
 
             if (user) {
+                // 1. Bloqueia a interface enquanto carrega a segurança
                 login.style.display = 'none';
                 
-                // 1. CARREGA AS PERMISSÕES (O Portão de Segurança)
-                await carregarPermissoes(user.email);
+                // 2. Busca permissões e aguarda a confirmação do banco
+                const perms = await carregarPermissoes(user.email);
                 
-                if (!permissoesUsuario) {
-                    alert("Acesso não configurado.");
+                if (!perms) {
+                    alert("Acesso não autorizado ou erro de rede.");
                     signOut(auth);
                     return;
                 }
 
-                // 2. MAQUIAGEM RBAC (Esconde/Mostra o que é permitido)
-                const abasConfig = [
+                // 3. Mapeamento de Abas e Privilégios
+                const mapaAbas = [
                     { id: 'aba-temas', perm: 'acesso_temas' },
                     { id: 'aba-escalas', perm: 'acesso_escalas' },
                     { id: 'aba-mecanicas', perm: 'acesso_mecanicas' },
                     { id: 'aba-discursos', perm: 'acesso_discursos' },
                     { id: 'aba-limpeza', perm: 'acesso_limpeza' },
-                    { id: 'aba-mural', perm: 'acesso_mural' }
+                    { id: 'aba-mural', perm: 'acesso_mural' },
+                    { id: 'aba-acessos', perm: 'is_super_admin' },
+                    { id: 'btnConfigLimpeza', perm: 'acesso_limpeza' } // 🟢 Incluído aqui para não sumir
                 ];
 
-                let primeiraAba = null;
-                abasConfig.forEach(aba => {
-                    const btn = document.getElementById(aba.id);
+                let primeiraAbaDisponivel = null;
+
+                mapaAbas.forEach(item => {
+                    const btn = document.getElementById(item.id);
                     if (btn) {
-                        if (permissoesUsuario[aba.perm] || permissoesUsuario.is_super_admin) {
+                        // Se for Super Admin OU tiver a permissão específica, mostra
+                        if (perms.is_super_admin || perms[item.perm]) {
                             btn.style.display = 'inline-block';
-                            if (!primeiraAba) primeiraAba = btn;
-                        } else { btn.style.display = 'none'; }
+                            if (!primeiraAbaDisponivel && item.id.startsWith('aba-')) {
+                                primeiraAbaDisponivel = btn;
+                            }
+                        } else {
+                            btn.style.display = 'none';
+                        }
                     }
                 });
 
-                // Aba secreta de acessos
-                if (permissoesUsuario.is_super_admin) {
-                    document.getElementById('aba-acessos').style.display = 'inline-block';
-                }
-
-                // 3. INICIALIZAÇÃO DOS MOTORES
+                // 4. Liberação da Interface
                 sidebar.style.setProperty('display', 'flex', 'important');
                 sistema.style.setProperty('display', 'block', 'important');
-                
+
+                // 5. Inicialização dos Motores
                 await carregarConfiguracoes();
                 carregarHistoricoSidebar(carregarProgramacaoEdicao, prepararNovoFormulario);
                 prepararNovoFormulario();
@@ -718,24 +723,22 @@
                 initModuloDiscursos();
                 initModuloLimpeza();
                 
-                // 🟢 AS DUAS PEÇAS QUE FALTAVAM:
+                // Carga dinâmica dos módulos extras
                 import('./js/modulo-anuncios.js').then(m => m.initModuloAnuncios());
-                if (permissoesUsuario.is_super_admin) {
+                if (perms.is_super_admin) {
                     import('./js/modulo-acessos.js').then(m => m.initModuloAcessos());
                 }
 
-                if (primeiraAba) {
-                    setTimeout(() => primeiraAba.click(), 100);
-                } else {
-                    alert("Você não tem acesso a nenhuma ferramenta. Contate o administrador.");
-                    signOut(auth);
-                    return;
+                // 6. Roteamento: Abre a primeira aba que o usuário tem direito
+                if (primeiraAbaDisponivel) {
+                    setTimeout(() => primeiraAbaDisponivel.click(), 200);
                 }
 
             } else {
+                // Usuário deslogado
                 login.style.display = 'block';
-                sidebar.style.setProperty('display', 'none', 'important'); // Mata a sidebar no login
-                sistema.style.setProperty('display', 'none', 'important'); // Mata o sistema no login
+                sidebar.style.setProperty('display', 'none', 'important');
+                sistema.style.setProperty('display', 'none', 'important');
             }
         });
 
