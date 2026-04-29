@@ -737,9 +737,31 @@
                 }
                 // --------------------------------------------------
 
-                // 4. Liberação da Interface
-                sidebar.style.setProperty('display', 'flex', 'important');
+                // 4. Liberação da Interface (Com Filtro de Privilégios Globais)
                 sistema.style.setProperty('display', 'block', 'important');
+                
+                // O Sidebar e os botões superiores só fazem sentido para quem edita a Reunião ou Tabela Mensal
+                const temAcessoAgenda = perms.is_super_admin || perms.acesso_temas || perms.acesso_escalas;
+                
+                if (temAcessoAgenda) {
+                    sidebar.style.setProperty('display', 'flex', 'important');
+                    // Garante que os botões do topo fiquem visíveis para os admins
+                    ['btnConfig', 'btnGerarDesignacoes', 'btnGerarS140'].forEach(id => {
+                        const b = document.getElementById(id);
+                        if (b) b.style.display = 'inline-block';
+                    });
+                } else {
+                    // MODO RESTRITO: Esconde a barra lateral e expande o painel para ocupar 100% da tela
+                    sidebar.style.setProperty('display', 'none', 'important');
+                    sistema.style.marginLeft = '0'; 
+                    sistema.style.width = '100%';
+                    
+                    // Esconde os botões globais de PDF e Configurações
+                    ['btnConfig', 'btnGerarDesignacoes', 'btnGerarS140'].forEach(id => {
+                        const b = document.getElementById(id);
+                        if (b) b.style.display = 'none';
+                    });
+                }
 
                 // 5. Inicialização dos Motores
                 await carregarConfiguracoes();
