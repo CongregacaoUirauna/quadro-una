@@ -218,7 +218,6 @@ select.alerta-fadiga {
         border-bottom: 3px solid #1a73e8;
         box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         position: relative !important;
-        display: flex !important; 
     }
 
     /* 3. Área Principal ocupa o resto da tela */
