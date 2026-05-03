@@ -44,7 +44,7 @@
     </div>
 
     <!-- Ocultamos ambos por padrão no HTML -->
-    <div id="painelSidebar" style="display: none;"> 
+    <div id="painelSidebar" style="display: none; resize: horizontal; overflow-y: auto; overflow-x: hidden; min-width: 200px; max-width: 80vw; border-right: 3px solid #ccc; padding-right: 5px;"> 
         <div class="sidebar-header">
             <h2>Gestor Semanal</h2>
         </div>
@@ -52,10 +52,12 @@
         <ul class="history-list" id="listaHistorico"></ul>
     </div>
 
-    <div id="painelSistema" style="display: none;"> 
+    <div id="painelSistema" style="display: none; flex: 1; min-width: 0;"> 
         <div class="container">
             <div class="topo-acoes">
-                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+                    <button type="button" id="btnToggleSidebar" class="btn-config" style="background-color: #333; color: white; margin-top: 0; padding: 10px 15px; font-size: 18px; border-radius: 5px;" title="Mostrar/Ocultar Histórico">☰</button>
+                    
                     <button type="button" id="btnConfig" class="btn-config">⚙️ Configurações</button>
                     <button type="button" id="btnGerarDesignacoes" class="btn-config" style="background-color: #25D366; color: white;">📱 S-89 / WhatsApp</button>
                     <button type="button" id="btnGerarS140" class="btn-config" style="background-color: #9c27b0; color: white;">🖨️ Gerar Quadro S-140</button>
@@ -746,7 +748,7 @@
                 if (temAcessoAgenda) {
                     sidebar.style.setProperty('display', 'flex', 'important');
                     // Garante que os botões do topo fiquem visíveis para os admins
-                    ['btnConfig', 'btnGerarDesignacoes', 'btnGerarS140'].forEach(id => {
+                    ['btnToggleSidebar', 'btnConfig', 'btnGerarDesignacoes', 'btnGerarS140'].forEach(id => {
                         const b = document.getElementById(id);
                         if (b) b.style.display = 'inline-block';
                     });
@@ -756,8 +758,8 @@
                     sistema.style.marginLeft = '0'; 
                     sistema.style.width = '100%';
                     
-                    // Esconde os botões globais de PDF e Configurações
-                    ['btnConfig', 'btnGerarDesignacoes', 'btnGerarS140'].forEach(id => {
+                    // Esconde os botões globais de PDF, Configurações E O MENU
+                    ['btnToggleSidebar', 'btnConfig', 'btnGerarDesignacoes', 'btnGerarS140'].forEach(id => {
                         const b = document.getElementById(id);
                         if (b) b.style.display = 'none';
                     });
@@ -808,6 +810,18 @@
         });
 
         document.getElementById('btnSair').addEventListener('click', () => signOut(auth));
+        // --- CONTROLE DA BARRA LATERAL (TOGGLE) ---
+        document.getElementById('btnToggleSidebar').addEventListener('click', () => {
+            const sidebar = document.getElementById('painelSidebar');
+            // Verifica a visibilidade atual e inverte
+            if (sidebar.style.display === 'none' || sidebar.classList.contains('hidden')) {
+                sidebar.style.setProperty('display', 'flex', 'important');
+                sidebar.classList.remove('hidden');
+            } else {
+                sidebar.style.setProperty('display', 'none', 'important');
+                sidebar.classList.add('hidden');
+            }
+        });
 
        // --- CONTROLE DE NAVEGAÇÃO ENTRE ABAS (ROTEADOR UNIVERSAL) ---
         // 1. Mapeamento dos botões e seus painéis respectivos
