@@ -44,7 +44,7 @@
     </div>
 
     <!-- Ocultamos ambos por padrão no HTML -->
-    <div id="painelSidebar" style="display: none; resize: horizontal; overflow-y: auto; overflow-x: hidden; min-width: 200px; max-width: 80vw; border-right: 3px solid #ccc; padding-right: 5px;"> 
+    <div id="painelSidebar" style="display: none; resize: horizontal; overflow-y: auto; overflow-x: hidden; min-width: 250px; max-width: 80vw; border-right: 2px solid #ddd; background: #f8f9fa; height: 100vh; flex-shrink: 0;"> 
         <div class="sidebar-header">
             <h2>Gestor Semanal</h2>
         </div>
@@ -682,6 +682,16 @@
             const sistema = document.getElementById('painelSistema');
             const login = document.getElementById('telaLogin');
 
+            // 🟢 GARANTE LAYOUT FLEXÍVEL (Elimina vãos e margens fantasmas)
+            if (user) {
+                document.body.style.display = 'flex';
+                document.body.style.margin = '0';
+                document.body.style.height = '100vh';
+                document.body.style.overflow = 'hidden'; // Evita barra de rolagem dupla
+            } else {
+                document.body.style.display = 'block'; // Volta ao normal na tela de login
+            }
+
             if (user) {
                 // 1. Bloqueia a interface enquanto carrega a segurança
                 login.style.display = 'none';
@@ -745,20 +755,21 @@
                 // O Sidebar e os botões superiores só fazem sentido para quem edita a Reunião ou Tabela Mensal
                 const temAcessoAgenda = perms.is_super_admin || perms.acesso_temas || perms.acesso_escalas;
                 
+                // 4. Liberação da Interface (Lógica Anti-Vão)
+                sistema.style.setProperty('display', 'block', 'important');
+                sistema.style.marginLeft = '0'; // 🟢 MATA A MARGEM FANTASMA
+                sistema.style.width = '100%';   // 🟢 FAZ O PAINEL OCUPAR TUDO
+                
+                const temAcessoAgenda = perms.is_super_admin || perms.acesso_temas || perms.acesso_escalas;
+                
                 if (temAcessoAgenda) {
                     sidebar.style.setProperty('display', 'flex', 'important');
-                    // Garante que os botões do topo fiquem visíveis para os admins
                     ['btnToggleSidebar', 'btnConfig', 'btnGerarDesignacoes', 'btnGerarS140'].forEach(id => {
                         const b = document.getElementById(id);
                         if (b) b.style.display = 'inline-block';
                     });
                 } else {
-                    // MODO RESTRITO: Esconde a barra lateral e expande o painel para ocupar 100% da tela
                     sidebar.style.setProperty('display', 'none', 'important');
-                    sistema.style.marginLeft = '0'; 
-                    sistema.style.width = '100%';
-                    
-                    // Esconde os botões globais de PDF, Configurações E O MENU
                     ['btnToggleSidebar', 'btnConfig', 'btnGerarDesignacoes', 'btnGerarS140'].forEach(id => {
                         const b = document.getElementById(id);
                         if (b) b.style.display = 'none';
