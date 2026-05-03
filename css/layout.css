@@ -15,12 +15,17 @@ body {
 #painelSidebar { 
     display: none; 
     width: 250px; 
+    min-width: 200px;
+    resize: horizontal; /* Habilita arrastar no PC */
+    overflow-y: auto; 
+    overflow-x: hidden;
     background-color: #fff; 
     border-right: 1px solid #ddd; 
     flex-direction: column; 
     height: 100vh; 
     box-shadow: 2px 0 5px rgba(0,0,0,0.05); 
     z-index: 10;
+    flex-shrink: 0;
 }
 
 .sidebar-header { 
@@ -206,12 +211,13 @@ select.alerta-fadiga {
     /* 2. Barra Lateral (Gestor Semanal) vai para o topo */
     #painelSidebar {
         width: 100% !important;
-        height: 35vh !important; /* Ocupa cerca de 35% da altura da tela */
+        max-width: 100% !important; /* Força matar o espaço vazio */
+        resize: none !important; /* Desliga o recurso de arrastar no celular */
+        height: 35vh !important;
         border-right: none !important;
         border-bottom: 3px solid #1a73e8;
         box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         position: relative !important;
-        /* Garante que o painel apareça empilhado quando ativo no celular */
         display: flex !important; 
     }
 
