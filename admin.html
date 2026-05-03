@@ -751,10 +751,23 @@
 
                 // 4. Liberação da Interface (Lógica Anti-Vão e Filtro Global)
                 sistema.style.setProperty('display', 'block', 'important');
-                sistema.style.marginLeft = '0'; // 🟢 MATA A MARGEM FANTASMA
-                sistema.style.width = '100%';   // 🟢 FAZ O PAINEL OCUPAR TUDO
                 
-                // O Sidebar e os botões superiores só fazem sentido para quem edita a Reunião ou Tabela Mensal
+                // --- SOLUÇÃO DEFINITIVA PARA O ESPAÇO VAZIO ---
+                // Resetamos margens, paddings e forçamos a largura total
+                sistema.style.marginLeft = '0';
+                sistema.style.paddingLeft = '0';
+                sistema.style.width = '100%';
+                sistema.style.maxWidth = '100%';
+
+                // Ajuste do container interno (Garante que o conteúdo não fique "preso" no meio)
+                const containerInterno = sistema.querySelector('.container');
+                if (containerInterno) {
+                    containerInterno.style.maxWidth = '100%';
+                    containerInterno.style.margin = '0';
+                    containerInterno.style.padding = '20px'; // Margem interna suave para não colar no canto
+                }
+                // ----------------------------------------------
+                
                 const temAcessoAgenda = perms.is_super_admin || perms.acesso_temas || perms.acesso_escalas;
                 
                 if (temAcessoAgenda) {
