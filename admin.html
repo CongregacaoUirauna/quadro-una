@@ -749,17 +749,12 @@
                 }
                 // --------------------------------------------------
 
-                // 4. Liberação da Interface (Com Filtro de Privilégios Globais)
-                sistema.style.setProperty('display', 'block', 'important');
-                
-                // O Sidebar e os botões superiores só fazem sentido para quem edita a Reunião ou Tabela Mensal
-                const temAcessoAgenda = perms.is_super_admin || perms.acesso_temas || perms.acesso_escalas;
-                
-                // 4. Liberação da Interface (Lógica Anti-Vão)
+                // 4. Liberação da Interface (Lógica Anti-Vão e Filtro Global)
                 sistema.style.setProperty('display', 'block', 'important');
                 sistema.style.marginLeft = '0'; // 🟢 MATA A MARGEM FANTASMA
                 sistema.style.width = '100%';   // 🟢 FAZ O PAINEL OCUPAR TUDO
                 
+                // O Sidebar e os botões superiores só fazem sentido para quem edita a Reunião ou Tabela Mensal
                 const temAcessoAgenda = perms.is_super_admin || perms.acesso_temas || perms.acesso_escalas;
                 
                 if (temAcessoAgenda) {
