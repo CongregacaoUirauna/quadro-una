@@ -1084,7 +1084,7 @@
                             vencimento: dataExpMeio,
                             titulo: "☀️ Limpeza (Meio de Semana)",
                             texto: p.texto_limpeza_meio,
-                            dataLabel: p.data
+                            dataLabel: obterDataLocalYMD(dataExpMeio) // Correção cirúrgica: Usa a data real calculada para o meio da semana
                         });
                     }
                     
@@ -1093,7 +1093,7 @@
                             vencimento: dataExpFim,
                             titulo: "🌙 Limpeza (Fim de Semana)",
                             texto: p.texto_limpeza_fim,
-                            dataLabel: p.data
+                            dataLabel: obterDataLocalYMD(dataExpFim) // Correção cirúrgica: Usa a data real calculada para o fim de semana
                         });
                     }
                 });
