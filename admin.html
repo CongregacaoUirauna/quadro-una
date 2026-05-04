@@ -751,25 +751,12 @@
                 }
                 // --------------------------------------------------
 
-                // 4. Liberação da Interface (Lógica Anti-Vão e Consolidação de Acessos)
+                // 4. Liberação da Interface (Consolidação de Acessos)
                 sistema.style.setProperty('display', 'block', 'important');
                 
-                // --- SOLUÇÃO DEFINITIVA PARA O VÃO (ELIMINA MARGENS E CENTRALIZAÇÃO) ---
-                // Forçamos o painel principal a não ter margem e ocupar tudo
+                // Limpamos apenas a margem lateral do painel principal para encostar no menu
                 sistema.style.marginLeft = '0';
-                sistema.style.padding = '0'; // Remove o padding de 20px do CSS original
-                sistema.style.width = '100%';
-                sistema.style.maxWidth = '100%';
-
-                // Agora forçamos o ".container" interno a se esticar totalmente
-                const containerInterno = sistema.querySelector('.container');
-                if (containerInterno) {
-                    containerInterno.style.maxWidth = '100%';
-                    containerInterno.style.width = '100%';
-                    containerInterno.style.margin = '0';
-                    containerInterno.style.padding = '20px'; // Respiro interno para o conteúdo não colar na borda
-                }
-                // --------------------------------------------------
+                sistema.style.padding = '0';
 
                 // Declaração ÚNICA da variável (Resolve o erro SyntaxError)
                 const temAcessoAgenda = perms.is_super_admin || perms.acesso_temas || perms.acesso_escalas;
