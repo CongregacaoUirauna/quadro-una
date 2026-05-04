@@ -250,7 +250,7 @@
             try {
                 // Janela Dinâmica (Segunda a Segunda)
                 const hoje = new Date();
-                const diaDaSemana = 5; // 5 = Sexta-feira (Simulação) 
+                const diaDaSemana = hoje.getDay(); 
                 const diasParaSubtrair = diaDaSemana === 0 ? 6 : diaDaSemana - 1;
                 
                 const dataLimite = new Date(hoje);
@@ -1025,7 +1025,7 @@
                 // 3. O Motor de Janela Temporal (O Alvo Atual)
                 // Converte dias para uma lógica de Segunda(1) a Domingo(7)
                 const mapLogico = (dia) => dia === 0 ? 7 : dia;
-                const diaAtualLogico = mapLogico(diaDaSemana);
+                const diaAtualLogico = 6; // SIMULAÇÃO: O cérebro acha que hoje é Sábado!
                 const diaMeioLogico = mapLogico(diaMeio);
                 const diaFimLogico = mapLogico(diaFim);
 
