@@ -998,7 +998,7 @@
                 }
 
                 // 2. Lógica de Data e Semana Atual (Janela começa sempre à Segunda-feira)
-                const hoje = new Date();
+                const hoje = new Date("2026-05-09T12:00:00"); // 🟢 SIMULAÇÃO: Um Sábado ao meio-dia!
                 const diaDaSemana = hoje.getDay(); 
                 const diasParaSubtrair = diaDaSemana === 0 ? 6 : diaDaSemana - 1;
                 const dataLimite = new Date(hoje);
