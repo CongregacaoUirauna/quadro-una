@@ -255,7 +255,7 @@
                 
                 const dataLimite = new Date(hoje);
                 dataLimite.setDate(hoje.getDate() - diasParaSubtrair);
-                const dataCorte = dataLimite.toISOString().split('T')[0]; 
+                const dataCorte = obterDataLocalYMD(dataLimite); // Correção Cirúrgica: Fuso horário blindado
 
                 // Busca as reuniões
                 const q = query(
@@ -299,7 +299,7 @@
                             let d = new Date(dataId + "T12:00:00");
                             let diffParaTerca = 2 - d.getDay(); 
                             d.setDate(d.getDate() + diffParaTerca);
-                            dataVisual = d.toISOString().split('T')[0];
+                            dataVisual = obterDataLocalYMD(d); // Correção Cirúrgica: Fuso horário blindado
                             sufixoMenu = " 💼 (Visita)";
                         } else if (p.tipo_evento === "Assembleia") {
                             sufixoMenu = " 🏢 (Assembleia)";
@@ -506,6 +506,14 @@
         // Funções de formatação e renderização do quadro normal
         function formatarDataBR(dataISO) { return dataISO.split('-').reverse().join('/'); }
 
+        // [NOVO] Motor Cirúrgico para blindar o fuso horário local e evitar avanço de dias à noite
+        function obterDataLocalYMD(dataObj) {
+            const ano = dataObj.getFullYear();
+            const mes = String(dataObj.getMonth() + 1).padStart(2, '0');
+            const dia = String(dataObj.getDate()).padStart(2, '0');
+            return `${ano}-${mes}-${dia}`;
+        }
+
         function nomeFormatado(nome) { return nome && nome.trim() !== "" ? nome : "<span style='color:#ccc; font-weight:normal;'>A designar</span>"; }
 
         function renderizarProgramacao(dados) {
@@ -519,7 +527,7 @@
                 let d = new Date(dados.data + "T12:00:00");
                 let diffParaTerca = 2 - d.getDay(); 
                 d.setDate(d.getDate() + diffParaTerca);
-                dataVisual = d.toISOString().split('T')[0];
+                dataVisual = obterDataLocalYMD(d); // Correção Cirúrgica: Fuso horário blindado
             }
 
             // --- 2. SISTEMA DE ETIQUETAS ESPECIAIS ---
@@ -797,7 +805,7 @@
                 const diaAtual = hojeDate.getDate();
                 const mesAtualNome = hojeDate.toLocaleString('pt-BR', { month: 'long' });
                 const anoAtual = hojeDate.getFullYear();
-                const hojeISO = hojeDate.toISOString().split('T')[0];
+                const hojeISO = obterDataLocalYMD(hojeDate); // Correção Cirúrgica: Evita que o aviso expire horas antes
 
                 let htmlFinal = '';
 
@@ -990,9 +998,9 @@
                 // ====================================================================
                 // ⏱️ RELÓGIO GLOBAL (O CÉREBRO DO TEMPO)
                 // ====================================================================
-                // Para testar a "Viagem no Tempo", coloque "//" na Linha A e retire da Linha B.
+                // Para testar a "Viagem no Tempo", certifique-se de ter dados salvos no Firebase para essa data futura!
                 
-                // const relogioAtual = new Date(); // <--- LINHA A (Relógio Real)
+                // const relogioAtual = new Date(); // <--- LINHA A (Relógio Real Restaurado para Produção)
                 const relogioAtual = new Date("2026-05-09T12:00:00"); // <--- LINHA B (Simulação)
 
                 // ====================================================================
