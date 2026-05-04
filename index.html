@@ -984,12 +984,12 @@
 
         async function consolidarLimpezaMensal() {
             const container = document.getElementById('conteudo-limpeza-consolidada');
-            container.innerHTML = "<div style='text-align:center; padding: 20px; color: #666;'>A processar janela de limpeza...</div>";
+            container.innerHTML = "<div style='text-align:center; padding: 20px; color: #666;'>A processar janela temporal exata...</div>";
             
             try {
                 // 1. Configurações de Dias (Puxa do banco as definições da congregação)
-                let diaMeio = 4; // Padrão: Quinta-feira
-                let diaFim = 0;  // Padrão: Domingo
+                let diaMeio = 4; // Quinta-feira (Padrão)
+                let diaFim = 0;  // Domingo (Padrão)
                 const docConfig = await getDoc(doc(db, "configuracoes", "geral"));
                 if (docConfig.exists()) {
                     const cfg = docConfig.data();
@@ -997,15 +997,15 @@
                     if (cfg.dia_reuniao_fim) diaFim = parseInt(cfg.dia_reuniao_fim);
                 }
 
-                // 2. Lógica de Data e Semana Atual (Janela começa sempre à Segunda-feira)
-                const hoje = new Date("2026-05-09T12:00:00"); // 🟢 SIMULAÇÃO: Um Sábado ao meio-dia!
+                // 2. Busca de Dados (Semanas atuais e futuras baseadas na Segunda-feira)
+                const hoje = new Date();
                 const diaDaSemana = hoje.getDay(); 
                 const diasParaSubtrair = diaDaSemana === 0 ? 6 : diaDaSemana - 1;
                 const dataLimite = new Date(hoje);
                 dataLimite.setDate(hoje.getDate() - diasParaSubtrair);
+                dataLimite.setHours(0,0,0,0);
                 const dataCorte = dataLimite.toISOString().split('T')[0];
 
-                // Busca as próximas 4 semanas para garantir a escala do mês
                 const q = query(
                     collection(db, "programacoes_semanais"), 
                     where("data", ">=", dataCorte),
@@ -1022,56 +1022,80 @@
                     return;
                 }
 
-                // 3. O Motor de Janela Temporal (O Alvo Atual)
-                // Converte dias para uma lógica de Segunda(1) a Domingo(7)
-                const mapLogico = (dia) => dia === 0 ? 7 : dia;
-                const diaAtualLogico = 6; // SIMULAÇÃO: O cérebro acha que hoje é Sábado!
-                const diaMeioLogico = mapLogico(diaMeio);
-                const diaFimLogico = mapLogico(diaFim);
+                // ====================================================================
+                // 3. 🧠 NOVO MOTOR TEMPORAL (Linha do Tempo Matemática)
+                // ====================================================================
+                const timelineEventos = [];
+                // Converte: 1(Seg)->0, 4(Qui)->3, 0(Dom)->6
+                const mapDiaAdd = (dia) => dia === 0 ? 6 : dia - 1; 
 
-                let pAlvo = programacoes[0]; // Assume a semana atual
-                let textoLimpezaAlvo = '';
-                let tituloAlvo = '';
+                programacoes.forEach(p => {
+                    const dReuniao = new Date(p.data + "T12:00:00");
+                    const diffSegunda = dReuniao.getDay() === 0 ? -6 : 1 - dReuniao.getDay();
+                    const inicioSemana = new Date(dReuniao);
+                    inicioSemana.setDate(dReuniao.getDate() + diffSegunda);
+                    
+                    // Calcula as horas exatas de expiração (23:59:59 do dia da reunião)
+                    const dataExpiracaoMeio = new Date(inicioSemana);
+                    dataExpiracaoMeio.setDate(inicioSemana.getDate() + mapDiaAdd(diaMeio));
+                    dataExpiracaoMeio.setHours(23, 59, 59, 999);
+                    
+                    const dataExpiracaoFim = new Date(inicioSemana);
+                    dataExpiracaoFim.setDate(inicioSemana.getDate() + mapDiaAdd(diaFim));
+                    dataExpiracaoFim.setHours(23, 59, 59, 999);
 
-                // Decisão Matemática
-                if (diaAtualLogico <= diaMeioLogico) {
-                    // Estamos entre Segunda e o dia da Reunião de Meio de Semana
-                    textoLimpezaAlvo = pAlvo.texto_limpeza_meio;
-                    tituloAlvo = "☀️ Limpeza (Meio de Semana)";
-                } else if (diaAtualLogico <= diaFimLogico) {
-                    // Passou o Meio de Semana, estamos a ir para o Fim de Semana
-                    textoLimpezaAlvo = pAlvo.texto_limpeza_fim;
-                    tituloAlvo = "🌙 Limpeza (Fim de Semana)";
-                } else {
-                    // Domingo acabou. Foca na reunião de Meio de Semana da PRÓXIMA semana
-                    if (programacoes.length > 1) {
-                        pAlvo = programacoes[1];
-                        textoLimpezaAlvo = pAlvo.texto_limpeza_meio;
-                        tituloAlvo = "☀️ Limpeza (Próximo Meio de Semana)";
+                    if (p.texto_limpeza_meio && p.texto_limpeza_meio.trim() !== '') {
+                        timelineEventos.push({
+                            vencimento: dataExpiracaoMeio,
+                            titulo: "☀️ Limpeza (Meio de Semana)",
+                            texto: p.texto_limpeza_meio,
+                            dataLabel: p.data
+                        });
                     }
-                }
+                    if (p.texto_limpeza_fim && p.texto_limpeza_fim.trim() !== '') {
+                        timelineEventos.push({
+                            vencimento: dataExpiracaoFim,
+                            titulo: "🌙 Limpeza (Fim de Semana)",
+                            texto: p.texto_limpeza_fim,
+                            dataLabel: p.data
+                        });
+                    }
+                });
 
-                // 4. Construção Visual - O Destaque Principal
+                // Ordena rigorosamente os eventos de limpeza por data e hora de expiração
+                timelineEventos.sort((a, b) => a.vencimento - b.vencimento);
+
+                // --------------------------------------------------------
+                // ⏱️ ÁREA DE TESTE DA MÁQUINA DO TEMPO (Segura!)
+                // Descomente a linha abaixo para viajar no tempo:
+                // const relogioAtual = new Date("2026-05-09T12:00:00"); // Simula que hoje é Sábado!
+                const relogioAtual = new Date(); 
+                // --------------------------------------------------------
+
+                // O Cérebro: Apanha o primeiro evento cuja hora de vencimento seja MAIOR que a hora atual
+                const eventoAlvo = timelineEventos.find(ev => ev.vencimento >= relogioAtual);
+
+                // 4. Construção Visual - Destaque
                 let htmlDestaque = '';
-                if (textoLimpezaAlvo && textoLimpezaAlvo.trim() !== '') {
+                if (eventoAlvo) {
                     htmlDestaque = `
                         <div style="background: #e0f2f1; border-left: 5px solid #00796b; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
                             <div style="font-weight: bold; color: #004d40; margin-bottom: 15px; font-size: 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #b2dfdb; padding-bottom: 10px;">
-                                <span>${tituloAlvo}</span>
-                                <span style="background: #00796b; color: white; padding: 4px 10px; border-radius: 12px; font-size: 13px;">${formatarDataBR(pAlvo.data)}</span>
+                                <span>${eventoAlvo.titulo}</span>
+                                <span style="background: #00796b; color: white; padding: 4px 10px; border-radius: 12px; font-size: 13px;">${formatarDataBR(eventoAlvo.dataLabel)}</span>
                             </div>
-                            <div style="white-space: pre-wrap; font-family: 'Courier New', monospace; font-size: 15px; line-height: 1.6; color: #00695c; font-weight: bold;">${textoLimpezaAlvo}</div>
+                            <div style="white-space: pre-wrap; font-family: 'Courier New', monospace; font-size: 15px; line-height: 1.6; color: #00695c; font-weight: bold;">${eventoAlvo.texto}</div>
                         </div>
                     `;
                 } else {
                     htmlDestaque = `
                         <div style="background: #f5f5f5; border-left: 5px solid #9e9e9e; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center; color: #666;">
-                            Nenhuma limpeza designada para o próximo evento (${tituloAlvo}).
+                            Nenhuma limpeza designada nas próximas semanas.
                         </div>
                     `;
                 }
 
-                // 5. Construção Visual - Tabela Completa (Oculta)
+                // 5. Construção Visual - Tabela Completa (Oculta) e Botões (O resto do código mantém-se igual...)
                 let htmlTabelaCompleta = `
                     <div id="tabela-limpeza-completa" style="display: none; margin-top: 20px; animation: fadeIn 0.3s;">
                         <h4 style="color: #00796b; margin-bottom: 10px; border-bottom: 2px solid #e0f2f1; padding-bottom: 5px;">Escala Completa das Próximas Semanas</h4>
@@ -1100,7 +1124,6 @@
                 });
                 htmlTabelaCompleta += `</tbody></table></div></div>`;
 
-                // 6. Botões de Ação Dinâmicos
                 const htmlBotoes = `
                     <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                         <button onclick="document.getElementById('tabela-limpeza-completa').style.display = document.getElementById('tabela-limpeza-completa').style.display === 'none' ? 'block' : 'none'" style="flex: 1; min-width: 150px; background: transparent; border: 2px solid #00796b; color: #00796b; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; transition: 0.2s;">
@@ -1116,7 +1139,7 @@
 
             } catch (e) {
                 console.error("Erro ao carregar limpeza:", e);
-                container.innerHTML = "<div style='color: red; text-align: center; padding: 10px;'>Erro ao carregar a escala de limpeza.</div>";
+                container.innerHTML = "<div style='color: red; text-align: center; padding: 10px;'>Erro ao processar o motor cronológico.</div>";
             }
         }
 
