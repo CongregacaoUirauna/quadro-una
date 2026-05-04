@@ -1065,11 +1065,10 @@
                 // Ordena rigorosamente os eventos de limpeza por data e hora de expiração
                 timelineEventos.sort((a, b) => a.vencimento - b.vencimento);
 
-                // --------------------------------------------------------
+               // --------------------------------------------------------
                 // ⏱️ ÁREA DE TESTE DA MÁQUINA DO TEMPO (Segura!)
-                // Descomente a linha abaixo para viajar no tempo:
-                const relogioAtual = new Date("2026-05-09T12:00:00"); // Simula que hoje é Sábado!
-                const relogioAtual = new Date(); 
+                const relogioAtual = new Date("2026-05-09T12:00:00"); // 🟢 TESTE LIGADO (Sábado)
+                // const relogioAtual = new Date(); // 🔴 RELÓGIO REAL DESLIGADO (Comentado)
                 // --------------------------------------------------------
 
                 // O Cérebro: Apanha o primeiro evento cuja hora de vencimento seja MAIOR que a hora atual
