@@ -984,28 +984,43 @@
 
         async function consolidarLimpezaMensal() {
             const container = document.getElementById('conteudo-limpeza-consolidada');
-            container.innerHTML = "<div style='text-align:center; padding: 20px; color: #666;'>A processar janela temporal exata...</div>";
+            container.innerHTML = "<div style='text-align:center; padding: 20px; color: #666;'>A processar a linha do tempo exata...</div>";
             
             try {
-                // 1. Configurações de Dias (Puxa do banco as definições da congregação)
+                // ====================================================================
+                // ⏱️ RELÓGIO GLOBAL (O CÉREBRO DO TEMPO)
+                // ====================================================================
+                // Para testar a "Viagem no Tempo", coloque "//" na Linha A e retire da Linha B.
+                
+                // const relogioAtual = new Date(); // <--- LINHA A (Relógio Real)
+                const relogioAtual = new Date("2026-05-09T12:00:00"); // <--- LINHA B (Simulação)
+
+                // ====================================================================
+
+                // 1. Puxa as Configurações (Que dias são as reuniões?)
                 let diaMeio = 4; // Quinta-feira (Padrão)
                 let diaFim = 0;  // Domingo (Padrão)
                 const docConfig = await getDoc(doc(db, "configuracoes", "geral"));
                 if (docConfig.exists()) {
                     const cfg = docConfig.data();
-                    if (cfg.dia_reuniao) diaMeio = parseInt(cfg.dia_reuniao);
-                    if (cfg.dia_reuniao_fim) diaFim = parseInt(cfg.dia_reuniao_fim);
+                    if (cfg.dia_reuniao !== undefined) diaMeio = parseInt(cfg.dia_reuniao);
+                    if (cfg.dia_reuniao_fim !== undefined) diaFim = parseInt(cfg.dia_reuniao_fim);
                 }
 
-                // 2. Busca de Dados (Semanas atuais e futuras baseadas na Segunda-feira)
-                const hoje = new Date();
-                const diaDaSemana = hoje.getDay(); 
-                const diasParaSubtrair = diaDaSemana === 0 ? 6 : diaDaSemana - 1;
-                const dataLimite = new Date(hoje);
-                dataLimite.setDate(hoje.getDate() - diasParaSubtrair);
-                dataLimite.setHours(0,0,0,0);
-                const dataCorte = dataLimite.toISOString().split('T')[0];
+                // 2. Calcula a "Segunda-feira" baseada no Relógio Atual para a busca no Firebase
+                const diaDaSemanaAtual = relogioAtual.getDay(); 
+                const diasParaSubtrair = diaDaSemanaAtual === 0 ? 6 : diaDaSemanaAtual - 1;
+                
+                const dataLimiteBusca = new Date(relogioAtual);
+                dataLimiteBusca.setDate(relogioAtual.getDate() - diasParaSubtrair);
+                
+                // Monta a string YYYY-MM-DD para o Firebase sem riscos de fuso horário
+                const anoB = dataLimiteBusca.getFullYear();
+                const mesB = String(dataLimiteBusca.getMonth() + 1).padStart(2, '0');
+                const diaB = String(dataLimiteBusca.getDate()).padStart(2, '0');
+                const dataCorte = `${anoB}-${mesB}-${diaB}`;
 
+                // Busca as programações a partir desta Segunda-feira exata
                 const q = query(
                     collection(db, "programacoes_semanais"), 
                     where("data", ">=", dataCorte),
@@ -1022,39 +1037,52 @@
                     return;
                 }
 
-                // ====================================================================
-                // 3. 🧠 NOVO MOTOR TEMPORAL (Linha do Tempo Matemática)
-                // ====================================================================
+                // 3. 🧠 MOTOR MATEMÁTICO BLINDADO (Gera a Linha do Tempo)
                 const timelineEventos = [];
-                // Converte: 1(Seg)->0, 4(Qui)->3, 0(Dom)->6
-                const mapDiaAdd = (dia) => dia === 0 ? 6 : dia - 1; 
 
                 programacoes.forEach(p => {
-                    const dReuniao = new Date(p.data + "T12:00:00");
-                    const diffSegunda = dReuniao.getDay() === 0 ? -6 : 1 - dReuniao.getDay();
-                    const inicioSemana = new Date(dReuniao);
-                    inicioSemana.setDate(dReuniao.getDate() + diffSegunda);
+                    // Desmonta a data exata do Firebase ("2026-05-04")
+                    const partesData = p.data.split('-');
+                    const pAno = parseInt(partesData[0]);
+                    const pMes = parseInt(partesData[1]) - 1; // JS: meses começam em 0
+                    const pDia = parseInt(partesData[2]);
                     
-                    // Calcula as horas exatas de expiração (23:59:59 do dia da reunião)
-                    const dataExpiracaoMeio = new Date(inicioSemana);
-                    dataExpiracaoMeio.setDate(inicioSemana.getDate() + mapDiaAdd(diaMeio));
-                    dataExpiracaoMeio.setHours(23, 59, 59, 999);
+                    // Cria uma data âncora ao meio-dia para evitar bugs de viragem de fuso horário
+                    const dataRef = new Date(pAno, pMes, pDia, 12, 0, 0);
                     
-                    const dataExpiracaoFim = new Date(inicioSemana);
-                    dataExpiracaoFim.setDate(inicioSemana.getDate() + mapDiaAdd(diaFim));
-                    dataExpiracaoFim.setHours(23, 59, 59, 999);
-
+                    // Descobre qual é a Segunda-feira da semana deste registo específico
+                    const diaSem = dataRef.getDay();
+                    const diffSeg = diaSem === 0 ? -6 : 1 - diaSem;
+                    const segundaFeiraDaSemana = new Date(dataRef);
+                    segundaFeiraDaSemana.setDate(dataRef.getDate() + diffSeg);
+                    segundaFeiraDaSemana.setHours(0, 0, 0, 0);
+                    
+                    // Distância em dias a partir de Segunda-feira (1)
+                    const distMeio = diaMeio === 0 ? 6 : diaMeio - 1; 
+                    const distFim = diaFim === 0 ? 6 : diaFim - 1;  
+                    
+                    // Constrói o prazo de expiração EXATO (23:59:59 do dia da reunião)
+                    const dataExpMeio = new Date(segundaFeiraDaSemana);
+                    dataExpMeio.setDate(segundaFeiraDaSemana.getDate() + distMeio);
+                    dataExpMeio.setHours(23, 59, 59, 999);
+                    
+                    const dataExpFim = new Date(segundaFeiraDaSemana);
+                    dataExpFim.setDate(segundaFeiraDaSemana.getDate() + distFim);
+                    dataExpFim.setHours(23, 59, 59, 999);
+                    
+                    // Se houver texto, cadastra o evento na Linha do Tempo
                     if (p.texto_limpeza_meio && p.texto_limpeza_meio.trim() !== '') {
                         timelineEventos.push({
-                            vencimento: dataExpiracaoMeio,
+                            vencimento: dataExpMeio,
                             titulo: "☀️ Limpeza (Meio de Semana)",
                             texto: p.texto_limpeza_meio,
                             dataLabel: p.data
                         });
                     }
+                    
                     if (p.texto_limpeza_fim && p.texto_limpeza_fim.trim() !== '') {
                         timelineEventos.push({
-                            vencimento: dataExpiracaoFim,
+                            vencimento: dataExpFim,
                             titulo: "🌙 Limpeza (Fim de Semana)",
                             texto: p.texto_limpeza_fim,
                             dataLabel: p.data
@@ -1062,19 +1090,13 @@
                     }
                 });
 
-                // Ordena rigorosamente os eventos de limpeza por data e hora de expiração
+                // Ordena cronologicamente do mais antigo para o mais futuro
                 timelineEventos.sort((a, b) => a.vencimento - b.vencimento);
 
-               // --------------------------------------------------------
-                // ⏱️ ÁREA DE TESTE DA MÁQUINA DO TEMPO (Segura!)
-                const relogioAtual = new Date("2026-05-09T12:00:00"); // 🟢 TESTE LIGADO (Sábado)
-                // const relogioAtual = new Date(); // 🔴 RELÓGIO REAL DESLIGADO (Comentado)
-                // --------------------------------------------------------
-
-                // O Cérebro: Apanha o primeiro evento cuja hora de vencimento seja MAIOR que a hora atual
+                // 4. A DECISÃO MATEMÁTICA: O primeiro evento que NÃO expirou perante o Relógio
                 const eventoAlvo = timelineEventos.find(ev => ev.vencimento >= relogioAtual);
 
-                // 4. Construção Visual - Destaque
+                // 5. Construção Visual - Destaque
                 let htmlDestaque = '';
                 if (eventoAlvo) {
                     htmlDestaque = `
@@ -1094,7 +1116,7 @@
                     `;
                 }
 
-                // 5. Construção Visual - Tabela Completa (Oculta) e Botões (O resto do código mantém-se igual...)
+                // 6. Construção Visual - Tabela Completa (Oculta)
                 let htmlTabelaCompleta = `
                     <div id="tabela-limpeza-completa" style="display: none; margin-top: 20px; animation: fadeIn 0.3s;">
                         <h4 style="color: #00796b; margin-bottom: 10px; border-bottom: 2px solid #e0f2f1; padding-bottom: 5px;">Escala Completa das Próximas Semanas</h4>
@@ -1123,6 +1145,7 @@
                 });
                 htmlTabelaCompleta += `</tbody></table></div></div>`;
 
+                // 7. Botões e Injeção Final
                 const htmlBotoes = `
                     <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                         <button onclick="document.getElementById('tabela-limpeza-completa').style.display = document.getElementById('tabela-limpeza-completa').style.display === 'none' ? 'block' : 'none'" style="flex: 1; min-width: 150px; background: transparent; border: 2px solid #00796b; color: #00796b; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; transition: 0.2s;">
@@ -1138,11 +1161,11 @@
 
             } catch (e) {
                 console.error("Erro ao carregar limpeza:", e);
-                container.innerHTML = "<div style='color: red; text-align: center; padding: 10px;'>Erro ao processar o motor cronológico.</div>";
+                container.innerHTML = "<div style='color: red; text-align: center; padding: 10px;'>Erro crítico ao gerar escala cronológica.</div>";
             }
         }
 
-        // --- FUNÇÃO GLOBAL: Gerador de PDF/Impressão Limpa ---
+        // --- FUNÇÃO GLOBAL DE IMPRESSÃO DA ESCALA ---
         window.imprimirEscalaLimpeza = () => {
             const tabelaHTML = document.getElementById('tabela-limpeza-completa').innerHTML;
             const janelaPrint = window.open('', '', 'width=900,height=700');
@@ -1169,7 +1192,6 @@
             `);
             janelaPrint.document.close();
             janelaPrint.focus();
-            // Dá um tempo curto para o navegador renderizar a tabela antes de chamar o Print
             setTimeout(() => { 
                 janelaPrint.print(); 
                 janelaPrint.close(); 
