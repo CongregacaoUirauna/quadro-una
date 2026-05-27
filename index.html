@@ -128,6 +128,31 @@
         
         .agenda-futura { margin-top: 10px; background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
         .agenda-item { border-bottom: 1px solid #eee; padding: 10px 0; }
+
+        /* --- CRONÔMETRO DO OPERADOR (SPLIT SCREEN) --- */
+        #painel-cronometro { position: fixed; bottom: 0; left: 0; width: 100%; background: #1a1a1a; color: #fff; z-index: 9999; padding: 15px 10px; box-shadow: 0 -4px 15px rgba(0,0,0,0.5); display: flex; flex-direction: column; align-items: center; justify-content: center; border-top: 3px solid var(--cor-destaque); transition: transform 0.3s ease; }
+        .crono-fechado { transform: translateY(100%); }
+        .crono-visor { font-size: 48px; font-weight: bold; font-family: 'Courier New', monospace; letter-spacing: 2px; margin: 10px 0; line-height: 1; color: #00e676; text-shadow: 0 0 10px rgba(0, 230, 118, 0.3); transition: color 0.3s; }
+        .crono-visor.alerta { color: #ff3d00; text-shadow: 0 0 10px rgba(255, 61, 0, 0.5); }
+        .crono-titulo-parte { font-size: 15px; color: #b0bec5; text-align: center; max-width: 90%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; }
+        .crono-controles { display: flex; gap: 15px; margin-top: 10px; width: 100%; justify-content: center; }
+        .btn-crono { border: none; border-radius: 50px; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s; padding: 12px 25px; display: flex; align-items: center; justify-content: center; }
+        .btn-play-pause { background: var(--cor-destaque); color: white; min-width: 120px; font-size: 18px; }
+        .btn-nav-parte { background: #333; color: #fff; padding: 12px 20px; }
+        .btn-crono:active { transform: scale(0.95); }
+        .btn-fechar-crono { position: absolute; top: 10px; right: 15px; background: transparent; border: none; color: #fff; font-size: 24px; cursor: pointer; opacity: 0.5; }
+        
+        /* Ajuste para quando a tela estiver dividida (Split Screen) e ficar muito baixa */
+        @media (max-height: 450px) {
+            #painel-cronometro { padding: 8px; flex-direction: row; flex-wrap: wrap; justify-content: space-around; }
+            .crono-titulo-parte { width: 100%; margin-bottom: 5px; font-size: 13px; }
+            .crono-visor { font-size: 36px; margin: 0; }
+            .crono-controles { width: auto; margin-top: 0; gap: 10px; }
+            .btn-crono { padding: 10px 15px; font-size: 14px; }
+            .btn-play-pause { min-width: 90px; }
+            .btn-fechar-crono { top: 2px; right: 5px; font-size: 18px; }
+        }
+        
         .agenda-item:last-child { border-bottom: none; padding-bottom: 0; }
         
     </style>
@@ -135,7 +160,7 @@
 <body>
 
     <header class="header">
-        <h1>Quadro de Anúncios</h1>
+        <h1 id="titulo-gatilho-secreto" style="cursor: pointer; user-select: none;">Quadro de Anúncios</h1>
         
         <div class="nav-portal">
             <button class="btn-tab active" id="tab-reunioes" onclick="alternarAbaPortal('reunioes')">📅 Reuniões</button>
@@ -223,9 +248,20 @@
                     <div id="conteudo-limpeza-consolidada" style="font-size: 14px;"></div>
                 </div>
             </div>
-        </div>
+        <</div>
     </div>
 
+    <div id="painel-cronometro" class="crono-fechado hidden">
+        <button class="btn-fechar-crono" id="btn-fechar-crono" title="Fechar Cronômetro">&times;</button>
+        <div class="crono-titulo-parte" id="crono-titulo-parte">Carregando partes...</div>
+        <div class="crono-visor" id="crono-visor">00:00</div>
+        
+        <div class="crono-controles">
+            <button class="btn-crono btn-nav-parte" id="btn-crono-voltar">⏮</button>
+            <button class="btn-crono btn-play-pause" id="btn-crono-play">▶ INICIAR</button>
+            <button class="btn-crono btn-nav-parte" id="btn-crono-avancar">⏭</button>
+        </div>
+    </div>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, getDocs, query, orderBy, where, doc, getDoc, limit } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
