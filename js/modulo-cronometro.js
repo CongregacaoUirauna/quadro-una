@@ -6,7 +6,7 @@ const painel = document.getElementById('painel-cronometro');
 const gatilho = document.getElementById('titulo-gatilho-secreto');
 const visor = document.getElementById('crono-visor');
 const tituloParte = document.getElementById('crono-titulo-parte');
-const btnPlay = document.getElementById('crono-play');
+const btnPlay = document.getElementById('btn-crono-play'); // CORREÇÃO: ID exato do HTML
 const btnVoltar = document.getElementById('btn-crono-voltar');
 const btnAvancar = document.getElementById('btn-crono-avancar');
 const btnFechar = document.getElementById('btn-fechar-crono');
@@ -64,34 +64,40 @@ function abrirCronometro() {
 
 function carregarPartesDaTela() {
     partesReuniao = [];
-    // A Mágica: Regex que caça textos no formato "Nome da Parte (10 min)"
     const regexTempo = /(.+?)\s*\(\s*(\d+)\s*min\s*\)/i;
     
-    const elementos = document.querySelectorAll('*');
+    // Procura em elementos específicos de texto em vez de varrer o HTML inteiro cegamente
+    const elementos = document.querySelectorAll('li, p, span, div, td, h3, h4');
+    
     elementos.forEach(el => {
-        // Inspeciona apenas os elementos "finais" que contêm o texto da parte
-        if (el.children.length === 0 && el.textContent) {
-            const match = el.textContent.match(regexTempo);
+        if (el.textContent) {
+            // Pega o texto puro, remove quebras de linha e normaliza espaços (Ignora as tags HTML)
+            const texto = el.textContent.replace(/\s+/g, ' ').trim();
+            const match = texto.match(regexTempo);
+            
             if (match) {
-                const tituloOriginal = match[1].trim();
-                // Limpa o título (corta se for gigante para não quebrar a tela)
-                const tituloLimpo = tituloOriginal.length > 35 ? tituloOriginal.substring(0, 35) + "..." : tituloOriginal;
-                const minutos = parseInt(match[2]);
+                let tituloLimpo = match[1].trim();
                 
-                // Evita adicionar a mesma parte duplicada se o HTML repetir a tag
-                if(!partesReuniao.some(p => p.titulo === tituloLimpo)) {
-                    partesReuniao.push({ titulo: tituloLimpo, minutos: minutos });
+                // Limpa números, pontos ou traços no início do nome (Ex: "1. Discurso" vira "Discurso")
+                tituloLimpo = tituloLimpo.replace(/^[-–>•*\d.]+\s*/, '');
+                
+                // Se o título capturado for menor que 60 letras, é uma parte real (impede de engolir a tela toda)
+                if (tituloLimpo.length > 0 && tituloLimpo.length < 60) {
+                    const minutos = parseInt(match[2]);
+                    
+                    // Evita adicionar a mesma parte duplicada
+                    if(!partesReuniao.some(p => p.titulo === tituloLimpo)) {
+                        partesReuniao.push({ titulo: tituloLimpo, minutos: minutos });
+                    }
                 }
             }
         }
     });
 
-    // Fallback: Se a internet estiver lenta e não achou dados, carrega valores padrão
+    // Proteção de Falha: Se não achar nada, avisa
     if (partesReuniao.length === 0) {
         partesReuniao = [
-            { titulo: "Parte 1 (Não detectada na tela)", minutos: 5 },
-            { titulo: "Parte 2 (Não detectada na tela)", minutos: 10 },
-            { titulo: "Parte 3 (Não detectada na tela)", minutos: 15 }
+            { titulo: "Parte 1 (Não detectada)", minutos: 5 }
         ];
     }
 }
