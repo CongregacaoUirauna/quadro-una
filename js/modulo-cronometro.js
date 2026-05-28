@@ -90,14 +90,14 @@ function carregarPartesDaTela() {
             if (match) {
                 let tituloLimpo = match[1].trim().replace(/^[-–>•*\d.]+\s*/, '');
                 
-                // MÁGICA SÊNIOR ATUALIZADA: Blindagem contra textos sem número
-                // Pega: "Cântico 12", "Cântico e oração", "Cânticos iniciais", "Cântico inicial"
-                const isCanticoLiteral = /^(cântico|cantico)s?\s*(\d+|e\s+oração|e\s+oracao|inicial|iniciais|final)/i.test(tituloLimpo);
+                // MÁGICA DEFINITIVA: Removemos a âncora "^".
+                // Agora, mesmo que o HTML tenha espaços invisíveis ou "sujeira" antes da letra C, o filtro pega o Cântico perfeitamente!
+                const isCanticoLiteral = /(cântico|cantico)s?\s*(\d+|e\s+oração|e\s+oracao)/i.test(tituloLimpo);
                 
-                // Pega: "Oração", "Oração inicial", "Orações finais"
-                const isOracaoLiteral = /^(oração|oracao)s?\s*(inicial|iniciais|final|finais)?$/i.test(tituloLimpo);
+                // Limpeza profunda de "sujeiras" para garantir que "Oração" pura também seja detectada
+                const textoOracao = tituloLimpo.replace(/^[-–>•*\d.:\s]+/, '').trim();
+                const isOracaoLiteral = /^(oração|oracao)\s*(inicial|iniciais|final|finais)?$/i.test(textoOracao);
 
-                // Só adiciona se o tamanho for válido e NÃO for Cântico/Oração literal
                 if (tituloLimpo.length > 0 && tituloLimpo.length < 60 && !isCanticoLiteral && !isOracaoLiteral) {
                     const minutos = parseInt(match[2]);
                     if(!partesReuniao.some(p => p.titulo === tituloLimpo)) {
