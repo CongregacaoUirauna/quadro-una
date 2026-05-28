@@ -1,4 +1,4 @@
-// cronometro-worker.js
+// js/cronometro-worker.js
 // O Coração Invisível: Garante que o tempo conte perfeitamente mesmo com o navegador em segundo plano.
 
 let intervalo;
@@ -14,26 +14,21 @@ self.onmessage = function(e) {
         if (intervalo) clearInterval(intervalo);
         
         intervalo = setInterval(() => {
-            const tempoRestante = Math.max(0, dataFinal - Date.now());
-            
-            // Avisa o arquivo principal sobre quanto tempo falta
+            // MÁGICA 1: Removemos a trava do zero! 
+            // Agora ele enviará números negativos caso o tempo estoure (Overtime)
+            const tempoRestante = dataFinal - Date.now();
             self.postMessage({ tempoRestante: tempoRestante });
-            
-            if (tempoRestante <= 0) {
-                clearInterval(intervalo);
-            }
         }, 500); // Checa a cada meio segundo para garantir precisão
         
     } else if (comando === 'pausar') {
         clearInterval(intervalo);
     } else if (comando === 'retomar') {
-        // Se pausou e retomou, calculamos uma nova data final baseada no tempo que restava
+        // Se pausou no meio do Overtime (tempo negativo), ele retoma perfeitamente
         dataFinal = Date.now() + e.data.tempoRestantePausado;
         
         intervalo = setInterval(() => {
-            const tempoRestante = Math.max(0, dataFinal - Date.now());
+            const tempoRestante = dataFinal - Date.now();
             self.postMessage({ tempoRestante: tempoRestante });
-            if (tempoRestante <= 0) clearInterval(intervalo);
         }, 500);
     }
 };
