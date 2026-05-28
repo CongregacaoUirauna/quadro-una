@@ -35,7 +35,7 @@ try {
     console.error("Erro no Worker do Cronômetro.", err);
 }
 
-// 4. O Gatilho de Segurança
+// 4. O Gatilho de Seguranças
 let cliques = 0;
 let tempoUltimoClique = 0;
 
