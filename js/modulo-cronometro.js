@@ -1,12 +1,12 @@
 // js/modulo-cronometro.js
-console.log("Módulo de Cronômetro Sensorial Iniciado.");
+console.log("Módulo de Cronômetro Sensorial com Analytics Iniciado.");
 
 // 1. Conexão com os Elementos Visuais (HTML)
 const painel = document.getElementById('painel-cronometro');
 const gatilho = document.getElementById('titulo-gatilho-secreto');
 const visor = document.getElementById('crono-visor');
 const tituloParte = document.getElementById('crono-titulo-parte');
-const btnPlay = document.getElementById('btn-crono-play'); // CORREÇÃO: ID exato do HTML
+const btnPlay = document.getElementById('btn-crono-play');
 const btnVoltar = document.getElementById('btn-crono-voltar');
 const btnAvancar = document.getElementById('btn-crono-avancar');
 const btnFechar = document.getElementById('btn-fechar-crono');
@@ -15,9 +15,14 @@ const btnFechar = document.getElementById('btn-fechar-crono');
 let worker;
 let partesReuniao = [];
 let indiceParteAtual = 0;
-let estadoCrono = 'parado'; // parado, rodando, pausado
+let estadoCrono = 'parado';
 let tempoRestantePausado = 0;
 let avisou1Minuto = false;
+let avisouZerad = false;
+
+// Variáveis de Analytics (Tempo Real Gasto)
+let msGastoAtual = 0;
+let timestampPlay = 0;
 
 // 3. Conexão com o "Coração Invisível" (Worker)
 try {
@@ -26,37 +31,33 @@ try {
         atualizarVisor(e.data.tempoRestante);
     };
 } catch (err) {
-    console.error("Erro no Worker do Cronômetro. Verifique se o caminho do arquivo está correto.", err);
+    console.error("Erro no Worker do Cronômetro. Verifique se o caminho está correto.", err);
 }
 
-// 4. O Gatilho de Segurança (3 Toques Rápidos)
+// 4. O Gatilho de Segurança
 let cliques = 0;
 let tempoUltimoClique = 0;
 
 gatilho.addEventListener('click', () => {
     const agora = Date.now();
-    // Se demorar mais de 1 segundo entre os toques, zera a contagem
     if (agora - tempoUltimoClique > 1000) cliques = 0; 
-    
     cliques++;
     tempoUltimoClique = agora;
-    
     if (cliques === 3) {
         abrirCronometro();
-        cliques = 0; // Zera para o próximo uso
+        cliques = 0;
     }
 });
 
 btnFechar.addEventListener('click', () => {
+    consolidarEAvancar(); // Salva o tempo da parte atual antes de fechar
     painel.classList.add('crono-fechado');
-    // Aguarda a animação de descer a tela terminar antes de esconder totalmente
     setTimeout(() => painel.classList.add('hidden'), 300); 
 });
 
 // 5. Inteligência de Varredura de Partes (Auto-Load)
 function abrirCronometro() {
     painel.classList.remove('hidden');
-    // Atraso microscópico para o CSS entender a transição de subida
     setTimeout(() => painel.classList.remove('crono-fechado'), 10); 
     carregarPartesDaTela();
     renderizarParteAtual();
@@ -65,27 +66,19 @@ function abrirCronometro() {
 function carregarPartesDaTela() {
     partesReuniao = [];
     const regexTempo = /(.+?)\s*\(\s*(\d+)\s*min\s*\)/i;
-    
-    // Procura em elementos específicos de texto em vez de varrer o HTML inteiro cegamente
     const elementos = document.querySelectorAll('li, p, span, div, td, h3, h4');
     
     elementos.forEach(el => {
         if (el.textContent) {
-            // Pega o texto puro, remove quebras de linha e normaliza espaços (Ignora as tags HTML)
             const texto = el.textContent.replace(/\s+/g, ' ').trim();
             const match = texto.match(regexTempo);
             
             if (match) {
                 let tituloLimpo = match[1].trim();
-                
-                // Limpa números, pontos ou traços no início do nome (Ex: "1. Discurso" vira "Discurso")
                 tituloLimpo = tituloLimpo.replace(/^[-–>•*\d.]+\s*/, '');
                 
-                // Se o título capturado for menor que 60 letras, é uma parte real (impede de engolir a tela toda)
                 if (tituloLimpo.length > 0 && tituloLimpo.length < 60) {
                     const minutos = parseInt(match[2]);
-                    
-                    // Evita adicionar a mesma parte duplicada
                     if(!partesReuniao.some(p => p.titulo === tituloLimpo)) {
                         partesReuniao.push({ titulo: tituloLimpo, minutos: minutos });
                     }
@@ -94,11 +87,8 @@ function carregarPartesDaTela() {
         }
     });
 
-    // Proteção de Falha: Se não achar nada, avisa
     if (partesReuniao.length === 0) {
-        partesReuniao = [
-            { titulo: "Parte 1 (Não detectada)", minutos: 5 }
-        ];
+        partesReuniao = [{ titulo: "Parte 1 (Não detectada na tela)", minutos: 5 }];
     }
 }
 
@@ -106,90 +96,152 @@ function renderizarParteAtual() {
     if (partesReuniao.length === 0) return;
     const parte = partesReuniao[indiceParteAtual];
     
-    // Atualiza a etiqueta superior Ex: [1/12] Discurso Principal
     tituloParte.textContent = `[${indiceParteAtual + 1}/${partesReuniao.length}] ${parte.titulo}`;
     
     pararCronometro();
+    msGastoAtual = 0; // Zera o rastreador de tempo para a nova parte
+    
     tempoRestantePausado = parte.minutos * 60000;
     atualizarVisor(tempoRestantePausado);
 }
 
-// 6. Motor de Exibição e Alertas Sensoriais
-function atualizarVisor(ms) {
-    if (ms <= 0) {
-        visor.textContent = "00:00";
-        if (estadoCrono === 'rodando') {
-            estadoCrono = 'parado';
-            visor.classList.add('alerta'); // Pisca vermelho
-            // Fim do Tempo: Vibração longa (3 toques densos)
-            if (navigator.vibrate) navigator.vibrate([1000, 500, 1000]); 
-        }
-        return;
+// 6. Motor de Exibição (Agora suportando Overtime/Tempo Negativo)
+function atualizarVisor(msRestantes) {
+    let ms = msRestantes;
+    let isOvertime = false;
+
+    // Se passou do zero, inverte a matemática e ativa modo de Excesso
+    if (ms < 0) {
+        isOvertime = true;
+        ms = Math.abs(ms); // Transforma negativo em positivo para desenhar na tela
     }
 
     const minutos = Math.floor(ms / 60000);
     const segundos = Math.floor((ms % 60000) / 1000);
-    
-    visor.textContent = `${String(minutos).padStart(2, '0')}:${String(segundos).padStart(2, '0')}`;
-    visor.classList.remove('alerta');
+    const textoTempo = `${String(minutos).padStart(2, '0')}:${String(segundos).padStart(2, '0')}`;
 
-    // O Alerta Sensorial: Exatamente faltando 1 minuto (Entre 60s e 59s)
-    if (ms <= 60000 && ms > 59000 && !avisou1Minuto && estadoCrono === 'rodando') {
-        avisou1Minuto = true;
-        visor.style.color = "#ffeb3b"; // Fica amarelo 
-        if (navigator.vibrate) navigator.vibrate([200, 100, 200]); // Pulso duplo
+    if (isOvertime) {
+        visor.textContent = `+${textoTempo}`; // Coloca o + na frente
+        visor.classList.add('alerta'); // Mantém o vermelho
+        
+        // Vibração Fim do Tempo (Só vibra na exata hora que cruza a barreira do zero)
+        if (estadoCrono === 'rodando' && !avisouZerad) {
+            avisouZerad = true;
+            if (navigator.vibrate) navigator.vibrate([1000, 500, 1000]); 
+        }
+    } else {
+        visor.textContent = textoTempo;
+        visor.classList.remove('alerta');
+        avisouZerad = false;
+
+        // O Alerta de 1 Minuto
+        if (ms <= 60000 && ms > 59000 && !avisou1Minuto && estadoCrono === 'rodando') {
+            avisou1Minuto = true;
+            visor.style.color = "#ffeb3b"; 
+            if (navigator.vibrate) navigator.vibrate([200, 100, 200]); 
+        } else if (ms > 60000) {
+            visor.style.color = ""; // Reseta cor se ganhar mais tempo
+        }
     }
 }
 
-// 7. Controles de Botões (Play, Pause, Navegação)
+// 7. Controles de Botões e Rastreador
 btnPlay.addEventListener('click', () => {
-    // "Aperto de Mãos" obrigatório com o celular para permitir vibrações no background
     if (navigator.vibrate) navigator.vibrate(50);
 
     if (estadoCrono === 'parado') {
         const parte = partesReuniao[indiceParteAtual];
         estadoCrono = 'rodando';
+        timestampPlay = Date.now(); // ⏱️ Liga o cronômetro invisível do Firebase
         avisou1Minuto = false;
-        visor.style.color = ""; // Tira o amarelo, se tiver
+        avisouZerad = false;
+        visor.style.color = ""; 
         
         worker.postMessage({ comando: 'iniciar', minutos: parte.minutos });
         
         btnPlay.textContent = '⏸ PAUSAR';
-        btnPlay.style.background = '#ff9800'; // Botão Laranja
+        btnPlay.style.background = '#ff9800'; 
         
     } else if (estadoCrono === 'rodando') {
         estadoCrono = 'pausado';
+        msGastoAtual += Date.now() - timestampPlay; // Salva o tempo percorrido até aqui
         worker.postMessage({ comando: 'pausar' });
         
-        // Lê o visor atual para congelar o tempo exato 
-        const partesTempo = visor.textContent.split(':');
-        tempoRestantePausado = (parseInt(partesTempo[0]) * 60000) + (parseInt(partesTempo[1]) * 1000);
+        // Congela o tempo que está na tela (considerando se tem o símbolo de +)
+        let textoNumeros = visor.textContent.replace('+', '');
+        const partesTempo = textoNumeros.split(':');
+        let msTela = (parseInt(partesTempo[0]) * 60000) + (parseInt(partesTempo[1]) * 1000);
+        
+        if (visor.textContent.includes('+')) msTela = -msTela; // Devolve o negativo
+        tempoRestantePausado = msTela;
         
         btnPlay.textContent = '▶ RETOMAR';
-        btnPlay.style.background = '#4caf50'; // Botão Verde
+        btnPlay.style.background = '#4caf50'; 
         
     } else if (estadoCrono === 'pausado') {
         estadoCrono = 'rodando';
+        timestampPlay = Date.now(); // ⏱️ Religa o cronômetro invisível
         worker.postMessage({ comando: 'retomar', tempoRestantePausado: tempoRestantePausado });
         
         btnPlay.textContent = '⏸ PAUSAR';
-        btnPlay.style.background = '#ff9800'; // Botão Laranja
+        btnPlay.style.background = '#ff9800'; 
     }
 });
 
 function pararCronometro() {
+    if (estadoCrono === 'rodando') {
+        msGastoAtual += Date.now() - timestampPlay; // Fecha a conta
+    }
     estadoCrono = 'parado';
     avisou1Minuto = false;
+    avisouZerad = false;
     visor.style.color = "";
     visor.classList.remove('alerta');
     if (worker) worker.postMessage({ comando: 'pausar' });
     
     btnPlay.innerHTML = '▶ INICIAR';
-    btnPlay.style.background = 'var(--cor-destaque)'; // Azul original
+    btnPlay.style.background = 'var(--cor-destaque)'; 
+}
+
+// 8. O Motor do Firebase (Analytics)
+function consolidarEAvancar() {
+    pararCronometro();
+    
+    // Evita salvar "lixo" no banco se o irmão passou a parte rápido sem o cronômetro rodar por pelo menos 3 segundos
+    if (msGastoAtual > 3000) { 
+        salvarLogFirebase(partesReuniao[indiceParteAtual], msGastoAtual);
+    }
+}
+
+function salvarLogFirebase(parte, tempoGastoMs) {
+    try {
+        // Se a página não tiver Firebase (ex: rodando offline), ignora e não quebra o sistema
+        if (typeof firebase === 'undefined' || !firebase.firestore) return;
+
+        const db = firebase.firestore();
+        const dataHoje = new Date().toISOString().split('T')[0];
+        
+        const previstoMin = parte.minutos;
+        const realizadoMin = parseFloat((tempoGastoMs / 60000).toFixed(2));
+        const diferencaMin = parseFloat((realizadoMin - previstoMin).toFixed(2)); // Positivo = Estourou tempo, Negativo = Sobrou tempo
+
+        db.collection('cronometragem_logs').doc(dataHoje).collection('partes').add({
+            titulo: parte.titulo,
+            previsto_minutos: previstoMin,
+            realizado_minutos: realizadoMin,
+            diferenca_minutos: diferencaMin,
+            horario_registro: firebase.firestore.FieldValue.serverTimestamp()
+        }).then(() => {
+            console.log(`⏱️ Analytics: "${parte.titulo}" logado no Firebase com sucesso.`);
+        });
+    } catch (e) {
+        console.error("Erro ao salvar log no Firebase:", e);
+    }
 }
 
 btnAvancar.addEventListener('click', () => {
     if (indiceParteAtual < partesReuniao.length - 1) {
+        consolidarEAvancar(); // Mágica: Salva o tempo antes de passar para o próximo!
         indiceParteAtual++;
         renderizarParteAtual();
     }
@@ -197,6 +249,7 @@ btnAvancar.addEventListener('click', () => {
 
 btnVoltar.addEventListener('click', () => {
     if (indiceParteAtual > 0) {
+        consolidarEAvancar();
         indiceParteAtual--;
         renderizarParteAtual();
     }
