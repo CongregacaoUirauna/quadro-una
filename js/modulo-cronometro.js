@@ -90,14 +90,14 @@ function carregarPartesDaTela() {
             if (match) {
                 let tituloLimpo = match[1].trim().replace(/^[-–>•*\d.]+\s*/, '');
                 
-                // MÁGICA SÊNIOR: Expressões Regulares Ancoradas (Regex)
-                // 1. O símbolo ^ significa "Começa com". O \d+ significa "Tem que ter um número logo depois".
-                const isCanticoLiteral = /^(cântico|cantico)\s+\d+/i.test(tituloLimpo);
+                // MÁGICA SÊNIOR ATUALIZADA: Blindagem contra textos sem número
+                // Pega: "Cântico 12", "Cântico e oração", "Cânticos iniciais", "Cântico inicial"
+                const isCanticoLiteral = /^(cântico|cantico)s?\s*(\d+|e\s+oração|e\s+oracao|inicial|iniciais|final)/i.test(tituloLimpo);
                 
-                // 2. Os símbolos ^ e $ garantem que a frase seja EXATAMENTE essa, sem nada antes ou depois.
-                const isOracaoLiteral = /^(oração|oracao)(\s+inicial|\s+final)?$/i.test(tituloLimpo);
+                // Pega: "Oração", "Oração inicial", "Orações finais"
+                const isOracaoLiteral = /^(oração|oracao)s?\s*(inicial|iniciais|final|finais)?$/i.test(tituloLimpo);
 
-                // Só adiciona ao cronômetro se o tamanho for válido e NÃO for Cântico Literal ou Oração Literal
+                // Só adiciona se o tamanho for válido e NÃO for Cântico/Oração literal
                 if (tituloLimpo.length > 0 && tituloLimpo.length < 60 && !isCanticoLiteral && !isOracaoLiteral) {
                     const minutos = parseInt(match[2]);
                     if(!partesReuniao.some(p => p.titulo === tituloLimpo)) {
