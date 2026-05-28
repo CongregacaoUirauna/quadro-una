@@ -86,8 +86,8 @@ function carregarPartesDaTela() {
         if (el.textContent) {
             const texto = el.textContent.replace(/\s+/g, ' ').trim();
             const match = texto.match(regexTempo);
+            
             if (match) {
-                if (match) {
                 let tituloLimpo = match[1].trim().replace(/^[-–>•*\d.]+\s*/, '');
                 
                 // MÁGICA SÊNIOR: Expressões Regulares Ancoradas (Regex)
