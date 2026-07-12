@@ -220,8 +220,8 @@ function criarParteMinisterio(tipo="", tema="", tempo="", est="", aju="", estB="
             <option value="O que você diria?" ${tipo==='O que você diria?'?'selected':''}>O que você diria?</option>
             <option value="Discurso" ${tipo==='Discurso' || tema==='Discurso'?'selected':''}>Discurso</option>
         </select>
-        <input type="text" class="min-tema" placeholder="Detalhes (Opcional)" style="flex: 2;" value="${tema === tipo ? '' : tema}">
-            <input type="number" class="min-tempo" placeholder="Min" style="flex: 1; min-width: 50px;" value="${tempo}">
+        <input type="text" class="min-tema" placeholder="Tema/Título (Edite aqui)" style="flex: 2; border: 1px solid #1a73e8; border-radius: 4px; padding-left: 5px;" value="${tema === tipo ? '' : tema}">
+        <input type="number" class="min-tempo" placeholder="Min" style="flex: 1; min-width: 50px;" value="${tempo}">
             <button type="button" class="btn-remove" style="width: 30px; padding: 0;" onclick="this.parentElement.parentElement.remove()">X</button>
         </div>
         <div class="input-group">
@@ -632,6 +632,7 @@ function renderizarLinhasTabelas(datas) {
     window.criarBlocoMinTabela = () => `
         <div class="bloco-parte-min" style="display: flex; gap: 5px; margin-bottom: 8px; padding-bottom: 5px; border-bottom: 1px dashed #eee;">
             <select class="min-rotulo" style="flex: 1; font-size: 13px;">${optsRotulos}</select>
+            <input type="text" class="min-tema-tabela" placeholder="Tema/Título (Edite aqui)" style="flex: 1; font-size: 13px; border: 1px solid #ccc; border-radius: 3px; padding: 2px;">
             <select class="min-titular" style="flex: 1; font-size: 13px;">${optsTodos}</select>
             <select class="min-ajudante" style="flex: 1; font-size: 13px;">${optsTodos}</select>
             <button type="button" class="btn-remove-parte" style="width: 25px; padding: 0; background: #ff4d4d; color: white; border: none; border-radius: 3px; cursor: pointer;" title="Remover Parte">X</button>
@@ -850,6 +851,8 @@ async function carregarDadosMensais(datas) {
                         d.ministerio.forEach((parte, index) => {
                             if (blocos[index]) {
                                 blocos[index].querySelector('.min-rotulo').value = parte.tipo || parte.tema || "";
+                                // Alimenta o novo campo de texto com a variação do tema (se houver)
+                                blocos[index].querySelector('.min-tema-tabela').value = (parte.tema !== parte.tipo) ? parte.tema : "";
                                 // Dispara o evento para ocultar ajudante e filtrar gênero ANTES de injetar o titular
                                 // INJEÇÃO: O { bubbles: true } faz o "grito" subir até a tabela ouvir o evento
                                 blocos[index].querySelector('.min-rotulo').dispatchEvent(new Event('change', { bubbles: true }));
@@ -925,10 +928,13 @@ async function salvarEstudantesMensal() {
             const ministerio = [];
             linha.querySelectorAll('.bloco-parte-min').forEach(bloco => {
                 const rotulo = bloco.querySelector('.min-rotulo').value;
+                const textoDigitado = bloco.querySelector('.min-tema-tabela').value.trim();
                 const titular = bloco.querySelector('.min-titular').value;
                 const ajudante = bloco.querySelector('.min-ajudante').value;
                 if (rotulo || titular) {
-                    ministerio.push({ tipo: rotulo, tema: rotulo, estudante: titular, ajudante: ajudante });
+                    // MÁGICA: Se digitar algo no campo novo, salva isso. Se não, salva o nome padrão.
+                    const temaFinal = textoDigitado ? textoDigitado : rotulo;
+                    ministerio.push({ tipo: rotulo, tema: temaFinal, estudante: titular, ajudante: ajudante });
                 }
             });
 
