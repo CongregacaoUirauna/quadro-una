@@ -196,17 +196,6 @@
         <div id="seccao-portal" class="hidden">
             <div id="banner-relatorio-container" class="hidden"></div>
 
-            <div class="card" style="border-left: 5px solid #ef6c00;">
-                <div style="padding: 20px;">
-                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-                        <span style="font-size: 20px;">📍</span>
-                        <h3 style="margin: 0; color: #ef6c00;">Ponto de Parada Atual</h3>
-                    </div>
-                    <p id="txt-ponto-parada" style="font-size: 18px; font-weight: bold; margin: 0; color: #333;">A carregar local...</p>
-                    <small style="color: #666; display: block; margin-top: 5px;">Atualizado em tempo real pelos responsáveis.</small>
-                </div>
-            </div>
-
             <div class="card" style="border-left: 5px solid #2e7d32;">
                 <div style="padding: 20px;">
                     <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
@@ -230,7 +219,14 @@
                     </div>
                 </div>
             </div>
-            
+            <div class="card" id="card-limpeza-mensal">
+                <div style="padding: 20px;">
+                    <h3 style="margin: 0 0 15px 0; color: #00796b; display: flex; align-items: center; gap: 10px;">
+                        <span>🧹</span> Escala de Limpeza do Mês
+                    </h3>
+                    <div id="conteudo-limpeza-consolidada" style="font-size: 14px;"></div>
+                </div>
+            </div>
             <div class="card">
                 <div style="padding: 20px;">
                     <h3 style="margin: 0 0 15px 0; color: var(--cor-destaque); display: flex; align-items: center; gap: 10px;">
@@ -239,13 +235,14 @@
                     <div id="txt-mural-avisos" style="white-space: pre-wrap; line-height: 1.6; color: #444;">Nenhum aviso no momento.</div>
                 </div>
             </div>
-
-            <div class="card" id="card-limpeza-mensal">
+            <div class="card" style="border-left: 5px solid #ef6c00;">
                 <div style="padding: 20px;">
-                    <h3 style="margin: 0 0 15px 0; color: #00796b; display: flex; align-items: center; gap: 10px;">
-                        <span>🧹</span> Escala de Limpeza do Mês
-                    </h3>
-                    <div id="conteudo-limpeza-consolidada" style="font-size: 14px;"></div>
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                        <span style="font-size: 20px;">📍</span>
+                        <h3 style="margin: 0; color: #ef6c00;">Ponto de Parada Atual</h3>
+                    </div>
+                    <p id="txt-ponto-parada" style="font-size: 18px; font-weight: bold; margin: 0; color: #333;">A carregar local...</p>
+                    <small style="color: #666; display: block; margin-top: 5px;">Atualizado em tempo real pelos responsáveis.</small>
                 </div>
             </div>
         </div>
