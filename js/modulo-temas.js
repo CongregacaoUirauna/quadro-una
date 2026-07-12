@@ -216,10 +216,11 @@ function criarParteMinisterio(tipo="", tema="", tempo="", est="", aju="", estB="
                 <option value="Cultivando o Interesse" ${tipo==='Cultivando o Interesse'?'selected':''}>Cultivando o Interesse</option>
                 <option value="Fazendo Discípulos" ${tipo==='Fazendo Discípulos'?'selected':''}>Fazendo Discípulos</option>
                 <option value="Explicando suas Crenças (Demonstração)" ${tipo==='Explicando suas Crenças (Demonstração)'?'selected':''}>Crenças (Demonstração)</option>
-                <option value="Explicando suas Crenças (Discurso)" ${tipo==='Explicando suas Crenças (Discurso)'?'selected':''}>Crenças (Discurso)</option>
-                <option value="Discurso" ${tipo==='Discurso' || tema==='Discurso'?'selected':''}>Discurso</option>
-            </select>
-            <input type="text" class="min-tema" placeholder="Detalhes (Opcional)" style="flex: 2;" value="${tema === tipo ? '' : tema}">
+            <option value="Explicando suas Crenças (Discurso)" ${tipo==='Explicando suas Crenças (Discurso)'?'selected':''}>Crenças (Discurso)</option>
+            <option value="O que você diria?" ${tipo==='O que você diria?'?'selected':''}>O que você diria?</option>
+            <option value="Discurso" ${tipo==='Discurso' || tema==='Discurso'?'selected':''}>Discurso</option>
+        </select>
+        <input type="text" class="min-tema" placeholder="Detalhes (Opcional)" style="flex: 2;" value="${tema === tipo ? '' : tema}">
             <input type="number" class="min-tempo" placeholder="Min" style="flex: 1; min-width: 50px;" value="${tempo}">
             <button type="button" class="btn-remove" style="width: 30px; padding: 0;" onclick="this.parentElement.parentElement.remove()">X</button>
         </div>
@@ -241,9 +242,8 @@ function criarParteMinisterio(tipo="", tema="", tempo="", est="", aju="", estB="
     const selectAjuB = div.querySelector('.min-ajudante-b');
 
     selectTipo.addEventListener('change', (e) => {
-        const isDisc = e.target.value === "Discurso" || e.target.value === "Explicando suas Crenças (Discurso)";
+        const isDisc = e.target.value === "Discurso" || e.target.value === "Explicando suas Crenças (Discurso)" || e.target.value === "O que você diria?";
         const valEst = selectEst.value;
-        const valEstB = selectEstB.value;
 
         if (isDisc) {
             selectAju.style.display = 'none'; selectAju.value = "";
@@ -624,6 +624,7 @@ function renderizarLinhasTabelas(datas) {
         <option value="Fazendo Discípulos">Fazendo Discípulos</option>
         <option value="Explicando suas Crenças (Demonstração)">Explicando suas Crenças (Demonstração)</option>
         <option value="Explicando suas Crenças (Discurso)">Explicando suas Crenças (Discurso)</option>
+        <option value="O que você diria?">O que você diria?</option>
         <option value="Discurso">Discurso</option>
     `;
 
@@ -731,7 +732,7 @@ function ativarInteligenciaUI() {
             const valorSelecionadoAtual = selectTitular.value; // Salva quem estava preenchido
 
             // Só esconde o ajudante e filtra para irmãos se for explicitamente um formato de Discurso
-            if (e.target.value === "Discurso" || e.target.value === "Explicando suas Crenças (Discurso)") {
+            if (e.target.value === "Discurso" || e.target.value === "Explicando suas Crenças (Discurso)" || e.target.value === "O que você diria?") {
                 selectAjudante.style.display = 'none'; // <-- INJEÇÃO: Força o CSS para garantir que suma
                 selectAjudante.value = ""; 
                 // REGRA ESTREITA: Muda a lista do Titular para mostrar APENAS IRMÃOS
