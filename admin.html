@@ -437,21 +437,18 @@
                                 </div>
                                 <div style="flex: 1.5; min-width: 150px;">
                                     <label style="font-size: 12px; font-weight: bold;">Local de Saída:</label>
-                                    <select id="inputPregaLocal" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; background: white;">
-                                        <option value="">Selecione o local...</option>
-                                    </select>
+                                    <input type="text" id="inputPregaLocal" list="listaLocaisSugestoes" placeholder="Escolha ou digite..." style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; background: white;">
+                                    <datalist id="listaLocaisSugestoes"></datalist>
                                 </div>
                                 <div style="flex: 1; min-width: 100px;">
                                     <label style="font-size: 12px; font-weight: bold;">Território:</label>
-                                    <select id="inputPregaTerritorio" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; background: white;">
-                                        <option value="">Escolha...</option>
-                                        </select>
+                                    <input type="text" id="inputPregaTerritorio" list="listaTerritoriosSugestoes" placeholder="Ex: 01, Centro..." style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; background: white;">
+                                    <datalist id="listaTerritoriosSugestoes"></datalist>
                                 </div>
                                 <div style="flex: 1.5; min-width: 150px;">
                                     <label style="font-size: 12px; font-weight: bold;">Dirigente:</label>
-                                    <select id="inputPregaDirigente" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; background: white;">
-                                        <option value="">Selecione o irmão...</option>
-                                    </select>
+                                    <input type="text" id="inputPregaDirigente" list="listaDirigentesSugestoes" placeholder="Escolha ou digite..." style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; background: white;">
+                                    <datalist id="listaDirigentesSugestoes"></datalist>
                                 </div>
                                 <div style="display: flex; align-items: flex-end; gap: 5px;">
                                     <input type="hidden" id="inputIdEdicaoPrega" value="">
