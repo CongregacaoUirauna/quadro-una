@@ -427,24 +427,37 @@
                             <h3 style="margin-top: 0; color: #2e7d32; border-bottom: 1px solid #eee; padding-bottom: 10px;">📅 Configurar Escala Mensal de Pregação</h3>
                             
                             <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; background: #f9f9f9; padding: 15px; border-radius: 8px;">
-                                <div style="flex: 1; min-width: 120px;">
+                                <div style="flex: 1; min-width: 110px;">
                                     <label style="font-size: 12px; font-weight: bold;">Data:</label>
                                     <input type="date" id="inputPregaData" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
                                 </div>
-                                <div style="flex: 0.5; min-width: 100px;">
+                                <div style="flex: 0.5; min-width: 90px;">
                                     <label style="font-size: 12px; font-weight: bold;">Hora:</label>
                                     <input type="time" id="inputPregaHora" value="08:00" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
                                 </div>
-                                <div style="flex: 2; min-width: 200px;">
-                                    <label style="font-size: 12px; font-weight: bold;">Local / Ponto de Encontro:</label>
-                                    <input type="text" id="inputPregaLocal" placeholder="Ex: Praça ou Residência" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                                <div style="flex: 1.5; min-width: 150px;">
+                                    <label style="font-size: 12px; font-weight: bold;">Local de Saída:</label>
+                                    <select id="inputPregaLocal" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; background: white;">
+                                        <option value="">Selecione o local...</option>
+                                    </select>
                                 </div>
-                                <div style="flex: 2; min-width: 200px;">
+                                <div style="flex: 1; min-width: 100px;">
+                                    <label style="font-size: 12px; font-weight: bold;">Território:</label>
+                                    <select id="inputPregaTerritorio" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; background: white;">
+                                        <option value="">Escolha...</option>
+                                        </select>
+                                </div>
+                                <div style="flex: 1.5; min-width: 150px;">
                                     <label style="font-size: 12px; font-weight: bold;">Dirigente:</label>
-                                    <input type="text" id="inputPregaDirigente" placeholder="Nome do Irmão" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                                    <select id="inputPregaDirigente" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; background: white;">
+                                        <option value="">Selecione o irmão...</option>
+                                    </select>
                                 </div>
-                                <div style="display: flex; align-items: flex-end;">
-                                    <button id="btnAdicionarLinhaPrega" class="btn-salvar" style="margin: 0; background-color: #2e7d32; width: auto; padding: 10px 20px;">+ Adicionar</button>
+                                <div style="display: flex; align-items: flex-end; gap: 5px;">
+                                    <input type="hidden" id="inputIdEdicaoPrega" value="">
+                                    <button id="btnAdicionarLinhaPrega" class="btn-salvar" style="margin: 0; background-color: #2e7d32; width: auto; padding: 10px 15px;">+ Add</button>
+                                    <button id="btnAtualizarLinhaPrega" class="btn-salvar" style="margin: 0; background-color: #f57c00; width: auto; padding: 10px 15px; display: none;">✏️ Atualizar</button>
+                                    <button id="btnCancelarEdicaoPrega" class="btn-config" style="margin: 0; background-color: #999; color: white; width: auto; padding: 10px 15px; display: none;">✖ Cancelar</button>
                                 </div>
                             </div>
 
@@ -454,8 +467,9 @@
                                         <th style="padding: 10px; text-align: left; font-size: 13px;">Data</th>
                                         <th style="padding: 10px; text-align: left; font-size: 13px;">Hora</th>
                                         <th style="padding: 10px; text-align: left; font-size: 13px;">Local</th>
+                                        <th style="padding: 10px; text-align: center; font-size: 13px;">Território</th>
                                         <th style="padding: 10px; text-align: left; font-size: 13px;">Dirigente</th>
-                                        <th style="padding: 10px; text-align: center; font-size: 13px;">Ação</th>
+                                        <th style="padding: 10px; text-align: center; font-size: 13px;">Ações</th>
                                     </tr>
                                 </thead>
                                 <tbody id="tabelaCorpoPregaAdmin">
