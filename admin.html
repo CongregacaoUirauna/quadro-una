@@ -475,6 +475,59 @@
 
                             <button id="btnSalvarEscalaPregacaoCompleta" class="btn-salvar" style="margin: 0; background-color: #1b5e20; width: 100%;">💾 Salvar Escala Completa no Firebase</button>
                         </div>
+
+                        <div id="bloco-escala-testemunho" style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #ddd; box-shadow: 0 2px 4px rgba(0,0,0,0.05); grid-column: 1 / -1; margin-top: 20px;">
+                            <h3 style="margin-top: 0; color: #1565c0; border-bottom: 1px solid #eee; padding-bottom: 10px;">📌 Configurar Escala de Testemunho Público</h3>
+                            
+                            <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; background: #f4f8fb; padding: 15px; border-radius: 8px;">
+                                <div style="flex: 1; min-width: 110px;">
+                                    <label style="font-size: 12px; font-weight: bold;">Data:</label>
+                                    <input type="date" id="inputTestemunhoData" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                                </div>
+                                <div style="flex: 0.5; min-width: 90px;">
+                                    <label style="font-size: 12px; font-weight: bold;">Hora:</label>
+                                    <input type="time" id="inputTestemunhoHora" value="08:00" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                                </div>
+                                <div style="flex: 1.5; min-width: 140px;">
+                                    <label style="font-size: 12px; font-weight: bold;">Local / Ponto:</label>
+                                    <input type="text" id="inputTestemunhoLocal" list="listaLocaisSugestoes" placeholder="Escolha ou digite..." style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; background: white;">
+                                </div>
+                                <div style="flex: 1.5; min-width: 140px;">
+                                    <label style="font-size: 12px; font-weight: bold;">Designado 1:</label>
+                                    <input type="text" id="inputTestemunhoDesig1" list="listaDesignadosTestemunhoSugestoes" placeholder="Escolha ou digite..." style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; background: white;">
+                                </div>
+                                <div style="flex: 1.5; min-width: 140px;">
+                                    <label style="font-size: 12px; font-weight: bold;">Designado 2:</label>
+                                    <input type="text" id="inputTestemunhoDesig2" list="listaDesignadosTestemunhoSugestoes" placeholder="Escolha ou digite..." style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; background: white;">
+                                </div>
+                                
+                                <datalist id="listaDesignadosTestemunhoSugestoes"></datalist>
+
+                                <div style="display: flex; align-items: flex-end; gap: 5px;">
+                                    <input type="hidden" id="inputIdEdicaoTestemunho" value="">
+                                    <button id="btnAdicionarLinhaTestemunho" class="btn-salvar" style="margin: 0; background-color: #1565c0; width: auto; padding: 10px 15px;">+ Add</button>
+                                    <button id="btnAtualizarLinhaTestemunho" class="btn-salvar" style="margin: 0; background-color: #f57c00; width: auto; padding: 10px 15px; display: none;">✏️ Atualizar</button>
+                                    <button id="btnCancelarEdicaoTestemunho" class="btn-config" style="margin: 0; background-color: #999; color: white; width: auto; padding: 10px 15px; display: none;">✖ Cancelar</button>
+                                </div>
+                            </div>
+
+                            <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px;">
+                                <thead style="background: #e3f2fd;">
+                                    <tr>
+                                        <th style="padding: 10px; text-align: left; font-size: 13px;">Data</th>
+                                        <th style="padding: 10px; text-align: left; font-size: 13px;">Hora</th>
+                                        <th style="padding: 10px; text-align: left; font-size: 13px;">Local</th>
+                                        <th style="padding: 10px; text-align: left; font-size: 13px;">Designados</th>
+                                        <th style="padding: 10px; text-align: center; font-size: 13px;">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabelaCorpoTestemunhoAdmin">
+                                </tbody>
+                            </table>
+
+                            <button id="btnSalvarEscalaTestemunhoCompleta" class="btn-salvar" style="margin: 0; background-color: #0d47a1; width: 100%;">💾 Salvar Escala de Testemunho Público no Firebase</button>
+                        </div>
+                        
                     </div> </div> </div> <div id="painel-acessos" style="display: none; width: 100%; clear: both;">
                 <div class="container-escala">
                                 <div class="escala-header" style="background: #f3e5f5; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #ce93d8;">
