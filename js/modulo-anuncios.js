@@ -230,6 +230,7 @@ function configurarOuvintesMural() {
 // 5. Função de Renderização Refatorada (Ordenação Temporal Perfeita)
 function renderizarTabelaPregaAdmin() {
     const corpo = document.getElementById('tabelaCorpoPregaAdmin');
+    if (!corpo) return;
     corpo.innerHTML = '';
     
     // 🟢 MÁGICA: Funde a data e a hora para o JavaScript ordenar de forma cronologicamente exata.
@@ -250,28 +251,6 @@ function renderizarTabelaPregaAdmin() {
             <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center; white-space: nowrap;">
                 <button class="btn-editar-prega" data-id="${item.id}" style="background: none; border: none; cursor: pointer; font-size: 16px; margin-right: 10px;" title="Editar esta linha">✏️</button>
                 <button class="btn-remover-prega" data-id="${item.id}" style="background: none; border: none; color: red; cursor: pointer; font-size: 16px;" title="Apagar esta linha">🗑️</button>
-            </td>
-        `;
-        corpo.appendChild(tr);
-    });
-}
-
-function renderizarTabelaPregaAdmin() {
-    const corpo = document.getElementById('tabelaCorpoPregaAdmin');
-    corpo.innerHTML = '';
-    
-    listaPregaTemporaria.sort((a, b) => new Date(a.data) - new Date(b.data));
-
-    listaPregaTemporaria.forEach(item => {
-        const tr = document.createElement('tr');
-        // 🟢 O "item.hora || '--:--'" garante que dados antigos não mostrem "undefined"
-        tr.innerHTML = `
-            <td style="padding: 8px; border-bottom: 1px solid #eee;">${item.data.split('-').reverse().join('/')}</td>
-            <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold; color: #1a73e8;">${item.hora || '--:--'}</td>
-            <td style="padding: 8px; border-bottom: 1px solid #eee;">${item.local}</td>
-            <td style="padding: 8px; border-bottom: 1px solid #eee;">${item.dirigente}</td>
-            <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">
-                <button class="btn-remover-prega" data-id="${item.id}" style="background: none; border: none; color: red; cursor: pointer;">🗑️</button>
             </td>
         `;
         corpo.appendChild(tr);
