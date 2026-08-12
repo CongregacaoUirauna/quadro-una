@@ -13,34 +13,53 @@ export function initModuloAnuncios() {
 }
 
 function preencherSelectsEstaticos() {
-    // 1. Sugestões de Territórios (Números 1 a 50) - Permite também digitar nomes
+    // 1. Sugestões de Territórios (Números 1 a 50)
     const datalistTerritorio = document.getElementById('listaTerritoriosSugestoes');
-    if(datalistTerritorio) {
+    if (datalistTerritorio) {
         datalistTerritorio.innerHTML = '';
         for (let i = 1; i <= 50; i++) {
             datalistTerritorio.innerHTML += `<option value="Território ${i}">`;
         }
     }
     
-    // 2. Sugestões de Dirigentes e Testemunho (Inclui Irmãos e Irmãs - Lista Completa)
+    // 2. Sugestões Unificadas: Irmãos e Irmãs (Busca em todas as listas de pessoas)
     const datalistDirigente = document.getElementById('listaDirigentesSugestoes');
-    const datalistTestemunho = document.getElementById('listaDesignadosTestemunhoSugestoes'); // 🔵 INJEÇÃO
+    const datalistTestemunho = document.getElementById('listaDesignadosTestemunhoSugestoes');
     
-    if(datalistDirigente && configGlobal) {
-        datalistDirigente.innerHTML = '';
-        if(datalistTestemunho) datalistTestemunho.innerHTML = ''; // 🔵 Limpa a lista
+    if (configGlobal) {
+        if (datalistDirigente) datalistDirigente.innerHTML = '';
+        if (datalistTestemunho) datalistTestemunho.innerHTML = '';
         
-        // Carrega a lista completa de pessoas (irmãos e irmãs da global)
-        const listaCompleta = configGlobal.pessoas || configGlobal.todos || configGlobal.irmaos || [];
-        listaCompleta.forEach(p => {
-            const nome = typeof p === 'object' ? (p.nome || p.label) : p;
-            if (nome) {
-                datalistDirigente.innerHTML += `<option value="${nome}">`;
-                if(datalistTestemunho) datalistTestemunho.innerHTML += `<option value="${nome}">`; // 🔵 Injeta o nome na lista
+        const todosOsNomes = new Set();
+
+        // Mapeia todas as propriedades do configGlobal que sejam listas/arrays de pessoas
+        Object.keys(configGlobal).forEach(chave => {
+            if (Array.isArray(configGlobal[chave])) {
+                configGlobal[chave].forEach(p => {
+                    const nome = typeof p === 'object' ? (p.nome || p.label) : p;
+                    if (nome && typeof nome === 'string' && nome.trim() !== '') {
+                        todosOsNomes.add(nome.trim());
+                    }
+                });
             }
+        });
+
+        // Ordena todos os nomes de Irmãos e Irmãs em ordem alfabética
+        const listaOrdenada = Array.from(todosOsNomes).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+
+        listaOrdenada.forEach(nome => {
+            if (datalistDirigente) datalistDirigente.innerHTML += `<option value="${nome}">`;
+            if (datalistTestemunho) datalistTestemunho.innerHTML += `<option value="${nome}">`;
         });
     }
 }
+
+// 🟢 MÁGICA DE SEGURANÇA: Garante recarregar a lista caso o configGlobal demore a carregar
+document.addEventListener('focusin', (e) => {
+    if (['inputPregaDirigente', 'inputTestemunhoDesig1', 'inputTestemunhoDesig2'].includes(e.target.id)) {
+        preencherSelectsEstaticos();
+    }
+});
 
 async function carregarDadosMuralAdmin() {
     try {
