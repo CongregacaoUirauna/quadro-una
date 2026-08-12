@@ -1,5 +1,6 @@
 import { doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { db } from './firebase-config.js'; 
+import { configGlobal } from './estado-global.js'; // 🟢 INJEÇÃO: Para ler os nomes dos irmãos
 
 let listaPregaTemporaria = [];
 let listaPontosTemporaria = []; // 🟢 NOVA VARIÁVEL PARA OS PONTOS
@@ -7,6 +8,27 @@ let listaPontosTemporaria = []; // 🟢 NOVA VARIÁVEL PARA OS PONTOS
 export function initModuloAnuncios() {
     carregarDadosMuralAdmin();
     configurarOuvintesMural();
+    preencherSelectsEstaticos(); // 🟢 INJEÇÃO: Preenche territórios e dirigentes
+}
+
+function preencherSelectsEstaticos() {
+    // 1. Preenche Territórios (Gerador Automático de 1 a 100)
+    const selectTerritorio = document.getElementById('inputPregaTerritorio');
+    if(selectTerritorio) {
+        selectTerritorio.innerHTML = '<option value="">Selecione...</option>';
+        for (let i = 1; i <= 100; i++) {
+            selectTerritorio.innerHTML += `<option value="Território ${i}">Território ${i}</option>`;
+        }
+    }
+    
+    // 2. Preenche Dirigentes usando o ficheiro raiz (configGlobal)
+    const selectDirigente = document.getElementById('inputPregaDirigente');
+    if(selectDirigente && configGlobal && configGlobal.irmaos) {
+        selectDirigente.innerHTML = '<option value="">Selecione o irmão...</option>';
+        configGlobal.irmaos.forEach(irmao => {
+            selectDirigente.innerHTML += `<option value="${irmao}">${irmao}</option>`;
+        });
+    }
 }
 
 async function carregarDadosMuralAdmin() {
@@ -104,33 +126,88 @@ function configurarOuvintesMural() {
 
     // --- GESTÃO DA ESCALA MENSAL DE PREGAÇÃO ---
     
-    // Adicionar linha temporária (Agora capturando a HORA)
+    const limparCamposPrega = () => {
+        document.getElementById('inputPregaLocal').value = '';
+        document.getElementById('inputPregaTerritorio').value = '';
+        document.getElementById('inputPregaDirigente').value = '';
+        document.getElementById('inputIdEdicaoPrega').value = '';
+        document.getElementById('btnAdicionarLinhaPrega').style.display = 'inline-block';
+        document.getElementById('btnAtualizarLinhaPrega').style.display = 'none';
+        document.getElementById('btnCancelarEdicaoPrega').style.display = 'none';
+    };
+
+    // 1. Adicionar linha temporária
     document.getElementById('btnAdicionarLinhaPrega').addEventListener('click', (e) => {
         e.preventDefault();
         const data = document.getElementById('inputPregaData').value;
-        const hora = document.getElementById('inputPregaHora').value; // 🟢 Captura a hora
+        const hora = document.getElementById('inputPregaHora').value;
         const local = document.getElementById('inputPregaLocal').value;
+        const territorio = document.getElementById('inputPregaTerritorio').value;
         const dirigente = document.getElementById('inputPregaDirigente').value;
 
-        if (!data || !hora || !local || !dirigente) {
-            alert("Preencha todos os campos, incluindo a hora da pregação.");
+        if (!data || !hora || !local || !territorio || !dirigente) {
+            alert("Por favor, preencha todos os campos obrigatórios (Data, Hora, Local, Território e Dirigente).");
             return;
         }
 
-        // 🟢 Injeta a variável 'hora' no pacote que vai pro Firebase
-        listaPregaTemporaria.push({ data, hora, local, dirigente, id: Date.now() });
+        listaPregaTemporaria.push({ data, hora, local, territorio, dirigente, id: Date.now() });
         renderizarTabelaPregaAdmin();
-
-        document.getElementById('inputPregaLocal').value = '';
-        document.getElementById('inputPregaDirigente').value = '';
+        limparCamposPrega();
     });
 
-    // Delegação de Eventos: Remover linha temporária
+    // 2. Atualizar linha em edição
+    document.getElementById('btnAtualizarLinhaPrega').addEventListener('click', (e) => {
+        e.preventDefault();
+        const idEdicao = parseInt(document.getElementById('inputIdEdicaoPrega').value);
+        
+        const data = document.getElementById('inputPregaData').value;
+        const hora = document.getElementById('inputPregaHora').value;
+        const local = document.getElementById('inputPregaLocal').value;
+        const territorio = document.getElementById('inputPregaTerritorio').value;
+        const dirigente = document.getElementById('inputPregaDirigente').value;
+
+        if (!data || !hora || !local || !territorio || !dirigente) return;
+
+        const index = listaPregaTemporaria.findIndex(i => i.id === idEdicao);
+        if(index !== -1) {
+            listaPregaTemporaria[index] = { ...listaPregaTemporaria[index], data, hora, local, territorio, dirigente };
+            renderizarTabelaPregaAdmin();
+            limparCamposPrega();
+        }
+    });
+
+    // 3. Cancelar Edição
+    document.getElementById('btnCancelarEdicaoPrega').addEventListener('click', (e) => {
+        e.preventDefault();
+        limparCamposPrega();
+    });
+
+    // 4. Delegação: Remover ou Editar linha na Tabela
     document.getElementById('tabelaCorpoPregaAdmin').addEventListener('click', (e) => {
+        const id = parseInt(e.target.getAttribute('data-id'));
+        
         if (e.target.classList.contains('btn-remover-prega')) {
-            const id = parseInt(e.target.getAttribute('data-id'));
             listaPregaTemporaria = listaPregaTemporaria.filter(i => i.id !== id);
             renderizarTabelaPregaAdmin();
+            limparCamposPrega(); // Aborta qualquer edição em curso se apagar
+        }
+        
+        if (e.target.classList.contains('btn-editar-prega')) {
+            const item = listaPregaTemporaria.find(i => i.id === id);
+            if(item) {
+                // Devolve os dados para os campos lá de cima
+                document.getElementById('inputPregaData').value = item.data;
+                document.getElementById('inputPregaHora').value = item.hora;
+                document.getElementById('inputPregaLocal').value = item.local;
+                document.getElementById('inputPregaTerritorio').value = item.territorio || '';
+                document.getElementById('inputPregaDirigente').value = item.dirigente;
+                document.getElementById('inputIdEdicaoPrega').value = item.id;
+                
+                // Troca os botões
+                document.getElementById('btnAdicionarLinhaPrega').style.display = 'none';
+                document.getElementById('btnAtualizarLinhaPrega').style.display = 'inline-block';
+                document.getElementById('btnCancelarEdicaoPrega').style.display = 'inline-block';
+            }
         }
     });
 
@@ -147,6 +224,35 @@ function configurarOuvintesMural() {
             alert("Erro ao salvar a escala.");
             btn.innerText = "💾 Salvar Escala Completa no Firebase";
         }
+    });
+}
+
+// 5. Função de Renderização Refatorada (Ordenação Temporal Perfeita)
+function renderizarTabelaPregaAdmin() {
+    const corpo = document.getElementById('tabelaCorpoPregaAdmin');
+    corpo.innerHTML = '';
+    
+    // 🟢 MÁGICA: Funde a data e a hora para o JavaScript ordenar de forma cronologicamente exata.
+    listaPregaTemporaria.sort((a, b) => {
+        const dataHoraA = new Date(`${a.data}T${a.hora || '00:00'}`);
+        const dataHoraB = new Date(`${b.data}T${b.hora || '00:00'}`);
+        return dataHoraA - dataHoraB;
+    });
+
+    listaPregaTemporaria.forEach(item => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td style="padding: 8px; border-bottom: 1px solid #eee;">${item.data.split('-').reverse().join('/')}</td>
+            <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold; color: #1a73e8;">${item.hora || '--:--'}</td>
+            <td style="padding: 8px; border-bottom: 1px solid #eee;">${item.local}</td>
+            <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center; color: #e65100; font-weight: bold;">${item.territorio || '---'}</td>
+            <td style="padding: 8px; border-bottom: 1px solid #eee;">${item.dirigente}</td>
+            <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center; white-space: nowrap;">
+                <button class="btn-editar-prega" data-id="${item.id}" style="background: none; border: none; cursor: pointer; font-size: 16px; margin-right: 10px;" title="Editar esta linha">✏️</button>
+                <button class="btn-remover-prega" data-id="${item.id}" style="background: none; border: none; color: red; cursor: pointer; font-size: 16px;" title="Apagar esta linha">🗑️</button>
+            </td>
+        `;
+        corpo.appendChild(tr);
     });
 }
 
@@ -182,4 +288,13 @@ function renderizarListaPontosAdmin() {
             <button class="btn-remover-ponto" data-index="${i}" style="background: none; border: none; color: red; cursor: pointer; font-weight: bold; font-size: 16px;">✕</button>
         </li>
     `).join('');
+
+    // 🟢 INJEÇÃO: Sempre que um local é adicionado/removido, atualiza o Menu de Pregação
+    const selectLocal = document.getElementById('inputPregaLocal');
+    if(selectLocal) {
+        selectLocal.innerHTML = '<option value="">Selecione o local...</option>';
+        listaPontosTemporaria.forEach(ponto => {
+            selectLocal.innerHTML += `<option value="${ponto}">${ponto}</option>`;
+        });
+    }
 }
