@@ -4,6 +4,7 @@ import { configGlobal } from './estado-global.js'; // 🟢 INJEÇÃO: Para ler o
 
 let listaPregaTemporaria = [];
 let listaPontosTemporaria = []; // 🟢 NOVA VARIÁVEL PARA OS PONTOS
+let listaTestemunhoTemporaria = []; // 🔵 NOVA VARIÁVEL: TESTEMUNHO
 
 export function initModuloAnuncios() {
     carregarDadosMuralAdmin();
@@ -21,16 +22,21 @@ function preencherSelectsEstaticos() {
         }
     }
     
-    // 2. Sugestões de Dirigentes (Inclui Irmãos e Irmãs - Lista Completa)
+    // 2. Sugestões de Dirigentes e Testemunho (Inclui Irmãos e Irmãs - Lista Completa)
     const datalistDirigente = document.getElementById('listaDirigentesSugestoes');
+    const datalistTestemunho = document.getElementById('listaDesignadosTestemunhoSugestoes'); // 🔵 INJEÇÃO
+    
     if(datalistDirigente && configGlobal) {
         datalistDirigente.innerHTML = '';
-        // Carrega a lista completa de pessoas (irmãos e irmãs)
+        if(datalistTestemunho) datalistTestemunho.innerHTML = ''; // 🔵 Limpa a lista
+        
+        // Carrega a lista completa de pessoas (irmãos e irmãs da global)
         const listaCompleta = configGlobal.pessoas || configGlobal.todos || configGlobal.irmaos || [];
         listaCompleta.forEach(p => {
             const nome = typeof p === 'object' ? (p.nome || p.label) : p;
             if (nome) {
                 datalistDirigente.innerHTML += `<option value="${nome}">`;
+                if(datalistTestemunho) datalistTestemunho.innerHTML += `<option value="${nome}">`; // 🔵 Injeta o nome na lista
             }
         });
     }
@@ -58,6 +64,13 @@ async function carregarDadosMuralAdmin() {
         if (docEscala.exists()) {
             listaPregaTemporaria = docEscala.data().dias || [];
             renderizarTabelaPregaAdmin();
+        }
+
+        // 3. Carrega a Escala de Testemunho existente
+        const docTestemunho = await getDoc(doc(db, "configuracoes", "escala_testemunho"));
+        if (docTestemunho.exists()) {
+            listaTestemunhoTemporaria = docTestemunho.data().dias || [];
+            renderizarTabelaTestemunhoAdmin();
         }
     } catch (e) {
         console.error("Erro ao carregar configurações do mural:", e);
@@ -230,6 +243,103 @@ function configurarOuvintesMural() {
             btn.innerText = "💾 Salvar Escala Completa no Firebase";
         }
     });
+
+    // --- GESTÃO DA ESCALA DE TESTEMUNHO PÚBLICO ---
+    const limparCamposTestemunho = () => {
+        document.getElementById('inputTestemunhoLocal').value = '';
+        document.getElementById('inputTestemunhoDesig1').value = '';
+        document.getElementById('inputTestemunhoDesig2').value = '';
+        document.getElementById('inputIdEdicaoTestemunho').value = '';
+        document.getElementById('btnAdicionarLinhaTestemunho').style.display = 'inline-block';
+        document.getElementById('btnAtualizarLinhaTestemunho').style.display = 'none';
+        document.getElementById('btnCancelarEdicaoTestemunho').style.display = 'none';
+    };
+
+    // 1. Adicionar linha
+    document.getElementById('btnAdicionarLinhaTestemunho').addEventListener('click', (e) => {
+        e.preventDefault();
+        const data = document.getElementById('inputTestemunhoData').value;
+        const hora = document.getElementById('inputTestemunhoHora').value;
+        const local = document.getElementById('inputTestemunhoLocal').value;
+        const desig1 = document.getElementById('inputTestemunhoDesig1').value;
+        const desig2 = document.getElementById('inputTestemunhoDesig2').value;
+
+        if (!data || !hora || !local || !desig1) {
+            alert("Preencha ao menos Data, Hora, Local e o Designado 1.");
+            return;
+        }
+
+        listaTestemunhoTemporaria.push({ data, hora, local, desig1, desig2, id: Date.now() });
+        renderizarTabelaTestemunhoAdmin();
+        limparCamposTestemunho();
+    });
+
+    // 2. Atualizar linha editada
+    document.getElementById('btnAtualizarLinhaTestemunho').addEventListener('click', (e) => {
+        e.preventDefault();
+        const idEdicao = parseInt(document.getElementById('inputIdEdicaoTestemunho').value);
+        const data = document.getElementById('inputTestemunhoData').value;
+        const hora = document.getElementById('inputTestemunhoHora').value;
+        const local = document.getElementById('inputTestemunhoLocal').value;
+        const desig1 = document.getElementById('inputTestemunhoDesig1').value;
+        const desig2 = document.getElementById('inputTestemunhoDesig2').value;
+
+        if (!data || !hora || !local || !desig1) return;
+
+        const index = listaTestemunhoTemporaria.findIndex(i => i.id === idEdicao);
+        if(index !== -1) {
+            listaTestemunhoTemporaria[index] = { ...listaTestemunhoTemporaria[index], data, hora, local, desig1, desig2 };
+            renderizarTabelaTestemunhoAdmin();
+            limparCamposTestemunho();
+        }
+    });
+
+    // 3. Cancelar Edição
+    document.getElementById('btnCancelarEdicaoTestemunho').addEventListener('click', (e) => {
+        e.preventDefault();
+        limparCamposTestemunho();
+    });
+
+    // 4. Remover ou Editar da Tabela
+    document.getElementById('tabelaCorpoTestemunhoAdmin').addEventListener('click', (e) => {
+        const id = parseInt(e.target.getAttribute('data-id'));
+        if (e.target.classList.contains('btn-remover-testemunho')) {
+            listaTestemunhoTemporaria = listaTestemunhoTemporaria.filter(i => i.id !== id);
+            renderizarTabelaTestemunhoAdmin();
+            limparCamposTestemunho();
+        }
+        if (e.target.classList.contains('btn-editar-testemunho')) {
+            const item = listaTestemunhoTemporaria.find(i => i.id === id);
+            if(item) {
+                document.getElementById('inputTestemunhoData').value = item.data;
+                document.getElementById('inputTestemunhoHora').value = item.hora;
+                document.getElementById('inputTestemunhoLocal').value = item.local;
+                document.getElementById('inputTestemunhoDesig1').value = item.desig1 || '';
+                document.getElementById('inputTestemunhoDesig2').value = item.desig2 || '';
+                document.getElementById('inputIdEdicaoTestemunho').value = item.id;
+                
+                document.getElementById('btnAdicionarLinhaTestemunho').style.display = 'none';
+                document.getElementById('btnAtualizarLinhaTestemunho').style.display = 'inline-block';
+                document.getElementById('btnCancelarEdicaoTestemunho').style.display = 'inline-block';
+            }
+        }
+    });
+
+    // 5. Salvar Escala no Firebase
+    document.getElementById('btnSalvarEscalaTestemunhoCompleta').addEventListener('click', async () => {
+        const btn = document.getElementById('btnSalvarEscalaTestemunhoCompleta');
+        btn.innerText = "⏳ Salvando...";
+        try {
+            await setDoc(doc(db, "configuracoes", "escala_testemunho"), { dias: listaTestemunhoTemporaria });
+            btn.innerText = "✅ Salvo com Sucesso!";
+            setTimeout(() => btn.innerText = "💾 Salvar Escala de Testemunho Público no Firebase", 2000);
+        } catch(e) {
+            console.error(e);
+            alert("Erro ao salvar a escala.");
+            btn.innerText = "💾 Salvar Escala de Testemunho Público no Firebase";
+        }
+    });
+    
 }
 
 // 5. Função de Renderização Refatorada (Ordenação Temporal Perfeita)
@@ -281,4 +391,39 @@ function renderizarListaPontosAdmin() {
             datalistLocal.innerHTML += `<option value="${ponto}">`;
         });
     }
+}
+
+function renderizarTabelaTestemunhoAdmin() {
+    const corpo = document.getElementById('tabelaCorpoTestemunhoAdmin');
+    if (!corpo) return;
+    corpo.innerHTML = '';
+    
+    // MÁGICA: Ordenação exata fundindo Data e Hora
+    listaTestemunhoTemporaria.sort((a, b) => {
+        const dataHoraA = new Date(`${a.data}T${a.hora || '00:00'}`);
+        const dataHoraB = new Date(`${b.data}T${b.hora || '00:00'}`);
+        return dataHoraA - dataHoraB;
+    });
+
+    listaTestemunhoTemporaria.forEach(item => {
+        const tr = document.createElement('tr');
+        
+        // MÁGICA: Junta os dois nomes num só, ou mostra apenas um se o 2º estiver vazio
+        let nomesDesignados = item.desig1;
+        if (item.desig2 && item.desig2.trim() !== '') {
+            nomesDesignados += ` <br><span style="font-size: 11px; color: #555;">&</span> ${item.desig2}`;
+        }
+
+        tr.innerHTML = `
+            <td style="padding: 8px; border-bottom: 1px solid #eee;">${item.data.split('-').reverse().join('/')}</td>
+            <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold; color: #1565c0;">${item.hora || '--:--'}</td>
+            <td style="padding: 8px; border-bottom: 1px solid #eee;">${item.local}</td>
+            <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: 600;">${nomesDesignados}</td>
+            <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center; white-space: nowrap;">
+                <button class="btn-editar-testemunho" data-id="${item.id}" style="background: none; border: none; cursor: pointer; font-size: 16px; margin-right: 10px;" title="Editar esta linha">✏️</button>
+                <button class="btn-remover-testemunho" data-id="${item.id}" style="background: none; border: none; color: red; cursor: pointer; font-size: 16px;" title="Apagar esta linha">🗑️</button>
+            </td>
+        `;
+        corpo.appendChild(tr);
+    });
 }
