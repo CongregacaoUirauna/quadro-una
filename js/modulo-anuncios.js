@@ -12,21 +12,26 @@ export function initModuloAnuncios() {
 }
 
 function preencherSelectsEstaticos() {
-    // 1. Preenche Territórios (Gerador Automático de 1 a 100)
-    const selectTerritorio = document.getElementById('inputPregaTerritorio');
-    if(selectTerritorio) {
-        selectTerritorio.innerHTML = '<option value="">Selecione...</option>';
-        for (let i = 1; i <= 100; i++) {
-            selectTerritorio.innerHTML += `<option value="Território ${i}">Território ${i}</option>`;
+    // 1. Sugestões de Territórios (Números 1 a 50) - Permite também digitar nomes
+    const datalistTerritorio = document.getElementById('listaTerritoriosSugestoes');
+    if(datalistTerritorio) {
+        datalistTerritorio.innerHTML = '';
+        for (let i = 1; i <= 50; i++) {
+            datalistTerritorio.innerHTML += `<option value="Território ${i}">`;
         }
     }
     
-    // 2. Preenche Dirigentes usando o ficheiro raiz (configGlobal)
-    const selectDirigente = document.getElementById('inputPregaDirigente');
-    if(selectDirigente && configGlobal && configGlobal.irmaos) {
-        selectDirigente.innerHTML = '<option value="">Selecione o irmão...</option>';
-        configGlobal.irmaos.forEach(irmao => {
-            selectDirigente.innerHTML += `<option value="${irmao}">${irmao}</option>`;
+    // 2. Sugestões de Dirigentes (Inclui Irmãos e Irmãs - Lista Completa)
+    const datalistDirigente = document.getElementById('listaDirigentesSugestoes');
+    if(datalistDirigente && configGlobal) {
+        datalistDirigente.innerHTML = '';
+        // Carrega a lista completa de pessoas (irmãos e irmãs)
+        const listaCompleta = configGlobal.pessoas || configGlobal.todos || configGlobal.irmaos || [];
+        listaCompleta.forEach(p => {
+            const nome = typeof p === 'object' ? (p.nome || p.label) : p;
+            if (nome) {
+                datalistDirigente.innerHTML += `<option value="${nome}">`;
+            }
         });
     }
 }
@@ -268,12 +273,12 @@ function renderizarListaPontosAdmin() {
         </li>
     `).join('');
 
-    // 🟢 INJEÇÃO: Sempre que um local é adicionado/removido, atualiza o Menu de Pregação
-    const selectLocal = document.getElementById('inputPregaLocal');
-    if(selectLocal) {
-        selectLocal.innerHTML = '<option value="">Selecione o local...</option>';
+    // Alimenta as sugestões do Local de Saída
+    const datalistLocal = document.getElementById('listaLocaisSugestoes');
+    if(datalistLocal) {
+        datalistLocal.innerHTML = '';
         listaPontosTemporaria.forEach(ponto => {
-            selectLocal.innerHTML += `<option value="${ponto}">${ponto}</option>`;
+            datalistLocal.innerHTML += `<option value="${ponto}">`;
         });
     }
 }
