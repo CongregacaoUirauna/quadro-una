@@ -527,6 +527,42 @@
 
                             <button id="btnSalvarEscalaTestemunhoCompleta" class="btn-salvar" style="margin: 0; background-color: #0d47a1; width: 100%;">💾 Salvar Escala de Testemunho Público no Firebase</button>
                         </div>
+
+                        <div id="bloco-gestao-territorios" style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #ddd; box-shadow: 0 2px 4px rgba(0,0,0,0.05); grid-column: 1 / -1; margin-top: 20px;">
+                            <h3 style="margin-top: 0; color: #d84315; border-bottom: 1px solid #eee; padding-bottom: 10px;">🗺️ Gestor de Territórios e Mapas</h3>
+                            
+                            <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; background: #fbe9e7; padding: 15px; border-radius: 8px;">
+                                <div style="flex: 1; min-width: 150px;">
+                                    <label style="font-size: 12px; font-weight: bold;">Nome / Número do Território:</label>
+                                    <input type="text" id="inputTerritorioNome" placeholder="Ex: 01 - Centro" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; background: white;">
+                                </div>
+                                <div style="flex: 2; min-width: 200px;">
+                                    <label style="font-size: 12px; font-weight: bold;">Link da Imagem / Mapa (URL):</label>
+                                    <input type="url" id="inputTerritorioLink" placeholder="Cole o link (Google Drive, ImgBB, etc.)" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; background: white;">
+                                </div>
+                                
+                                <div style="display: flex; align-items: flex-end; gap: 5px;">
+                                    <input type="hidden" id="inputIdEdicaoTerritorio" value="">
+                                    <button id="btnAdicionarTerritorio" class="btn-salvar" style="margin: 0; background-color: #d84315; width: auto; padding: 10px 15px;">+ Add</button>
+                                    <button id="btnAtualizarTerritorio" class="btn-salvar" style="margin: 0; background-color: #f57c00; width: auto; padding: 10px 15px; display: none;">✏️ Atualizar</button>
+                                    <button id="btnCancelarEdicaoTerritorio" class="btn-config" style="margin: 0; background-color: #999; color: white; width: auto; padding: 10px 15px; display: none;">✖ Cancelar</button>
+                                </div>
+                            </div>
+
+                            <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px;">
+                                <thead style="background: #ffccbc;">
+                                    <tr>
+                                        <th style="padding: 10px; text-align: left; font-size: 13px;">Território</th>
+                                        <th style="padding: 10px; text-align: left; font-size: 13px;">Link do Mapa</th>
+                                        <th style="padding: 10px; text-align: center; font-size: 13px;">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabelaCorpoTerritoriosAdmin">
+                                </tbody>
+                            </table>
+
+                            <button id="btnSalvarTerritoriosFirebase" class="btn-salvar" style="margin: 0; background-color: #bf360c; width: 100%;">💾 Salvar Lista de Territórios no Firebase</button>
+                        </div>
                         
                     </div> </div> </div> <div id="painel-acessos" style="display: none; width: 100%; clear: both;">
                 <div class="container-escala">
