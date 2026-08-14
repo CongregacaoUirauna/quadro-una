@@ -269,7 +269,7 @@ document.addEventListener('click', (e) => {
 });
 
 // --- FUNÇÕES AUXILIARES DO ALGORITMO GULOSO ---
-function selecionarParticipantes(historicoUso) {
+function selecionarParticipantes(historicoUso, quantidadeNecessaria) {
     let familias = {};
     configLimpeza.participantes.forEach(p => {
         if (!familias[p.familia]) familias[p.familia] = [];
@@ -290,12 +290,12 @@ function selecionarParticipantes(historicoUso) {
     let escolhidos = [];
     for (let fam of familiasArray) {
         for (let membro of fam.membros) {
-            if (escolhidos.length < 9) {
+            if (escolhidos.length < quantidadeNecessaria) {
                 escolhidos.push(membro);
                 historicoUso[membro.id]++; 
             }
         }
-        if (escolhidos.length >= 9) break; 
+        if (escolhidos.length >= quantidadeNecessaria) break; 
     }
     return escolhidos;
 }
@@ -305,7 +305,9 @@ function montarTexto(cabeca, escolhidos, tarefasBase) {
     tarefasBase.forEach(t => {
         for (let i = 0; i < t.qtd; i++) listaDeTarefas.push(t.nome);
     });
-    while (listaDeTarefas.length < 9) listaDeTarefas.push("Apoio Geral"); 
+    
+    // Agora o sistema respeita o tamanho exato dos escolhidos, sem forçar 9 tarefas.
+    while (listaDeTarefas.length < escolhidos.length) listaDeTarefas.push("Apoio Geral"); 
 
     let textoFinal = `Cabeça de Grupo: ${cabeca}\n`;
     textoFinal += `-------------------------\n`;
@@ -402,12 +404,20 @@ if (btnGerar) {
                 
                 let cabecaMeio = configLimpeza.cabecas[cabecaIndex % configLimpeza.cabecas.length] || "N/A";
                 if(configLimpeza.cabecas.length > 0) cabecaIndex++;
-                let escolhidosMeio = selecionarParticipantes(historicoUso);
+                
+                // Calcula dinamicamente o total de tarefas configuradas para o Meio de Semana
+                let qtdTarefasMeio = configLimpeza.tarefasMeioSemana.reduce((soma, t) => soma + t.qtd, 0);
+                let limiteMeio = qtdTarefasMeio > 0 ? qtdTarefasMeio : 9; // Mecanismo de segurança (Fallback)
+                let escolhidosMeio = selecionarParticipantes(historicoUso, limiteMeio);
                 let textoMeio = montarTexto(cabecaMeio, escolhidosMeio, configLimpeza.tarefasMeioSemana);
 
                 let cabecaFim = configLimpeza.cabecas[cabecaIndex % configLimpeza.cabecas.length] || "N/A";
                 if(configLimpeza.cabecas.length > 0) cabecaIndex++;
-                let escolhidosFim = selecionarParticipantes(historicoUso);
+                
+                // Calcula dinamicamente o total de tarefas configuradas para o Fim de Semana
+                let qtdTarefasFim = configLimpeza.tarefasFimSemana.reduce((soma, t) => soma + t.qtd, 0);
+                let limiteFim = qtdTarefasFim > 0 ? qtdTarefasFim : 9; // Mecanismo de segurança (Fallback)
+                let escolhidosFim = selecionarParticipantes(historicoUso, limiteFim);
                 let textoFim = montarTexto(cabecaFim, escolhidosFim, configLimpeza.tarefasFimSemana);
 
                 // Salva na memória do mês para uso posterior
