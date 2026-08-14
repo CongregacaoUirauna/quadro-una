@@ -1329,7 +1329,7 @@
         }
 
         // --- FUNÇÕES DO MODAL POP-UP DE MAPA DE TERRITÓRIO ---
-        function abrirModalTerritorio(nome, linkImagem) {
+        window.abrirModalTerritorio = function(nome, linkImagem) {
             const modal = document.getElementById('modalTerritorioMapa');
             const titulo = document.getElementById('tituloModalTerritorio');
             const img = document.getElementById('imagemModalTerritorio');
@@ -1339,18 +1339,25 @@
             titulo.innerText = `🗺️ Mapa: ${nome}`;
             img.src = linkImagem;
             modal.style.display = 'flex';
-        }
+        };
 
-        function fecharModalTerritorio() {
+        window.fecharModalTerritorio = function() {
             const modal = document.getElementById('modalTerritorioMapa');
             if (modal) modal.style.display = 'none';
-        }
+        };
 
         // Fechar ao clicar na área escura fora do cartão
         window.addEventListener('click', (e) => {
             const modal = document.getElementById('modalTerritorioMapa');
             if (e.target === modal) {
-                fecharModalTerritorio();
+                window.fecharModalTerritorio();
+            }
+        });
+
+        // Fechar ao pressionar a tecla ESC
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                window.fecharModalTerritorio();
             }
         });
 
