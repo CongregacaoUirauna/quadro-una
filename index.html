@@ -1275,7 +1275,18 @@
                         return;
                     }
 
-                    // Ordenar por data e hora (fuso e horário cronológico exato)
+                   // 1. Busca a lista de mapas/territórios do Firebase
+                    let listaTerritoriosMapas = [];
+                    try {
+                        const docTerritorios = await getDoc(doc(db, "configuracoes", "territorios_mapas"));
+                        if (docTerritorios.exists()) {
+                            listaTerritoriosMapas = docTerritorios.data().lista || [];
+                        }
+                    } catch (errTerr) {
+                        console.warn("Aviso ao carregar mapas de territórios:", errTerr);
+                    }
+
+                    // 2. Ordenar por data e hora (fuso e horário cronológico exato)
                     lista.sort((a, b) => {
                         const dataHoraA = new Date(`${a.data}T${a.hora || '00:00'}`);
                         const dataHoraB = new Date(`${b.data}T${b.hora || '00:00'}`);
@@ -1284,12 +1295,25 @@
 
                     let html = '';
                     lista.forEach(item => {
+                        // Cruza o nome do território da escala com a lista de mapas cadastrados
+                        const nomeTerr = (item.territorio || '').trim();
+                        const terrEncontrado = listaTerritoriosMapas.find(t => t.nome && t.nome.trim().toLowerCase() === nomeTerr.toLowerCase());
+
+                        let territorioHtml = '';
+                        if (terrEncontrado && terrEncontrado.link && terrEncontrado.link.trim() !== '') {
+                            const nomeEscapado = terrEncontrado.nome.replace(/'/g, "\\'");
+                            const linkEscapado = terrEncontrado.link.replace(/'/g, "\\'");
+                            territorioHtml = `<button onclick="abrirModalTerritorio('${nomeEscapado}', '${linkEscapado}')" style="background: #fbe9e7; border: 1px solid #ffccbc; color: #d84315; font-size: 11px; font-weight: bold; cursor: pointer; border-radius: 4px; padding: 2px 5px; display: inline-flex; align-items: center; gap: 3px;" title="Clique para ver o mapa">🗺️ ${item.territorio}</button>`;
+                        } else {
+                            territorioHtml = `<span style="color: #e65100; font-weight: bold;">${item.territorio || '---'}</span>`;
+                        }
+
                         html += `
                             <tr style="border-bottom: 1px solid #f5f5f5;">
                                 <td style="padding: 6px 3px; font-size: 12px; font-weight: bold; color: #2e7d32; white-space: nowrap;">${formatarDataBR(item.data)}</td>
                                 <td style="padding: 6px 3px; font-size: 12px; font-weight: bold; color: #333; white-space: nowrap;">${item.hora || '--:--'}</td>
                                 <td style="padding: 6px 3px; font-size: 12px; color: #333; word-break: break-word;">${item.local}</td>
-                                <td style="padding: 6px 3px; font-size: 12px; font-weight: bold; color: #e65100; text-align: center;">${item.territorio || '---'}</td>
+                                <td style="padding: 6px 3px; font-size: 12px; text-align: center;">${territorioHtml}</td>
                                 <td style="padding: 6px 3px; font-size: 12px; font-weight: 600; word-break: break-word;">${item.dirigente}</td>
                             </tr>
                         `;
@@ -1303,6 +1327,39 @@
                 corpo.innerHTML = '<tr><td colspan="5" style="padding: 15px; text-align: center; color: red; font-size: 13px;">Erro ao carregar dados.</td></tr>';
             }
         }
+
+        // --- FUNÇÕES DO MODAL POP-UP DE MAPA DE TERRITÓRIO ---
+        function abrirModalTerritorio(nome, linkImagem) {
+            const modal = document.getElementById('modalTerritorioMapa');
+            const titulo = document.getElementById('tituloModalTerritorio');
+            const img = document.getElementById('imagemModalTerritorio');
+            
+            if (!modal || !img || !titulo) return;
+
+            titulo.innerText = `🗺️ Mapa: ${nome}`;
+            img.src = linkImagem;
+            modal.style.display = 'flex';
+        }
+
+        function fecharModalTerritorio() {
+            const modal = document.getElementById('modalTerritorioMapa');
+            if (modal) modal.style.display = 'none';
+        }
+
+        // Fechar ao clicar na área escura fora do cartão
+        window.addEventListener('click', (e) => {
+            const modal = document.getElementById('modalTerritorioMapa');
+            if (e.target === modal) {
+                fecharModalTerritorio();
+            }
+        });
+
+        // Fechar ao pressionar a tecla ESC
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                fecharModalTerritorio();
+            }
+        });
 
         async function carregarEscalaTestemunho() {
             const corpo = document.getElementById('tabelaTestemunhoPublico');
@@ -1355,6 +1412,21 @@
     </script>
 
     <script type="module" src="js/modulo-cronometro.js"></script>
+
+    <div id="modalTerritorioMapa" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); z-index: 9999; justify-content: center; align-items: center; padding: 15px; box-sizing: border-box;">
+        <div style="background: white; border-radius: 12px; max-width: 500px; width: 100%; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 5px 25px rgba(0,0,0,0.3); position: relative;">
+            <div style="padding: 12px 15px; background: #d84315; color: white; display: flex; justify-content: space-between; align-items: center;">
+                <h4 id="tituloModalTerritorio" style="margin: 0; font-size: 15px; font-weight: bold;">🗺️ Mapa do Território</h4>
+                <button onclick="fecharModalTerritorio()" style="background: none; border: none; color: white; font-size: 20px; font-weight: bold; cursor: pointer; padding: 0 5px; line-height: 1;">✕</button>
+            </div>
+            <div style="padding: 10px; overflow-y: auto; text-align: center; background: #f9f9f9; display: flex; justify-content: center; align-items: center; min-height: 200px;">
+                <img id="imagemModalTerritorio" src="" alt="Mapa do Território" style="max-width: 100%; max-height: 70vh; border-radius: 8px; border: 1px solid #ddd; object-fit: contain;">
+            </div>
+            <div style="padding: 10px; background: #fff; text-align: right; border-top: 1px solid #eee;">
+                <button onclick="fecharModalTerritorio()" style="background: #666; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: bold; cursor: pointer;">Fechar</button>
+            </div>
+        </div>
+    </div>
     
 </body>
 </html>
