@@ -5,6 +5,7 @@ import { configGlobal } from './estado-global.js'; // 🟢 INJEÇÃO: Para ler o
 let listaPregaTemporaria = [];
 let listaPontosTemporaria = []; // 🟢 NOVA VARIÁVEL PARA OS PONTOS
 let listaTestemunhoTemporaria = []; // 🔵 NOVA VARIÁVEL: TESTEMUNHO
+let listaTerritoriosCadastrados = []; // 🟠 NOVA VARIÁVEL: GESTOR DE TERRITÓRIOS
 
 export function initModuloAnuncios() {
     carregarDadosMuralAdmin();
@@ -13,13 +14,14 @@ export function initModuloAnuncios() {
 }
 
 function preencherSelectsEstaticos() {
-    // 1. Sugestões de Territórios (Números 1 a 50)
+    // 1. Sugestões de Territórios (Dinâmico do Banco de Dados)
     const datalistTerritorio = document.getElementById('listaTerritoriosSugestoes');
     if (datalistTerritorio) {
         datalistTerritorio.innerHTML = '';
-        for (let i = 1; i <= 50; i++) {
-            datalistTerritorio.innerHTML += `<option value="Território ${i}">`;
-        }
+        // Alimenta o menu apenas com os nomes reais dos territórios cadastrados
+        listaTerritoriosCadastrados.forEach(t => {
+            datalistTerritorio.innerHTML += `<option value="${t.nome}">`;
+        });
     }
     
     // 2. Sugestões Unificadas: Irmãos e Irmãs (Busca em todas as listas de pessoas)
@@ -91,6 +93,14 @@ async function carregarDadosMuralAdmin() {
             listaTestemunhoTemporaria = docTestemunho.data().dias || [];
             renderizarTabelaTestemunhoAdmin();
         }
+
+        // 4. Carrega os Territórios e Mapas Cadastrados
+        const docTerritorios = await getDoc(doc(db, "configuracoes", "territorios_mapas"));
+        if (docTerritorios.exists()) {
+            listaTerritoriosCadastrados = docTerritorios.data().lista || [];
+            renderizarTabelaTerritoriosAdmin();
+        }
+        
     } catch (e) {
         console.error("Erro ao carregar configurações do mural:", e);
     }
@@ -441,6 +451,147 @@ function renderizarTabelaTestemunhoAdmin() {
             <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center; white-space: nowrap;">
                 <button class="btn-editar-testemunho" data-id="${item.id}" style="background: none; border: none; cursor: pointer; font-size: 16px; margin-right: 10px;" title="Editar esta linha">✏️</button>
                 <button class="btn-remover-testemunho" data-id="${item.id}" style="background: none; border: none; color: red; cursor: pointer; font-size: 16px;" title="Apagar esta linha">🗑️</button>
+            </td>
+        `;
+        corpo.appendChild(tr);
+    });
+}
+
+// ============================================================================
+// --- GESTOR DE TERRITÓRIOS E MAPAS (CRUD) ---
+// ============================================================================
+
+const limparCamposTerritorio = () => {
+    document.getElementById('inputTerritorioNome').value = '';
+    document.getElementById('inputTerritorioLink').value = '';
+    document.getElementById('inputIdEdicaoTerritorio').value = '';
+    document.getElementById('btnAdicionarTerritorio').style.display = 'inline-block';
+    document.getElementById('btnAtualizarTerritorio').style.display = 'none';
+    document.getElementById('btnCancelarEdicaoTerritorio').style.display = 'none';
+};
+
+// 1. Adicionar Território
+const btnAddTerritorio = document.getElementById('btnAdicionarTerritorio');
+if (btnAddTerritorio) {
+    btnAddTerritorio.addEventListener('click', (e) => {
+        e.preventDefault();
+        const nome = document.getElementById('inputTerritorioNome').value.trim();
+        const link = document.getElementById('inputTerritorioLink').value.trim();
+
+        if (!nome) {
+            alert("⚠️ O Nome ou Número do território é obrigatório.");
+            return;
+        }
+
+        listaTerritoriosCadastrados.push({ nome, link, id: Date.now() });
+        renderizarTabelaTerritoriosAdmin();
+        limparCamposTerritorio();
+        preencherSelectsEstaticos(); // Atualiza a lista da pregação na hora!
+    });
+}
+
+// 2. Atualizar Território
+const btnAtualizarTerritorio = document.getElementById('btnAtualizarTerritorio');
+if (btnAtualizarTerritorio) {
+    btnAtualizarTerritorio.addEventListener('click', (e) => {
+        e.preventDefault();
+        const idEdicao = parseInt(document.getElementById('inputIdEdicaoTerritorio').value);
+        const nome = document.getElementById('inputTerritorioNome').value.trim();
+        const link = document.getElementById('inputTerritorioLink').value.trim();
+
+        if (!nome) return;
+
+        const index = listaTerritoriosCadastrados.findIndex(i => i.id === idEdicao);
+        if (index !== -1) {
+            listaTerritoriosCadastrados[index] = { ...listaTerritoriosCadastrados[index], nome, link };
+            renderizarTabelaTerritoriosAdmin();
+            limparCamposTerritorio();
+            preencherSelectsEstaticos(); 
+        }
+    });
+}
+
+// 3. Cancelar Edição
+const btnCancelarTerritorio = document.getElementById('btnCancelarEdicaoTerritorio');
+if (btnCancelarTerritorio) {
+    btnCancelarTerritorio.addEventListener('click', (e) => {
+        e.preventDefault();
+        limparCamposTerritorio();
+    });
+}
+
+// 4. Ações na Tabela (Editar / Remover)
+const tabelaTerritorios = document.getElementById('tabelaCorpoTerritoriosAdmin');
+if (tabelaTerritorios) {
+    tabelaTerritorios.addEventListener('click', (e) => {
+        const id = parseInt(e.target.getAttribute('data-id'));
+        
+        if (e.target.classList.contains('btn-remover-territorio')) {
+            listaTerritoriosCadastrados = listaTerritoriosCadastrados.filter(i => i.id !== id);
+            renderizarTabelaTerritoriosAdmin();
+            limparCamposTerritorio();
+            preencherSelectsEstaticos();
+        }
+        
+        if (e.target.classList.contains('btn-editar-territorio')) {
+            const item = listaTerritoriosCadastrados.find(i => i.id === id);
+            if (item) {
+                document.getElementById('inputTerritorioNome').value = item.nome;
+                document.getElementById('inputTerritorioLink').value = item.link || '';
+                document.getElementById('inputIdEdicaoTerritorio').value = item.id;
+                
+                document.getElementById('btnAdicionarTerritorio').style.display = 'none';
+                document.getElementById('btnAtualizarTerritorio').style.display = 'inline-block';
+                document.getElementById('btnCancelarEdicaoTerritorio').style.display = 'inline-block';
+            }
+        }
+    });
+}
+
+// 5. Salvar no Firebase
+const btnSalvarTerritorios = document.getElementById('btnSalvarTerritoriosFirebase');
+if (btnSalvarTerritorios) {
+    btnSalvarTerritorios.addEventListener('click', async () => {
+        const btn = document.getElementById('btnSalvarTerritoriosFirebase');
+        btn.innerText = "⏳ Salvando...";
+        try {
+            // Salva ordenando alfabeticamente para ficar bonitinho
+            listaTerritoriosCadastrados.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR', {numeric: true}));
+            await setDoc(doc(db, "configuracoes", "territorios_mapas"), { lista: listaTerritoriosCadastrados });
+            renderizarTabelaTerritoriosAdmin(); // Re-renderiza para mostrar ordenado
+            preencherSelectsEstaticos();
+            
+            btn.innerText = "✅ Territórios Salvos!";
+            setTimeout(() => btn.innerText = "💾 Salvar Lista de Territórios no Firebase", 2000);
+        } catch (e) {
+            console.error(e);
+            alert("Erro ao salvar territórios.");
+            btn.innerText = "💾 Salvar Lista de Territórios no Firebase";
+        }
+    });
+}
+
+// 6. Função de Renderização
+function renderizarTabelaTerritoriosAdmin() {
+    const corpo = document.getElementById('tabelaCorpoTerritoriosAdmin');
+    if (!corpo) return;
+    corpo.innerHTML = '';
+    
+    listaTerritoriosCadastrados.forEach(item => {
+        const tr = document.createElement('tr');
+        
+        // Formata o link para virar um botãozinho clicável se existir
+        let linkHtml = '<span style="color: #999; font-size: 12px;">Sem mapa</span>';
+        if (item.link) {
+            linkHtml = `<a href="${item.link}" target="_blank" style="color: #1565c0; text-decoration: none; font-size: 12px; font-weight: bold; background: #e3f2fd; padding: 3px 8px; border-radius: 4px;">🔗 Testar Link</a>`;
+        }
+
+        tr.innerHTML = `
+            <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold; color: #d84315;">${item.nome}</td>
+            <td style="padding: 8px; border-bottom: 1px solid #eee;">${linkHtml}</td>
+            <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center; white-space: nowrap;">
+                <button class="btn-editar-territorio" data-id="${item.id}" style="background: none; border: none; cursor: pointer; font-size: 16px; margin-right: 10px;" title="Editar">✏️</button>
+                <button class="btn-remover-territorio" data-id="${item.id}" style="background: none; border: none; color: red; cursor: pointer; font-size: 16px;" title="Apagar">🗑️</button>
             </td>
         `;
         corpo.appendChild(tr);
