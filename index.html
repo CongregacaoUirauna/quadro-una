@@ -819,12 +819,18 @@
 
             // 3. Renderiza o Card
             if (discursoDestaSemana) {
+                // Injeta o cântico graciosamente acima do tema, se ele existir
+                const canticoHtml = discursoDestaSemana.cantico 
+                    ? `<div style="font-size: 13px; color: #555; margin-bottom: 5px; font-weight: 600;">🎵 Cântico: ${discursoDestaSemana.cantico}</div>` 
+                    : '';
+
                 const htmlDiscursoPrincipal = `
                     <div class="card-discurso">
                         <div class="discurso-badge">🎤 Discurso Público da Semana</div>
-                        <div class="discurso-tema">${discursoDestaSemana.tema}</div>
+                        ${canticoHtml}
+                        <div class="discurso-tema" style="font-size: 18px; margin-bottom: 8px;">${discursoDestaSemana.tema}</div>
                         <div class="discurso-orador">👤 ${discursoDestaSemana.orador} — <strong>${discursoDestaSemana.congregacao}</strong></div>
-                        ${discursoDestaSemana.grupo_lanche ? `<div class="discurso-lanche">☕ Grupo do Lanche: ${discursoDestaSemana.grupo_lanche}</div>` : ''}
+                        ${discursoDestaSemana.grupo_lanche ? `<div class="discurso-lanche" style="margin-top: 12px;">☕ Grupo do Lanche: ${discursoDestaSemana.grupo_lanche}</div>` : ''}
                     </div>
                 `;
                 board.innerHTML += htmlDiscursoPrincipal;
