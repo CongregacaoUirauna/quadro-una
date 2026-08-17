@@ -384,10 +384,19 @@ function renderizarTabelaPregaAdmin() {
         return dataHoraA - dataHoraB;
     });
 
+    const diasDaSemana = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"];
+
     listaPregaTemporaria.forEach(item => {
         const tr = document.createElement('tr');
+        
+        // 🟢 MÁGICA: Calcula o dia da semana blindando o fuso horário com T12:00:00
+        const diaSemanaTexto = diasDaSemana[new Date(item.data + "T12:00:00").getDay()];
+
         tr.innerHTML = `
-            <td style="padding: 8px; border-bottom: 1px solid #eee;">${item.data.split('-').reverse().join('/')}</td>
+            <td style="padding: 8px; border-bottom: 1px solid #eee;">
+                <div style="font-weight: bold;">${item.data.split('-').reverse().join('/')}</div>
+                <div style="font-size: 11px; color: #666;">${diaSemanaTexto}</div>
+            </td>
             <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold; color: #1a73e8;">${item.hora || '--:--'}</td>
             <td style="padding: 8px; border-bottom: 1px solid #eee;">${item.local}</td>
             <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center; color: #e65100; font-weight: bold;">${item.territorio || '---'}</td>
@@ -434,6 +443,8 @@ function renderizarTabelaTestemunhoAdmin() {
         return dataHoraA - dataHoraB;
     });
 
+    const diasDaSemana = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"];
+
     listaTestemunhoTemporaria.forEach(item => {
         const tr = document.createElement('tr');
         
@@ -443,8 +454,14 @@ function renderizarTabelaTestemunhoAdmin() {
             nomesDesignados += ` <br><span style="font-size: 11px; color: #555;">&</span> ${item.desig2}`;
         }
 
+        // 🟢 MÁGICA: Calcula o dia da semana blindando o fuso horário com T12:00:00
+        const diaSemanaTexto = diasDaSemana[new Date(item.data + "T12:00:00").getDay()];
+
         tr.innerHTML = `
-            <td style="padding: 8px; border-bottom: 1px solid #eee;">${item.data.split('-').reverse().join('/')}</td>
+            <td style="padding: 8px; border-bottom: 1px solid #eee;">
+                <div style="font-weight: bold;">${item.data.split('-').reverse().join('/')}</div>
+                <div style="font-size: 11px; color: #666;">${diaSemanaTexto}</div>
+            </td>
             <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold; color: #1565c0;">${item.hora || '--:--'}</td>
             <td style="padding: 8px; border-bottom: 1px solid #eee;">${item.local}</td>
             <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: 600;">${nomesDesignados}</td>
