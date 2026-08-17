@@ -4,7 +4,7 @@ const db = getFirestore();
 
 // === 1. VARIÁVEIS GERAIS ===
 let temasDiscursos = []; 
-let canticosDiscursos = []; // NOVO: Armazena a lista de cânticos
+let canticosDiscursos = []; // NOVO: Armazena a lista de cânticos...
 let discursosNoBanco = []; 
 let editandoId = null; 
 
