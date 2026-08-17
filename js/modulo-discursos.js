@@ -3,18 +3,20 @@ import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc, q
 const db = getFirestore(); 
 
 // === 1. VARIÁVEIS GERAIS ===
-let temasDiscursos = []; // Agora começa vazio e busca do banco
-
-let discursosNoBanco = []; // Memória local para a Regra de 1 Ano não sobrecarregar o banco
-let editandoId = null; // Variável para controlar se estamos salvando um novo ou editando
+let temasDiscursos = []; 
+let canticosDiscursos = []; // NOVO: Armazena a lista de cânticos
+let discursosNoBanco = []; 
+let editandoId = null; 
 
 export function initModuloDiscursos() {
     configurarNavegacaoAbas();
-    carregarTemasDoBanco(); // Puxa do Firebase na hora que abre
+    carregarTemasDoBanco(); 
+    carregarCanticosDoBanco(); // NOVO: Busca os cânticos no Firebase
     carregarDiscursosDaTabela();
     configurarMotorRegraUmAno();
     configurarSalvamento();
-    configurarGerenciadorDeTemas(); // Prepara os cliques do modal
+    configurarGerenciadorDeTemas(); 
+    configurarGerenciadorDeCanticos(); // NOVO: Prepara os cliques do modal de cânticos
 }
 
 // === 2. NAVEGAÇÃO ENTRE AS ABAS ===
@@ -23,19 +25,15 @@ function configurarNavegacaoAbas() {
     const painelDiscursos = document.getElementById('painel-discursos');
 
     btnAbaDiscursos.addEventListener('click', () => {
-        // 1. Mostra o painel de discursos
         painelDiscursos.style.display = 'block';
 
-        // 2. Esconde os outros painéis usando os IDs corretos do admin.html
         document.getElementById('painel-estrutural-temas').classList.add('hidden');
         document.getElementById('painel-escala-abas').classList.add('hidden');
         document.getElementById('painel-mecanicas').classList.add('hidden');
         
-        // Se a aba limpeza já existir no DOM, esconde ela também
         const painelLimpeza = document.getElementById('painel-limpeza');
         if (painelLimpeza) painelLimpeza.style.display = 'none';
 
-        // 3. Atualiza as cores dos botões (Discursos fica azul, resto cinza)
         btnAbaDiscursos.style.backgroundColor = '#1a73e8';
         btnAbaDiscursos.style.color = '#fff';
 
@@ -47,11 +45,9 @@ function configurarNavegacaoAbas() {
             }
         });
 
-        // 4. Carrega os dados da tabela
         carregarDiscursosDaTabela(); 
     });
 
-    // 5. Garante que o painel de discursos suma se clicar nas outras abas
     const outrasAbas = ['aba-temas', 'aba-escalas', 'aba-mecanicas', 'aba-limpeza'];
     outrasAbas.forEach(id => {
         document.getElementById(id)?.addEventListener('click', () => {
@@ -60,7 +56,7 @@ function configurarNavegacaoAbas() {
     });
 }
 
-// === 3. BANCO DE TEMAS (FIREBASE) ===
+// === 3. BANCO DE TEMAS E CÂNTICOS (FIREBASE) ===
 async function carregarTemasDoBanco() {
     try {
         const docRef = doc(db, "configuracoes", "lista_temas_discursos");
@@ -68,25 +64,40 @@ async function carregarTemasDoBanco() {
         
         if (docSnap.exists()) {
             temasDiscursos = docSnap.data().temas || [];
-            // Tenta ordenar pelo número do tema
             temasDiscursos.sort((a, b) => parseInt(a) - parseInt(b));
         } else {
-            // Se o documento não existir no Firebase, cria ele vazio
             await setDoc(docRef, { temas: [] });
             temasDiscursos = [];
         }
-        atualizarDatalistEModal();
+        atualizarDatalistEModalTemas();
     } catch (error) {
         console.error("Erro ao carregar temas:", error);
     }
 }
 
-function atualizarDatalistEModal() {
-    // 1. Preenche o menu de autocompletar do formulário
+// NOVO: Função para carregar os cânticos
+async function carregarCanticosDoBanco() {
+    try {
+        const docRef = doc(db, "configuracoes", "lista_canticos_discursos");
+        const docSnap = await getDoc(docRef);
+        
+        if (docSnap.exists()) {
+            canticosDiscursos = docSnap.data().canticos || [];
+            canticosDiscursos.sort((a, b) => parseInt(a) - parseInt(b));
+        } else {
+            await setDoc(docRef, { canticos: [] });
+            canticosDiscursos = [];
+        }
+        atualizarDatalistEModalCanticos();
+    } catch (error) {
+        console.error("Erro ao carregar cânticos:", error);
+    }
+}
+
+function atualizarDatalistEModalTemas() {
     const datalist = document.getElementById('listaTemasDiscurso');
     datalist.innerHTML = '';
     
-    // 2. Preenche a lista da telinha de gerenciamento
     const ulUI = document.getElementById('listaDeTemasUI');
     ulUI.innerHTML = '';
 
@@ -96,12 +107,10 @@ function atualizarDatalistEModal() {
     }
 
     temasDiscursos.forEach(tema => {
-        // Option pro Datalist
         const option = document.createElement('option');
         option.value = tema;
         datalist.appendChild(option);
 
-        // Linha pra Telinha
         const li = document.createElement('li');
         li.style.cssText = "display: flex; justify-content: space-between; align-items: center; padding: 8px; border-bottom: 1px solid #ddd;";
         li.innerHTML = `
@@ -111,7 +120,6 @@ function atualizarDatalistEModal() {
         ulUI.appendChild(li);
     });
 
-    // Ativa o botão de apagar de cada linha
     document.querySelectorAll('.btn-apagar-tema').forEach(btn => {
         btn.addEventListener('click', async (e) => {
             const temaParaApagar = e.target.getAttribute('data-tema');
@@ -119,7 +127,47 @@ function atualizarDatalistEModal() {
                 await updateDoc(doc(db, "configuracoes", "lista_temas_discursos"), {
                     temas: arrayRemove(temaParaApagar)
                 });
-                carregarTemasDoBanco(); // Recarrega tudo
+                carregarTemasDoBanco(); 
+            }
+        });
+    });
+}
+
+// NOVO: Função para atualizar a lista e o modal de cânticos
+function atualizarDatalistEModalCanticos() {
+    const datalist = document.getElementById('listaCanticosDiscurso');
+    datalist.innerHTML = '';
+    
+    const ulUI = document.getElementById('listaDeCanticosUI');
+    ulUI.innerHTML = '';
+
+    if (canticosDiscursos.length === 0) {
+        ulUI.innerHTML = '<li style="text-align: center; color: #666; padding: 10px;">Nenhum cântico cadastrado. Adicione o primeiro!</li>';
+        return;
+    }
+
+    canticosDiscursos.forEach(cantico => {
+        const option = document.createElement('option');
+        option.value = cantico;
+        datalist.appendChild(option);
+
+        const li = document.createElement('li');
+        li.style.cssText = "display: flex; justify-content: space-between; align-items: center; padding: 8px; border-bottom: 1px solid #ddd;";
+        li.innerHTML = `
+            <span>${cantico}</span>
+            <button type="button" class="btn-apagar-cantico" data-cantico="${cantico}" style="background: none; border: none; color: #d32f2f; cursor: pointer; font-size: 14px;" title="Remover">✖️</button>
+        `;
+        ulUI.appendChild(li);
+    });
+
+    document.querySelectorAll('.btn-apagar-cantico').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            const canticoParaApagar = e.target.getAttribute('data-cantico');
+            if(confirm(`Excluir o cântico "${canticoParaApagar}" da base de dados?`)) {
+                await updateDoc(doc(db, "configuracoes", "lista_canticos_discursos"), {
+                    canticos: arrayRemove(canticoParaApagar)
+                });
+                carregarCanticosDoBanco(); 
             }
         });
     });
@@ -135,7 +183,6 @@ function configurarGerenciadorDeTemas() {
     btnAbrir.addEventListener('click', () => { modal.style.display = 'flex'; });
     btnFechar.addEventListener('click', () => { modal.style.display = 'none'; });
 
-    // Adiciona o novo tema no Firebase
     btnAdd.addEventListener('click', async () => {
         const novoTema = inputNovo.value.trim();
         if (!novoTema) return;
@@ -146,10 +193,41 @@ function configurarGerenciadorDeTemas() {
                 temas: arrayUnion(novoTema)
             });
             inputNovo.value = '';
-            carregarTemasDoBanco(); // Recarrega atualizado
+            carregarTemasDoBanco(); 
         } catch (error) {
             console.error("Erro ao adicionar:", error);
             alert("Erro ao adicionar tema.");
+        } finally {
+            btnAdd.innerText = "Adicionar";
+        }
+    });
+}
+
+// NOVO: Função para gerenciar cliques no modal de cânticos
+function configurarGerenciadorDeCanticos() {
+    const modal = document.getElementById('modalCanticosDiscurso');
+    const btnAbrir = document.getElementById('btnAbrirModalCanticos');
+    const btnFechar = document.getElementById('btnFecharModalCanticos');
+    const btnAdd = document.getElementById('btnAdicionarCantico');
+    const inputNovo = document.getElementById('novoCanticoInput');
+
+    btnAbrir.addEventListener('click', () => { modal.style.display = 'flex'; });
+    btnFechar.addEventListener('click', () => { modal.style.display = 'none'; });
+
+    btnAdd.addEventListener('click', async () => {
+        const novoCantico = inputNovo.value.trim();
+        if (!novoCantico) return;
+
+        btnAdd.innerText = "⏳";
+        try {
+            await updateDoc(doc(db, "configuracoes", "lista_canticos_discursos"), {
+                canticos: arrayUnion(novoCantico)
+            });
+            inputNovo.value = '';
+            carregarCanticosDoBanco(); 
+        } catch (error) {
+            console.error("Erro ao adicionar:", error);
+            alert("Erro ao adicionar cântico.");
         } finally {
             btnAdd.innerText = "Adicionar";
         }
@@ -165,31 +243,26 @@ function configurarMotorRegraUmAno() {
     const checarRegra = () => {
         const temaEscolhido = inputTema.value.trim();
         const dataEscolhida = inputData.value;
-        divAlerta.style.display = 'none'; // Esconde o alerta por padrão
+        divAlerta.style.display = 'none'; 
 
         if (!temaEscolhido || !dataEscolhida) return;
 
-        // Pega a data preenchida e converte para Milissegundos
         const dataNovaMs = new Date(dataEscolhida + "T12:00:00").getTime();
-
-        // Filtra na memória do banco se esse tema já existe
         const historicoDesseTema = discursosNoBanco.filter(d => d.tema === temaEscolhido && d.id !== editandoId);
         
         if (historicoDesseTema.length > 0) {
-            // Ordena para pegar a vez mais recente que ele foi feito
             historicoDesseTema.sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime());
             const ultimo = historicoDesseTema[0];
             const dataVelhaMs = new Date(ultimo.data + "T12:00:00").getTime();
 
-            // Matemática da diferença de tempo
             const diffMs = Math.abs(dataNovaMs - dataVelhaMs);
-            const UM_ANO_EM_MS = 31536000000; // 365 dias em milissegundos
+            const UM_ANO_EM_MS = 31536000000; 
 
             if (diffMs < UM_ANO_EM_MS) {
                 const meses = Math.floor(diffMs / (1000 * 60 * 60 * 24 * 30.4));
                 const dataFormatada = ultimo.data.split('-').reverse().join('/');
                 divAlerta.innerHTML = `⚠️ Atenção: Este discurso foi proferido há aprox. ${meses} meses (em ${dataFormatada}) pelo orador ${ultimo.orador}.`;
-                divAlerta.style.display = 'block'; // Mostra o alerta na tela
+                divAlerta.style.display = 'block'; 
             }
         }
     };
@@ -207,7 +280,7 @@ async function carregarDiscursosDaTabela() {
         const q = query(collection(db, "agendamento_discursos"), orderBy("data", "asc"));
         const querySnapshot = await getDocs(q);
         
-        discursosNoBanco = []; // Limpa a memória
+        discursosNoBanco = []; 
         tbody.innerHTML = '';
 
         if (querySnapshot.empty) {
@@ -217,13 +290,16 @@ async function carregarDiscursosDaTabela() {
 
         querySnapshot.forEach((docSnap) => {
             const d = docSnap.data();
-            d.id = docSnap.id; // Guarda a chave do documento
+            d.id = docSnap.id; 
             discursosNoBanco.push(d);
 
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td style="padding: 10px; border: 1px solid #eee;">${d.data.split('-').reverse().join('/')}</td>
-                <td style="padding: 10px; border: 1px solid #eee; font-weight: 500;">${d.tema}</td>
+                <td style="padding: 10px; border: 1px solid #eee; font-weight: 500;">
+                    ${d.cantico ? `<div style="font-size: 11px; color: #888;">🎵 Cântico: ${d.cantico}</div>` : ''}
+                    ${d.tema}
+                </td>
                 <td style="padding: 10px; border: 1px solid #eee;">${d.orador}</td>
                 <td style="padding: 10px; border: 1px solid #eee;">${d.congregacao}<br><small style="color: #666;">${d.grupo_lanche ? 'Lanche: ' + d.grupo_lanche : ''}</small></td>
                 <td style="padding: 10px; border: 1px solid #eee; text-align: center;">
@@ -247,16 +323,16 @@ function configurarSalvamento() {
     document.getElementById('formDiscurso').addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        // Checa se a Regra de 1 ano barrou e pede confirmação
         const alertaAtivo = document.getElementById('alertaTemaDiscurso').style.display === 'block';
         if (alertaAtivo) {
             const querSalvarMesmo = confirm("A Regra de 1 Ano foi acionada. Deseja agendar esse discurso mesmo assim?");
-            if (!querSalvarMesmo) return; // Se o usuário clicar em "Cancelar", aborta o salvamento
+            if (!querSalvarMesmo) return; 
         }
 
         const dados = {
             data: document.getElementById('discData').value,
             tema: document.getElementById('discTema').value.trim(),
+            cantico: document.getElementById('discCantico').value.trim(), // NOVO: Captura o cântico
             orador: document.getElementById('discOrador').value.trim(),
             congregacao: document.getElementById('discCongregacao').value.trim(),
             grupo_lanche: document.getElementById('discLanche').value.trim()
@@ -268,18 +344,16 @@ function configurarSalvamento() {
 
         try {
             if (editandoId) {
-                // Modo Edição: Sobrescreve o documento existente
                 await updateDoc(doc(db, "agendamento_discursos", editandoId), dados);
                 editandoId = null;
                 btn.innerHTML = "💾 Salvar Discurso na Agenda";
             } else {
-                // Modo Novo: Cria um novo na coleção
                 await addDoc(collection(db, "agendamento_discursos"), dados);
             }
             
-            document.getElementById('formDiscurso').reset(); // Limpa o formulário
-            document.getElementById('alertaTemaDiscurso').style.display = 'none'; // Some com o alerta
-            carregarDiscursosDaTabela(); // Recarrega a tabela atualizada
+            document.getElementById('formDiscurso').reset(); 
+            document.getElementById('alertaTemaDiscurso').style.display = 'none'; 
+            carregarDiscursosDaTabela(); 
             
         } catch (error) {
             console.error("Erro ao salvar:", error);
@@ -293,7 +367,6 @@ function configurarSalvamento() {
 
 // === 7. BOTÕES DA TABELA (EDITAR E EXCLUIR) ===
 function adicionarEventosTabela() {
-    // Editar
     document.querySelectorAll('.btn-editar-disc').forEach(btn => {
         btn.addEventListener('click', (e) => {
             const id = e.target.getAttribute('data-id');
@@ -302,19 +375,19 @@ function adicionarEventosTabela() {
             if (discurso) {
                 document.getElementById('discData').value = discurso.data;
                 document.getElementById('discTema').value = discurso.tema;
+                document.getElementById('discCantico').value = discurso.cantico || ''; // NOVO: Preenche o cântico ao editar
                 document.getElementById('discOrador').value = discurso.orador;
                 document.getElementById('discCongregacao').value = discurso.congregacao;
                 document.getElementById('discLanche').value = discurso.grupo_lanche || '';
                 
-                editandoId = id; // Trava o ID para o salvamento saber que é uma edição
+                editandoId = id; 
                 document.getElementById('btnSalvarDiscurso').innerHTML = "🔄 Atualizar Discurso";
                 document.getElementById('alertaTemaDiscurso').style.display = 'none';
-                window.scrollTo({ top: 0, behavior: 'smooth' }); // Rola pra cima
+                window.scrollTo({ top: 0, behavior: 'smooth' }); 
             }
         });
     });
 
-    // Excluir
     document.querySelectorAll('.btn-excluir-disc').forEach(btn => {
         btn.addEventListener('click', async (e) => {
             const id = e.target.getAttribute('data-id');
