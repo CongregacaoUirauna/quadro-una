@@ -56,7 +56,7 @@ function preencherSelectsEstaticos() {
     }
 }
 
-// 🟢 MÁGICA DE SEGURANÇA: Garante recarregar a lista caso o configGlobal demore a carregar
+// 🟢 MÁGICA DE SEGURANÇA: Garante recarregar a lista caso o configGlobal demore a carregar..
 document.addEventListener('focusin', (e) => {
     if (['inputPregaDirigente', 'inputTestemunhoDesig1', 'inputTestemunhoDesig2'].includes(e.target.id)) {
         preencherSelectsEstaticos();
