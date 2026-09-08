@@ -1341,45 +1341,89 @@
             }
         }
 
-        // --- FUNÇÕES DO MODAL POP-UP DE MAPA DE TERRITÓRIO ---
-        window.abrirModalTerritorio = function(nome, linkImagem) {
-            const modal = document.getElementById('modalTerritorioMapa');
-            const titulo = document.getElementById('tituloModalTerritorio');
-            const img = document.getElementById('imagemModalTerritorio');
-            
-            if (!modal || !img || !titulo) return;
+        // --- FUNÇÕES DO MODAL POP-UP DE MAPA DE TERRITÓRIO (AGORA COM ZOOM) ---
+    let nivelZoomAtual = 100;
 
-            titulo.innerText = `🗺️ Mapa: ${nome}`;
-            img.src = linkImagem;
-            modal.style.display = 'flex';
-        };
+    window.alterarZoomMapa = function(fator) {
+        const img = document.getElementById('imagemModalTerritorio');
+        const container = document.getElementById('containerImagemMapa');
+        
+        if (!img || !container) return;
 
-        window.fecharModalTerritorio = function() {
-            const modal = document.getElementById('modalTerritorioMapa');
-            if (modal) modal.style.display = 'none';
-        };
+        nivelZoomAtual += fator;
+        
+        // Limita o zoom entre 100% (tamanho normal) e 400% (super ampliado)
+        if (nivelZoomAtual < 100) nivelZoomAtual = 100;
+        if (nivelZoomAtual > 400) nivelZoomAtual = 400;
 
-        // Fechar ao clicar na área escura fora do cartão
-        window.addEventListener('click', (e) => {
-            const modal = document.getElementById('modalTerritorioMapa');
-            if (e.target === modal) {
-                window.fecharModalTerritorio();
-            }
-        });
+        if (nivelZoomAtual === 100) {
+            // Estado normal (Imagem centralizada e contida na tela)
+            img.style.width = '100%';
+            img.style.maxWidth = '100%';
+            img.style.maxHeight = '70vh';
+            container.style.alignItems = 'center';
+            container.style.justifyContent = 'center';
+        } else {
+            // Estado ampliado (Desativa as amarras e permite rolagem)
+            img.style.width = `${nivelZoomAtual}%`;
+            img.style.maxWidth = 'none';
+            img.style.maxHeight = 'none';
+            container.style.alignItems = 'flex-start';
+            container.style.justifyContent = 'flex-start';
+        }
+    };
 
-        // Fechar ao pressionar a tecla ESC
-        window.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                window.fecharModalTerritorio();
-            }
-        });
+    window.abrirModalTerritorio = function(nome, linkImagem) {
+        const modal = document.getElementById('modalTerritorioMapa');
+        const titulo = document.getElementById('tituloModalTerritorio');
+        const img = document.getElementById('imagemModalTerritorio');
+        
+        if (!modal || !img || !titulo) return;
 
-        // Fechar ao pressionar a tecla ESC
-        window.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                fecharModalTerritorio();
-            }
-        });
+        titulo.innerText = `🗺️ Mapa: ${nome}`;
+        img.src = linkImagem;
+        
+        // Reinicia o zoom toda vez que um novo mapa é aberto
+        nivelZoomAtual = 100;
+        img.style.width = '100%';
+        img.style.maxWidth = '100%';
+        img.style.maxHeight = '70vh';
+        
+        const container = document.getElementById('containerImagemMapa');
+        if(container) {
+            container.style.alignItems = 'center';
+            container.style.justifyContent = 'center';
+        }
+
+        modal.style.display = 'flex';
+    };
+
+    window.fecharModalTerritorio = function() {
+        const modal = document.getElementById('modalTerritorioMapa');
+        if (modal) modal.style.display = 'none';
+    };
+
+    // Fechar ao clicar na área escura fora do cartão
+    window.addEventListener('click', (e) => {
+        const modal = document.getElementById('modalTerritorioMapa');
+        if (e.target === modal) {
+            window.fecharModalTerritorio();
+        }
+    });
+
+    // Fechar ao pressionar a tecla ESC
+    window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            window.fecharModalTerritorio();
+        }
+    });
+
+    // Fechar ao pressionar a tecla ESC
+    window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            fecharModalTerritorio();
+        }
+    });
 
         async function carregarEscalaTestemunho() {
             const corpo = document.getElementById('tabelaTestemunhoPublico');
