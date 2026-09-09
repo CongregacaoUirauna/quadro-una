@@ -18,11 +18,16 @@ function configurarOuvintesDeEventos() {
         const escala = event.detail.escala; // Puxa a lista de saídas recém-salva
         
         try {
+            const processadosNestaSessao = new Set(); // 🟢 MEMÓRIA CURTA: Bloqueia duplicatas no mesmo lote
+
             for (const item of escala) {
                 // Ignora se não houver território especificado
                 if (!item.territorio || item.territorio === '---') continue;
 
-                // Verifica se este território JÁ ESTÁ em andamento para não duplicar ciclos
+                // Se o mapa é enorme e apareceu de novo neste mesmo salvamento, ignora
+                if (processadosNestaSessao.has(item.territorio)) continue;
+
+                // Verifica se este território JÁ ESTÁ em andamento no banco
                 const q = query(collection(db, "historico_territorios"),
                     where("territorio", "==", item.territorio),
                     where("status", "==", "Em Andamento")
@@ -30,7 +35,7 @@ function configurarOuvintesDeEventos() {
                 
                 const snap = await getDocs(q);
 
-                // Se o banco retornar vazio, significa que o mapa está livre. Abrimos um novo ciclo!
+                // Se o banco retornar vazio, o mapa está livre. Abrimos um novo ciclo!
                 if (snap.empty) {
                     await addDoc(collection(db, "historico_territorios"), {
                         territorio: item.territorio,
@@ -40,6 +45,9 @@ function configurarOuvintesDeEventos() {
                         status: "Em Andamento",
                         timestamp_registro: Date.now() // Carimbo de tempo para ordenação matemática
                     });
+
+                    // Grava na memória que esse mapa já abriu ciclo hoje
+                    processadosNestaSessao.add(item.territorio);
                 }
             }
         } catch (error) {
@@ -50,7 +58,18 @@ function configurarOuvintesDeEventos() {
     // GATILHO B: Escuta quando o botão ✅ de Concluir Território é clicado
     window.addEventListener('registrarConclusaoTerritorio', async (event) => {
         const nomeTerritorio = event.detail.nome;
-        const hojeYMD = obterDataLocalYMD(new Date()); // Blindagem de Fuso Horário
+        const dataDigitadaDDMMYYYY = event.detail.dataReal; // Pega a data retroativa
+
+        // Converte DD/MM/AAAA para YYYY-MM-DD para organizar no banco
+        const partesData = dataDigitadaDDMMYYYY.split('/');
+        let dataFimYMD = "";
+        
+        if (partesData.length === 3) {
+            dataFimYMD = `${partesData[2]}-${partesData[1]}-${partesData[0]}`;
+        } else {
+            // Se o usuário apagar as barras e digitar errado, usamos hoje por segurança
+            dataFimYMD = obterDataLocalYMD(new Date());
+        }
 
         try {
             // Varre o banco procurando o ciclo ABERTO deste mapa exato
@@ -66,17 +85,17 @@ function configurarOuvintesDeEventos() {
                 return;
             }
 
-            // Encontrou o ciclo! Agora fecha a data e muda o status
+            // Encontrou o ciclo! Fecha com a data retroativa informada e muda status
             let contagem = 0;
             for (const docSnap of snap.docs) {
                 await updateDoc(doc(db, "historico_territorios", docSnap.id), {
-                    data_fim: hojeYMD,
+                    data_fim: dataFimYMD,
                     status: "Concluído"
                 });
                 contagem++;
             }
 
-            alert(`✅ Sucesso! O território "${nomeTerritorio}" teve seu ciclo encerrado no inventário em ${hojeYMD.split('-').reverse().join('/')}.`);
+            alert(`✅ Sucesso! O território "${nomeTerritorio}" teve seu ciclo encerrado no inventário com a data ${dataDigitadaDDMMYYYY}.`);
 
         } catch (error) {
             console.error("Auditoria Silenciosa: Erro ao concluir território.", error);
