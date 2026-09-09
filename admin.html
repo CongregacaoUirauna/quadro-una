@@ -802,6 +802,9 @@
         // NOVO MÓDULO IMPORTADO AQUI:
         import { initModuloDiscursos } from './js/modulo-discursos.js';
         import { initModuloAnuncios } from './js/modulo-anuncios.js';
+
+        // 🟢 INJEÇÃO: Novo módulo de auditoria
+        import { initModuloInventario } from './js/modulo-inventario.js';
         
         // --- GERENCIAMENTO DE ESTADO DE AUTENTICAÇÃO ---
         onAuthStateChanged(auth, async (user) => {
@@ -909,6 +912,7 @@
                 initModuloMecanicas();
                 initModuloDiscursos();
                 initModuloLimpeza();
+                initModuloInventario();
                 
                 // Carga dinâmica dos módulos extras
                 import('./js/modulo-anuncios.js').then(m => m.initModuloAnuncios());
