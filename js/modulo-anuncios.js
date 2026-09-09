@@ -547,12 +547,22 @@ if (tabelaTerritorios) {
     tabelaTerritorios.addEventListener('click', (e) => {
         const id = parseInt(e.target.getAttribute('data-id'));
         
-        // 🟢 GATILHO DO INVENTÁRIO: Botão Concluir
+        // 🟢 GATILHO DO INVENTÁRIO: Botão Concluir (Com Data Retroativa)
         if (e.target.classList.contains('btn-concluir-territorio')) {
             const nomeTerritorio = e.target.getAttribute('data-nome');
-            if(confirm(`Deseja registrar a CONCLUSÃO do território "${nomeTerritorio}" hoje?`)) {
-                // Dispara um alerta invisível para o modulo-inventario.js capturar
-                window.dispatchEvent(new CustomEvent('registrarConclusaoTerritorio', { detail: { nome: nomeTerritorio } }));
+            
+            // Pega a data de hoje e formata para DD/MM/AAAA para sugerir no prompt
+            const hoje = new Date();
+            const dia = String(hoje.getDate()).padStart(2, '0');
+            const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+            const ano = hoje.getFullYear();
+            const hojeBR = `${dia}/${mes}/${ano}`;
+
+            const dataConclusao = prompt(`📅 Qual a DATA EXATA de conclusão do território "${nomeTerritorio}"?\n(Mantenha ou altere no formato DD/MM/AAAA)`, hojeBR);
+            
+            if (dataConclusao) {
+                // Dispara o alerta invisível enviando o nome E a data que o irmão digitou
+                window.dispatchEvent(new CustomEvent('registrarConclusaoTerritorio', { detail: { nome: nomeTerritorio, dataReal: dataConclusao } }));
             }
         }
 
