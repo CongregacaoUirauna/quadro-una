@@ -258,12 +258,16 @@ function configurarOuvintesMural() {
         }
     });
 
-    // AÇÃO FINAL: Gravar Escala Completa no Firebase
+    // AÇÃO FINAL: Gravar Escala Completa no Firebase e Auditar Inventário
     document.getElementById('btnSalvarEscalaPregacaoCompleta').addEventListener('click', async () => {
         const btn = document.getElementById('btnSalvarEscalaPregacaoCompleta');
         btn.innerText = "⏳ Salvando no Firebase...";
         try {
             await setDoc(doc(db, "configuracoes", "escala_pregacao"), { dias: listaPregaTemporaria });
+            
+            // 🟢 GATILHO DO INVENTÁRIO: Avisa o cérebro independente para registrar as datas de início
+            window.dispatchEvent(new CustomEvent('registrarInicioTerritorios', { detail: { escala: listaPregaTemporaria } }));
+
             btn.innerText = "✅ Escala Completa Salva!";
             setTimeout(() => btn.innerText = "💾 Salvar Escala Completa no Firebase", 2000);
         } catch(e) {
@@ -537,12 +541,21 @@ if (btnCancelarTerritorio) {
     });
 }
 
-// 4. Ações na Tabela (Editar / Remover)
+// 4. Ações na Tabela (Concluir / Editar / Remover)
 const tabelaTerritorios = document.getElementById('tabelaCorpoTerritoriosAdmin');
 if (tabelaTerritorios) {
     tabelaTerritorios.addEventListener('click', (e) => {
         const id = parseInt(e.target.getAttribute('data-id'));
         
+        // 🟢 GATILHO DO INVENTÁRIO: Botão Concluir
+        if (e.target.classList.contains('btn-concluir-territorio')) {
+            const nomeTerritorio = e.target.getAttribute('data-nome');
+            if(confirm(`Deseja registrar a CONCLUSÃO do território "${nomeTerritorio}" hoje?`)) {
+                // Dispara um alerta invisível para o modulo-inventario.js capturar
+                window.dispatchEvent(new CustomEvent('registrarConclusaoTerritorio', { detail: { nome: nomeTerritorio } }));
+            }
+        }
+
         if (e.target.classList.contains('btn-remover-territorio')) {
             listaTerritoriosCadastrados = listaTerritoriosCadastrados.filter(i => i.id !== id);
             renderizarTabelaTerritoriosAdmin();
@@ -607,6 +620,7 @@ function renderizarTabelaTerritoriosAdmin() {
             <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold; color: #d84315;">${item.nome}</td>
             <td style="padding: 8px; border-bottom: 1px solid #eee;">${linkHtml}</td>
             <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center; white-space: nowrap;">
+                <button class="btn-concluir-territorio" data-id="${item.id}" data-nome="${item.nome}" style="background: none; border: none; cursor: pointer; font-size: 16px; margin-right: 10px;" title="Marcar Território como Concluído">✅</button>
                 <button class="btn-editar-territorio" data-id="${item.id}" style="background: none; border: none; cursor: pointer; font-size: 16px; margin-right: 10px;" title="Editar">✏️</button>
                 <button class="btn-remover-territorio" data-id="${item.id}" style="background: none; border: none; color: red; cursor: pointer; font-size: 16px;" title="Apagar">🗑️</button>
             </td>
