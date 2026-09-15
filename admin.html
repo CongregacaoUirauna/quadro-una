@@ -627,6 +627,12 @@
                                                 <label style="display: flex; flex-direction: row; align-items: center; justify-content: flex-start; cursor: pointer; text-align: left; font-weight: normal; margin: 0;">
                                                     <input type="checkbox" class="perm-check" value="acesso_pontos_parada" style="width: auto; margin: 0 10px 0 0; transform: scale(1.2);"> Pontos de Parada (Só Dirigentes)
                                                 </label>
+                                                <label style="display: flex; flex-direction: row; align-items: center; justify-content: flex-start; cursor: pointer; text-align: left; font-weight: normal; margin: 0;">
+                                                    <input type="checkbox" class="perm-check" value="acesso_testemunho" style="width: auto; margin: 0 10px 0 0; transform: scale(1.2);"> Testemunho Público
+                                                </label>
+                                                <label style="display: flex; flex-direction: row; align-items: center; justify-content: flex-start; cursor: pointer; text-align: left; font-weight: normal; margin: 0;">
+                                                    <input type="checkbox" class="perm-check" value="acesso_inventario" style="width: auto; margin: 0 10px 0 0; transform: scale(1.2);"> Auditoria e Inventário (Auditor)
+                                                </label>
                                             </div>
                                         </div>
                         
@@ -842,10 +848,11 @@
                     { id: 'aba-mecanicas', perm: 'acesso_mecanicas' },
                     { id: 'aba-discursos', perm: 'acesso_discursos' },
                     { id: 'aba-limpeza', perm: 'acesso_limpeza' },
-                    // Ajuste aqui: Aba Mural aparece se tiver acesso_mural OU acesso_pontos_parada
-                    { id: 'aba-mural', perms: ['acesso_mural', 'acesso_pontos_parada'] },
+                    // 🟢 INJEÇÃO: Testemunho Público adicionado aos gatilhos do Mural
+                    { id: 'aba-mural', perms: ['acesso_mural', 'acesso_pontos_parada', 'acesso_testemunho'] },
                     { id: 'aba-acessos', perm: 'is_super_admin' },
-                    { id: 'btnConfigLimpeza', perm: 'acesso_limpeza' } 
+                    { id: 'btnConfigLimpeza', perm: 'acesso_limpeza' },
+                    { id: 'btnGerarInventario', perm: 'acesso_inventario' }
                 ];
 
                 let primeiraAbaDisponivel = null;
@@ -853,7 +860,6 @@
                 mapaAbas.forEach(item => {
                     const btn = document.getElementById(item.id);
                     if (btn) {
-                        // Verifica se a permissão é uma array (várias) ou uma string (única)
                         const temAcesso = perms.is_super_admin || 
                             (item.perms ? item.perms.some(p => perms[p]) : perms[item.perm]);
 
@@ -869,13 +875,17 @@
                 });
 
                 // --- LÓGICA DO COMPONENTE CEGO (SUB-PERMISSÕES) ---
-                // Se o usuário NÃO for Super Admin e NÃO tiver acesso_mural total, mas tiver acesso_pontos_parada...
-                if (!perms.is_super_admin && !perms.acesso_mural && perms.acesso_pontos_parada) {
-                    const idsParaEsconder = ['bloco-relatorios-campo', 'bloco-avisos-mural', 'bloco-escala-pregacao'];
-                    idsParaEsconder.forEach(id => {
+                if (!perms.is_super_admin && !perms.acesso_mural) {
+                    // 1. Esconde todos os blocos do Mural por padrão
+                    const todosBlocosMural = ['bloco-pontos-parada', 'bloco-relatorios-campo', 'bloco-avisos-mural', 'bloco-escala-pregacao', 'bloco-escala-testemunho', 'bloco-gestao-territorios'];
+                    todosBlocosMural.forEach(id => {
                         const el = document.getElementById(id);
                         if (el) el.style.display = 'none';
                     });
+
+                    // 2. Revela cirurgicamente apenas o que o irmão tem permissão granular para ver
+                    if (perms.acesso_pontos_parada) document.getElementById('bloco-pontos-parada').style.display = 'block';
+                    if (perms.acesso_testemunho) document.getElementById('bloco-escala-testemunho').style.display = 'block';
                 }
                 // --------------------------------------------------
 
