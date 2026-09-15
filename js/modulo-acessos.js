@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { getAuth, createUserWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { doc, setDoc, getDocs, collection, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { db, firebaseConfig } from './firebase-config.js';
 
@@ -43,7 +43,22 @@ export function initModuloAcessos() {
             }
         } catch(e) { alert("Erro ao buscar dados para edição."); }
     };
+
+    // 🟢 INJEÇÃO: Nova função para enviar link de recuperação
+    window.enviarEmailRecuperacao = async (email) => {
+        if(confirm(`📧 Deseja enviar um link oficial de redefinição de senha para o e-mail: ${email}?`)) {
+            try {
+                const authPrincipal = getAuth(); // Pega a autenticação principal
+                await sendPasswordResetEmail(authPrincipal, email);
+                alert(`✅ Link enviado com sucesso! Peça ao irmão para verificar a caixa de entrada (ou lixo eletrônico) do e-mail ${email}.`);
+            } catch(e) {
+                console.error(e);
+                alert("❌ Erro ao enviar e-mail de recuperação. O e-mail pode não estar cadastrado corretamente.");
+            }
+        }
+    };
 }
+
 function configurarCliqueAba() {
     const btn = document.getElementById('aba-acessos');
     btn.addEventListener('click', () => {
@@ -135,8 +150,9 @@ async function carregarUsuarios() {
             </div>
             <div>
                 ${!u.is_super_admin ? `
-                    <button onclick="window.editarAcesso('${d.id}')" style="background:none; border:none; color:#1a73e8; cursor:pointer; margin-right:10px;" title="Editar">✏️</button>
-                    <button onclick="window.removerAcesso('${d.id}')" style="background:none; border:none; color:red; cursor:pointer;" title="Excluir">🗑️</button>
+                    <button onclick="window.enviarEmailRecuperacao('${d.id}')" style="background:none; border:none; color:#f57c00; cursor:pointer; margin-right:15px; font-size: 16px;" title="Enviar Link de Recuperação de Senha">🔑</button>
+                    <button onclick="window.editarAcesso('${d.id}')" style="background:none; border:none; color:#1a73e8; cursor:pointer; margin-right:10px; font-size: 16px;" title="Editar Permissões">✏️</button>
+                    <button onclick="window.removerAcesso('${d.id}')" style="background:none; border:none; color:red; cursor:pointer; font-size: 16px;" title="Excluir">🗑️</button>
                 ` : ''}
             </div>
         `;
