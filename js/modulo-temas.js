@@ -4,7 +4,7 @@
 // anti-duplicidade, modal de configuração e salvamento seguro.
 // =========================================
 
-import { doc, setDoc, getDoc, updateDoc, collection, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { doc, setDoc, getDoc, updateDoc, collection, query, orderBy, limit, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { db } from './firebase-config.js';
 import { 
     configGlobal, dadosSemanaAnterior, setDadosSemanaAnterior, 
@@ -482,16 +482,90 @@ function iniciarEventosConfig() {
     });
 
     document.getElementById('btnSalvarConfig').addEventListener('click', async () => {
+        const novoDiaReuniao = parseInt(document.getElementById('configDiaReuniao').value);
+        const novoDiaReuniaoFim = parseInt(document.getElementById('configDiaReuniaoFim').value);
+        
+        // 🟢 MÁGICA: Detecta se o irmão alterou o dia de meio de semana
+        const diaAntigo = configGlobal.dia_reuniao !== undefined ? configGlobal.dia_reuniao : novoDiaReuniao;
+        const mudouDiaMeio = (diaAntigo !== novoDiaReuniao);
+        
+        let desejaMigrar = false;
+        if (mudouDiaMeio) {
+            desejaMigrar = confirm(`⚠️ MUDANÇA DE DIA DETECTADA!\n\nVocê mudou a reunião de meio de semana.\nDeseja que o sistema vasculhe o banco de dados e transfira automaticamente as programações que você já preencheu para as novas datas, apagando os dias velhos duplicados?\n\n(Recomendado: SIM - Para não perder dados)`);
+        }
+
         const msg = document.getElementById('msgConfig');
         msg.style.color = "blue"; msg.innerText = "Salvando configurações...";
-        configGlobal.dia_reuniao = parseInt(document.getElementById('configDiaReuniao').value);
-        configGlobal.dia_reuniao_fim = parseInt(document.getElementById('configDiaReuniaoFim').value);
+        
+        configGlobal.dia_reuniao = novoDiaReuniao;
+        configGlobal.dia_reuniao_fim = novoDiaReuniaoFim;
         configGlobal.nome_congregacao = document.getElementById('configNomeCongregacao').value.toUpperCase();
+        
         try {
             await setDoc(doc(db, "configuracoes", "geral"), configGlobal, { merge: true });
+            
+            // =========================================================================
+            // 🟢 MOTOR DE MIGRAÇÃO AUTOMÁTICA (MANTÉM NA MESMA SEMANA E EXCLUI O ANTIGO)
+            // =========================================================================
+            if (desejaMigrar) {
+                msg.innerText = "⏳ Ajustando calendário e removendo duplicadas... (Aguarde)";
+                
+                const snap = await getDocs(collection(db, "programacoes_semanais"));
+                let contadorMigrados = 0;
+                
+                for (const documento of snap.docs) {
+                    const dadosOriginais = documento.data();
+                    const dataIsoOriginal = documento.id;
+                    
+                    // Acha o dia exato da semana que o documento velho foi registrado
+                    const d = new Date(dataIsoOriginal + "T12:00:00");
+                    const diaDoDocumento = d.getDay(); 
+                    
+                    // Se o dia gravado neste documento estiver fora do "novo dia padrão", ele sofre migração
+                    if (diaDoDocumento !== novoDiaReuniao) {
+                        // Cálculo matemático inquebrável para achar a Segunda-feira daquela semana
+                        const diffSegunda = diaDoDocumento === 0 ? -6 : 1 - diaDoDocumento;
+                        const segundaFeira = new Date(d);
+                        segundaFeira.setDate(d.getDate() + diffSegunda);
+                        
+                        // Soma os dias para achar a data exata do Novo Dia (Quarta) na MESMA semana
+                        const diffNovoDia = novoDiaReuniao === 0 ? 6 : novoDiaReuniao - 1;
+                        const novaData = new Date(segundaFeira);
+                        novaData.setDate(segundaFeira.getDate() + diffNovoDia);
+                        
+                        const ano = novaData.getFullYear();
+                        const mes = String(novaData.getMonth() + 1).padStart(2, '0');
+                        const dia = String(novaData.getDate()).padStart(2, '0');
+                        const dataAlvoIso = `${ano}-${mes}-${dia}`;
+                        
+                        // Atualiza a etiqueta da data por dentro do objeto
+                        dadosOriginais.data = dataAlvoIso;
+                        
+                        // 1. Clona/Funde o documento na data NOVA (Isso funde os dados sem perder nada)
+                        await setDoc(doc(db, "programacoes_semanais", dataAlvoIso), dadosOriginais, { merge: true });
+                        
+                        // 2. EXTERMINA o documento da data VELHA (O clone que ficou abandonado)
+                        await deleteDoc(doc(db, "programacoes_semanais", dataIsoOriginal));
+                        
+                        contadorMigrados++;
+                    }
+                }
+                
+                if (contadorMigrados > 0) {
+                    alert(`✅ Auditoria e Migração Concluídas!\n\n${contadorMigrados} semanas foram reorganizadas para o novo dia da reunião. Os documentos velhos duplicados foram apagados.`);
+                }
+            }
+            // =========================================================================
+
             atualizarDOMComListas();
             msg.style.color = "green"; msg.innerText = "Configurações salvas!";
-            setTimeout(() => { modalConfig.style.display = 'none'; msg.innerText=""; }, 1500);
+            
+            // Força a Tabela Mensal a recarregar automaticamente o visual do novo mês
+            const mesRef = document.getElementById('mesReferencia');
+            if(mesRef) mesRef.dispatchEvent(new Event('change'));
+
+            setTimeout(() => { modalConfig.style.display = 'none'; msg.innerText=""; }, 2000);
+            
         } catch(e) { 
             msg.style.color = "red"; 
             msg.innerText = "Erro ao salvar. Verifique o console (F12)."; 
