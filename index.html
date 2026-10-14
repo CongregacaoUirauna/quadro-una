@@ -297,9 +297,19 @@
         let todasAsProgramacoes = {};
         let datasOrdenadas = [];
         let agendaDiscursos = []; // NOVO: Memória dos discursos
+        let siglaFimGlobal = "Dom"; // 🟢 MÁGICA: Memória do dia de fim de semana
 
         async function carregarDados() {
             try {
+                // 🟢 INJEÇÃO: Busca o dia do fim de semana direto da configuração
+                try {
+                    const docConfig = await getDoc(doc(db, "configuracoes", "geral"));
+                    if (docConfig.exists() && docConfig.data().dia_reuniao_fim !== undefined) {
+                        const diasS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+                        siglaFimGlobal = diasS[parseInt(docConfig.data().dia_reuniao_fim)];
+                    }
+                } catch(e) { console.warn("Erro ao buscar config geral", e); }
+
                 // Janela Dinâmica (Segunda a Segunda)
                 const hoje = new Date();
                 const diaDaSemana = hoje.getDay(); 
@@ -489,14 +499,23 @@
 
                 // --- NOVA INJEÇÃO: Busca nas Designações Mecânicas ---
                 if (p.mecanicas) {
-                    checar(p.mecanicas.qui_ind, "Indicador (Quinta)");
-                    checar(p.mecanicas.qui_vol, "Volante (Quinta)");
-                    checar(p.mecanicas.qui_som, "Som e Vídeo (Quinta)");
-                    checar(p.mecanicas.dom_ind, "Indicador (Domingo)");
-                    checar(p.mecanicas.dom_vol, "Volante (Domingo)");
-                    checar(p.mecanicas.dom_som, "Som e Vídeo (Domingo)");
-                    checar(p.mecanicas.dom_pre, "Presidente da Reunião (Domingo)");
-                    checar(p.mecanicas.dom_lei, "Leitor de A Sentinela (Domingo)");
+                    let nomeBuscaMid = "Meio de Semana";
+                    if (p.data) {
+                        const dB = new Date(p.data + "T12:00:00");
+                        const diasBuscaNomes = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+                        nomeBuscaMid = diasBuscaNomes[dB.getDay()];
+                    }
+                    
+                    const nomeFimGlob = siglaFimGlobal === "Dom" ? "Domingo" : (siglaFimGlobal === "Sáb" ? "Sábado" : "Fim de Semana");
+
+                    checar(p.mecanicas.qui_ind, `Indicador (${nomeBuscaMid})`);
+                    checar(p.mecanicas.qui_vol, `Volante (${nomeBuscaMid})`);
+                    checar(p.mecanicas.qui_som, `Som e Vídeo (${nomeBuscaMid})`);
+                    checar(p.mecanicas.dom_ind, `Indicador (${nomeFimGlob})`);
+                    checar(p.mecanicas.dom_vol, `Volante (${nomeFimGlob})`);
+                    checar(p.mecanicas.dom_som, `Som e Vídeo (${nomeFimGlob})`);
+                    checar(p.mecanicas.dom_pre, `Presidente da Reunião (${nomeFimGlob})`);
+                    checar(p.mecanicas.dom_lei, `Leitor de A Sentinela (${nomeFimGlob})`);
                 }
                 // ---------------------------------------------------
                 
@@ -689,6 +708,14 @@
                 `;
             }
 
+            // 🟢 MÁGICA: Calcula os dias corretos para a exibição das Mecânicas
+            let siglaMid = "Qui"; 
+            if (dados.data) {
+                const dMid = new Date(dados.data + "T12:00:00");
+                const diasS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+                siglaMid = diasS[dMid.getDay()];
+            }
+
             // Monta o Bloco de Mecânicas (se houver dados)
             let htmlMecanicas = '';
             if (dados.mecanicas) {
@@ -696,17 +723,17 @@
                     <div class="bloco-mecanicas">
                         <div class="mecanicas-titulo">⚙️ Designações Mecânicas da Semana</div>
                         <div class="mecanicas-grid">
-                            <div class="mec-item"><span class="mec-label">Som (Qui):</span> <span class="mec-nome">${nomeFormatado(dados.mecanicas.qui_som)}</span></div>
-                            <div class="mec-item"><span class="mec-label">Som (Dom):</span> <span class="mec-nome">${nomeFormatado(dados.mecanicas.dom_som)}</span></div>
+                            <div class="mec-item"><span class="mec-label">Som (${siglaMid}):</span> <span class="mec-nome">${nomeFormatado(dados.mecanicas.qui_som)}</span></div>
+                            <div class="mec-item"><span class="mec-label">Som (${siglaFimGlobal}):</span> <span class="mec-nome">${nomeFormatado(dados.mecanicas.dom_som)}</span></div>
                             
-                            <div class="mec-item"><span class="mec-label">Volante (Qui):</span> <span class="mec-nome">${nomeFormatado(dados.mecanicas.qui_vol)}</span></div>
-                            <div class="mec-item"><span class="mec-label">Volante (Dom):</span> <span class="mec-nome">${nomeFormatado(dados.mecanicas.dom_vol)}</span></div>
+                            <div class="mec-item"><span class="mec-label">Volante (${siglaMid}):</span> <span class="mec-nome">${nomeFormatado(dados.mecanicas.qui_vol)}</span></div>
+                            <div class="mec-item"><span class="mec-label">Volante (${siglaFimGlobal}):</span> <span class="mec-nome">${nomeFormatado(dados.mecanicas.dom_vol)}</span></div>
                             
-                            <div class="mec-item"><span class="mec-label">Indicador (Qui):</span> <span class="mec-nome">${nomeFormatado(dados.mecanicas.qui_ind)}</span></div>
-                            <div class="mec-item"><span class="mec-label">Indicador (Dom):</span> <span class="mec-nome">${nomeFormatado(dados.mecanicas.dom_ind)}</span></div>
+                            <div class="mec-item"><span class="mec-label">Indicador (${siglaMid}):</span> <span class="mec-nome">${nomeFormatado(dados.mecanicas.qui_ind)}</span></div>
+                            <div class="mec-item"><span class="mec-label">Indicador (${siglaFimGlobal}):</span> <span class="mec-nome">${nomeFormatado(dados.mecanicas.dom_ind)}</span></div>
                             
-                            <div class="mec-item"><span class="mec-label">Leitor (Dom):</span> <span class="mec-nome">${nomeFormatado(dados.mecanicas.dom_lei)}</span></div>
-                            <div class="mec-item"><span class="mec-label">Presidente (Dom):</span> <span class="mec-nome">${nomeFormatado(dados.mecanicas.dom_pre)}</span></div>
+                            <div class="mec-item"><span class="mec-label">Leitor (${siglaFimGlobal}):</span> <span class="mec-nome">${nomeFormatado(dados.mecanicas.dom_lei)}</span></div>
+                            <div class="mec-item"><span class="mec-label">Presidente (${siglaFimGlobal}):</span> <span class="mec-nome">${nomeFormatado(dados.mecanicas.dom_pre)}</span></div>
                         </div>
                     </div>
                 `;
