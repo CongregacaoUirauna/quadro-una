@@ -1594,45 +1594,6 @@
                 corpo.innerHTML = '<tr><td colspan="4" style="padding: 15px; text-align: center; color: red; font-size: 13px;">Erro ao carregar dados.</td></tr>';
             }
         }
-                        let semanaSelecionada = chavesOrdenadas[0]; // Por padrão a primeira
-                        
-                        // Tenta encontrar a semana atual baseada no dia de hoje
-                        chavesOrdenadas.forEach(chave => {
-                            const [strSeg, strDom] = chave.split('|');
-                            const dataSeg = new Date(strSeg + "T00:00:00");
-                            const dataDom = new Date(strDom + "T23:59:59");
-                            
-                            if (hoje >= dataSeg && hoje <= dataDom) {
-                                semanaSelecionada = chave;
-                            }
-                            
-                            const opt = document.createElement('option');
-                            opt.value = chave;
-                            opt.innerText = semanasAgrupadasTestemunho[chave].nome;
-                            if (chave === semanaSelecionada) opt.selected = true;
-                            
-                            selectSemana.appendChild(opt);
-                        });
-
-                        containerFiltro.style.display = 'block';
-                        
-                        // Desenha a tabela pela primeira vez com a semana escolhida
-                        desenharTabelaTestemunho(semanaSelecionada);
-                        
-                        // Ativa a reatividade (Quando o usuário muda o menu, muda a tabela)
-                        selectSemana.addEventListener('change', (e) => {
-                            desenharTabelaTestemunho(e.target.value);
-                        });
-                    }
-
-                } else {
-                    corpo.innerHTML = '<tr><td colspan="4" style="padding: 15px; text-align: center; font-size: 13px; color: #666;">Escala não configurada.</td></tr>';
-                }
-            } catch (e) {
-                console.error("Erro ao carregar escala de testemunho:", e);
-                corpo.innerHTML = '<tr><td colspan="4" style="padding: 15px; text-align: center; color: red; font-size: 13px;">Erro ao carregar dados.</td></tr>';
-            }
-        }
 
         // 🟢 INJEÇÃO: Função que desenha a tabela filtrada
         function desenharTabelaTestemunho(chaveSemana) {
