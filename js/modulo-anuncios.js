@@ -283,6 +283,11 @@ function configurarOuvintesMural() {
         document.getElementById('inputTestemunhoDesig1').value = '';
         document.getElementById('inputTestemunhoDesig2').value = '';
         document.getElementById('inputIdEdicaoTestemunho').value = '';
+        
+        // 🟢 INJEÇÃO: Limpa o checkbox de repetição
+        const chkFixo = document.getElementById('inputTestemunhoFixo');
+        if (chkFixo) chkFixo.checked = false;
+
         document.getElementById('btnAdicionarLinhaTestemunho').style.display = 'inline-block';
         document.getElementById('btnAtualizarLinhaTestemunho').style.display = 'none';
         document.getElementById('btnCancelarEdicaoTestemunho').style.display = 'none';
@@ -296,13 +301,17 @@ function configurarOuvintesMural() {
         const local = document.getElementById('inputTestemunhoLocal').value;
         const desig1 = document.getElementById('inputTestemunhoDesig1').value;
         const desig2 = document.getElementById('inputTestemunhoDesig2').value;
+        
+        // 🟢 INJEÇÃO: Captura se a dupla é fixa
+        const chkFixo = document.getElementById('inputTestemunhoFixo');
+        const fixo = chkFixo ? chkFixo.checked : false;
 
         if (!data || !hora || !local || !desig1) {
             alert("Preencha ao menos Data, Hora, Local e o Designado 1.");
             return;
         }
 
-        listaTestemunhoTemporaria.push({ data, hora, local, desig1, desig2, id: Date.now() });
+        listaTestemunhoTemporaria.push({ data, hora, local, desig1, desig2, fixo, id: Date.now() });
         renderizarTabelaTestemunhoAdmin();
         limparCamposTestemunho();
     });
@@ -316,12 +325,16 @@ function configurarOuvintesMural() {
         const local = document.getElementById('inputTestemunhoLocal').value;
         const desig1 = document.getElementById('inputTestemunhoDesig1').value;
         const desig2 = document.getElementById('inputTestemunhoDesig2').value;
+        
+        // 🟢 INJEÇÃO: Captura o estado atualizado
+        const chkFixo = document.getElementById('inputTestemunhoFixo');
+        const fixo = chkFixo ? chkFixo.checked : false;
 
         if (!data || !hora || !local || !desig1) return;
 
         const index = listaTestemunhoTemporaria.findIndex(i => i.id === idEdicao);
         if(index !== -1) {
-            listaTestemunhoTemporaria[index] = { ...listaTestemunhoTemporaria[index], data, hora, local, desig1, desig2 };
+            listaTestemunhoTemporaria[index] = { ...listaTestemunhoTemporaria[index], data, hora, local, desig1, desig2, fixo };
             renderizarTabelaTestemunhoAdmin();
             limparCamposTestemunho();
         }
@@ -350,6 +363,10 @@ function configurarOuvintesMural() {
                 document.getElementById('inputTestemunhoDesig1').value = item.desig1 || '';
                 document.getElementById('inputTestemunhoDesig2').value = item.desig2 || '';
                 document.getElementById('inputIdEdicaoTestemunho').value = item.id;
+                
+                // 🟢 INJEÇÃO: Marca a caixinha de volta se o item era fixo
+                const chkFixo = document.getElementById('inputTestemunhoFixo');
+                if (chkFixo) chkFixo.checked = item.fixo || false;
                 
                 document.getElementById('btnAdicionarLinhaTestemunho').style.display = 'none';
                 document.getElementById('btnAtualizarLinhaTestemunho').style.display = 'inline-block';
@@ -396,12 +413,18 @@ function renderizarTabelaPregaAdmin() {
         // 🟢 MÁGICA: Calcula o dia da semana blindando o fuso horário com T12:00:00
         const diaSemanaTexto = diasDaSemana[new Date(item.data + "T12:00:00").getDay()];
 
+        // 🟢 INJEÇÃO: Desenha a etiqueta visual se for recorrente
+        const badgeFixo = item.fixo ? `<div style="display:inline-block; margin-top:4px; font-size:10px; background-color:#e8f5e9; color:#2e7d32; padding:2px 6px; border-radius:4px; font-weight:bold; border: 1px solid #c8e6c9;">🔄 FIXO</div>` : '';
+
         tr.innerHTML = `
             <td style="padding: 8px; border-bottom: 1px solid #eee;">
                 <div style="font-weight: bold;">${item.data.split('-').reverse().join('/')}</div>
                 <div style="font-size: 11px; color: #666;">${diaSemanaTexto}</div>
             </td>
-            <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold; color: #1a73e8;">${item.hora || '--:--'}</td>
+            <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold; color: #1565c0;">
+                ${item.hora || '--:--'}
+                <br>${badgeFixo}
+            </td>
             <td style="padding: 8px; border-bottom: 1px solid #eee;">${item.local}</td>
             <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center; color: #e65100; font-weight: bold;">${item.territorio || '---'}</td>
             <td style="padding: 8px; border-bottom: 1px solid #eee;">${item.dirigente}</td>
