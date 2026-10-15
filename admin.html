@@ -525,11 +525,19 @@
                                 
                                 <datalist id="listaDesignadosTestemunhoSugestoes"></datalist>
 
-                                <div style="display: flex; align-items: flex-end; gap: 5px;">
-                                    <input type="hidden" id="inputIdEdicaoTestemunho" value="">
-                                    <button id="btnAdicionarLinhaTestemunho" class="btn-salvar" style="margin: 0; background-color: #1565c0; width: auto; padding: 10px 15px;">+ Add</button>
-                                    <button id="btnAtualizarLinhaTestemunho" class="btn-salvar" style="margin: 0; background-color: #f57c00; width: auto; padding: 10px 15px; display: none;">✏️ Atualizar</button>
-                                    <button id="btnCancelarEdicaoTestemunho" class="btn-config" style="margin: 0; background-color: #999; color: white; width: auto; padding: 10px 15px; display: none;">✖ Cancelar</button>
+                                <!-- 🟢 INJEÇÃO: Caixinha Fixo Toda Semana + Botões -->
+                                <div style="display: flex; align-items: flex-end; gap: 15px; width: 100%; justify-content: flex-end; margin-top: 10px;">
+                                    <label style="display: flex; align-items: center; gap: 5px; cursor: pointer; color: #2e7d32; font-weight: bold; font-size: 13px; background: #e8f5e9; padding: 8px 12px; border-radius: 4px; border: 1px solid #c8e6c9;">
+                                        <input type="checkbox" id="inputTestemunhoFixo" style="margin: 0; transform: scale(1.2);">
+                                        🔄 Fixo Toda Semana
+                                    </label>
+                                    
+                                    <div style="display: flex; gap: 5px;">
+                                        <input type="hidden" id="inputIdEdicaoTestemunho" value="">
+                                        <button id="btnAdicionarLinhaTestemunho" class="btn-salvar" style="margin: 0; background-color: #1565c0; width: auto; padding: 10px 15px;">+ Add</button>
+                                        <button id="btnAtualizarLinhaTestemunho" class="btn-salvar" style="margin: 0; background-color: #f57c00; width: auto; padding: 10px 15px; display: none;">✏️ Atualizar</button>
+                                        <button id="btnCancelarEdicaoTestemunho" class="btn-config" style="margin: 0; background-color: #999; color: white; width: auto; padding: 10px 15px; display: none;">✖ Cancelar</button>
+                                    </div>
                                 </div>
                             </div>
 
