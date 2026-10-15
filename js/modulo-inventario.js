@@ -21,33 +21,31 @@ function configurarOuvintesDeEventos() {
             const processadosNestaSessao = new Set(); // 🟢 MEMÓRIA CURTA: Bloqueia duplicatas no mesmo lote
 
             for (const item of escala) {
-                // Ignora se não houver território especificado
                 if (!item.territorio || item.territorio === '---') continue;
 
-                // Se o mapa é enorme e apareceu de novo neste mesmo salvamento, ignora
-                if (processadosNestaSessao.has(item.territorio)) continue;
+                const nomeLimpo = item.territorio.trim(); // Remove espaços acidentais
 
-                // Verifica se este território JÁ ESTÁ em andamento no banco
+                if (processadosNestaSessao.has(nomeLimpo)) continue;
+
+                // 🟢 MÁGICA 1: Verifica pela DATA e não pelo status. Impede criar clones fantasmas!
                 const q = query(collection(db, "historico_territorios"),
-                    where("territorio", "==", item.territorio),
-                    where("status", "==", "Em Andamento")
+                    where("territorio", "==", nomeLimpo),
+                    where("data_inicio", "==", item.data) 
                 );
                 
                 const snap = await getDocs(q);
 
-                // Se o banco retornar vazio, o mapa está livre. Abrimos um novo ciclo!
                 if (snap.empty) {
                     await addDoc(collection(db, "historico_territorios"), {
-                        territorio: item.territorio,
+                        territorio: nomeLimpo,
                         dirigente: item.dirigente,
-                        data_inicio: item.data, // Formato YYYY-MM-DD
-                        data_fim: "", // Fica vazio até o botão de conclusão ser clicado
+                        data_inicio: item.data, 
+                        data_fim: "", 
                         status: "Em Andamento",
-                        timestamp_registro: Date.now() // Carimbo de tempo para ordenação matemática
+                        timestamp_registro: Date.now() 
                     });
 
-                    // Grava na memória que esse mapa já abriu ciclo hoje
-                    processadosNestaSessao.add(item.territorio);
+                    processadosNestaSessao.add(nomeLimpo);
                 }
             }
         } catch (error) {
@@ -57,7 +55,7 @@ function configurarOuvintesDeEventos() {
 
     // GATILHO B: Escuta quando o botão ✅ de Concluir Território é clicado
     window.addEventListener('registrarConclusaoTerritorio', async (event) => {
-        const nomeTerritorio = event.detail.nome;
+        const nomeTerritorio = event.detail.nome.trim(); // 🟢 Blindagem contra espaços
         const dataDigitadaDDMMYYYY = event.detail.dataReal; // Pega a data retroativa
 
         // Converte DD/MM/AAAA para YYYY-MM-DD para organizar no banco
@@ -108,7 +106,6 @@ function configurarOuvintesDeEventos() {
 function configurarGeradorDeRelatorio() {
     const btnGerar = document.getElementById('btnGerarInventario');
     
-    // Se o botão existir na tela do Admin, liga a função a ele
     if (btnGerar) {
         btnGerar.addEventListener('click', async () => {
             const txtOriginal = btnGerar.innerText;
@@ -116,9 +113,21 @@ function configurarGeradorDeRelatorio() {
             btnGerar.disabled = true;
 
             try {
-                // Puxa TODO o histórico, ordenando pelo nome do território e depois cronologicamente
-                const q = query(collection(db, "historico_territorios"), orderBy("territorio", "asc"), orderBy("timestamp_registro", "desc"));
+                // 🟢 MÁGICA 2: Busca TUDO de uma vez sem exigir Índices do Firebase
+                const q = query(collection(db, "historico_territorios"));
                 const snap = await getDocs(q);
+
+                // Organiza os dados localmente (Muito mais seguro e à prova de erros)
+                const listaHistorico = [];
+                snap.forEach(docSnap => listaHistorico.push(docSnap.data()));
+                
+                listaHistorico.sort((a, b) => {
+                    const nomeA = a.territorio.toUpperCase();
+                    const nomeB = b.territorio.toUpperCase();
+                    if (nomeA < nomeB) return -1;
+                    if (nomeA > nomeB) return 1;
+                    return b.timestamp_registro - a.timestamp_registro; // Mais recentes primeiro
+                });
 
                 let html = `
                     <html>
@@ -156,13 +165,12 @@ function configurarGeradorDeRelatorio() {
                                 <tbody>
                 `;
 
-                if (snap.empty) {
-                    html += `<tr><td colspan="5" style="text-align:center; padding: 30px; color: #666;">Nenhum histórico de território registrado até o momento. O inventário começará a ser preenchido quando você salvar a próxima Escala de Pregação.</td></tr>`;
+                if (listaHistorico.length === 0) {
+                    html += `<tr><td colspan="5" style="text-align:center; padding: 30px; color: #666;">Nenhum histórico de território registrado até o momento.</td></tr>`;
                 } else {
                     const formatarData = (d) => d ? d.split('-').reverse().join('/') : '<span style="color:#aaa;">---</span>';
 
-                    snap.forEach(docSnap => {
-                        const data = docSnap.data();
+                    listaHistorico.forEach(data => {
                         const statusClass = data.status === "Concluído" ? "status-concluido" : "status-andamento";
                         
                         html += `
@@ -188,7 +196,6 @@ function configurarGeradorDeRelatorio() {
                     </html>
                 `;
 
-                // Abre o relatório numa aba isolada e limpa
                 const janelaRelatorio = window.open('', '_blank');
                 janelaRelatorio.document.write(html);
                 janelaRelatorio.document.close();
