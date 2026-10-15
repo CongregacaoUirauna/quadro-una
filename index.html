@@ -1540,10 +1540,60 @@
 
                     // 3. ORDENA E MONTA O MENU DROPDOWN
                     // Pega as semanas e ordena cronologicamente
-                    const chavesOrdenadas = Object.keys(semanasAgrupadasTestemunho).sort();
+                    let chavesOrdenadas = Object.keys(semanasAgrupadasTestemunho).sort();
                     
+                    // 🟢 MÁGICA DO TEMPO: Filtra a lista e expulsa as semanas que já passaram
+                    chavesOrdenadas = chavesOrdenadas.filter(chave => {
+                        const strDom = chave.split('|')[1];
+                        const dataDom = new Date(strDom + "T23:59:59");
+                        return dataDom >= hoje; // A semana só sobrevive se o seu Domingo for hoje ou no futuro
+                    });
+
                     if(chavesOrdenadas.length > 0) {
                         selectSemana.innerHTML = '';
+                        let semanaSelecionada = chavesOrdenadas[0]; // Por padrão a primeira que sobrou (atual ou futura)
+                        
+                        // Tenta encontrar a semana atual baseada no dia de hoje
+                        chavesOrdenadas.forEach(chave => {
+                            const [strSeg, strDom] = chave.split('|');
+                            const dataSeg = new Date(strSeg + "T00:00:00");
+                            const dataDom = new Date(strDom + "T23:59:59");
+                            
+                            if (hoje >= dataSeg && hoje <= dataDom) {
+                                semanaSelecionada = chave;
+                            }
+                            
+                            const opt = document.createElement('option');
+                            opt.value = chave;
+                            opt.innerText = semanasAgrupadasTestemunho[chave].nome;
+                            if (chave === semanaSelecionada) opt.selected = true;
+                            
+                            selectSemana.appendChild(opt);
+                        });
+
+                        containerFiltro.style.display = 'block';
+                        
+                        // Desenha a tabela pela primeira vez com a semana escolhida
+                        desenharTabelaTestemunho(semanaSelecionada);
+                        
+                        // Ativa a reatividade (Substituímos addEventListener por onchange para evitar duplicações se atualizar a página)
+                        selectSemana.onchange = (e) => {
+                            desenharTabelaTestemunho(e.target.value);
+                        };
+                    } else {
+                        // Se todas as semanas cadastradas já ficaram no passado
+                        containerFiltro.style.display = 'none';
+                        corpo.innerHTML = '<tr><td colspan="4" style="padding: 15px; text-align: center; font-size: 13px; color: #666;">Nenhuma escala futura configurada.</td></tr>';
+                    }
+
+                } else {
+                    corpo.innerHTML = '<tr><td colspan="4" style="padding: 15px; text-align: center; font-size: 13px; color: #666;">Escala não configurada.</td></tr>';
+                }
+            } catch (e) {
+                console.error("Erro ao carregar escala de testemunho:", e);
+                corpo.innerHTML = '<tr><td colspan="4" style="padding: 15px; text-align: center; color: red; font-size: 13px;">Erro ao carregar dados.</td></tr>';
+            }
+        }
                         let semanaSelecionada = chavesOrdenadas[0]; // Por padrão a primeira
                         
                         // Tenta encontrar a semana atual baseada no dia de hoje
